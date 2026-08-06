@@ -14,6 +14,7 @@ datasource db {
 enum BusinessType {
   RESTAURANT
   SMALL_BUSINESS
+  SMARTLINK
 }
 
 enum Plan {
@@ -74,6 +75,7 @@ model Tenant {
   availabilityBlocks AvailabilityBlock[]
   bookings       Booking[]
   reviews        Review[]
+  smartLinkItems SmartLinkItem[]
   subscription   Subscription?
 
   @@map("tenants")
@@ -218,6 +220,38 @@ model Review {
   @@index([tenantId])
   @@index([tenantId, status])
   @@map("reviews")
+}
+
+enum SmartLinkType {
+  WEBSITE
+  WHATSAPP
+  PHONE
+  INSTAGRAM
+  FACEBOOK
+  TIKTOK
+  TWITTER
+  YOUTUBE
+  LINKEDIN
+  MAPS
+  CUSTOM
+}
+
+model SmartLinkItem {
+  id        String        @id @default(cuid())
+  tenantId  String
+  type      SmartLinkType
+  label     String
+  // Para WHATSAPP: solo dígitos (se arma el link wa.me al mostrarlo).
+  // Para PHONE: número tal cual (se arma el link tel: al mostrarlo).
+  // Para el resto: una URL completa que se usa directo como href.
+  value     String
+  sortOrder Int           @default(0)
+  createdAt DateTime      @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("smartlink_items")
 }
 
 // ---------- Billing ----------

@@ -7,7 +7,7 @@ import { signSession, sessionCookieName } from "@/lib/auth";
 
 const schema = z.object({
   businessName: z.string().min(1),
-  businessType: z.enum(["RESTAURANT", "SMALL_BUSINESS"]),
+  businessType: z.enum(["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"]),
   email: z.string().email(),
   password: z.string().min(8),
   name: z.string().min(1),

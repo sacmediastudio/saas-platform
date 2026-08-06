@@ -8,9 +8,11 @@ export default async function MenuPage() {
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
-  // El módulo de menú es solo para restaurantes — un negocio de servicios
-  // no debería poder llegar aquí ni por URL directa.
-  if (tenant.businessType !== "RESTAURANT") redirect("/dashboard/bookings");
+  // El módulo de menú es solo para restaurantes — otros tipos de negocio
+  // no deberían poder llegar aquí ni por URL directa.
+  if (tenant.businessType !== "RESTAURANT") {
+    redirect(tenant.businessType === "SMALL_BUSINESS" ? "/dashboard/bookings" : "/dashboard/smartlink");
+  }
 
   const [categories, items] = await Promise.all([
     db.menuCategory.findMany({

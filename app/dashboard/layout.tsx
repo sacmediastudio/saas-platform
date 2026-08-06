@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { UtensilsCrossed, Calendar, Star, BarChart3, Settings } from "lucide-react";
+import { UtensilsCrossed, Calendar, Link2, Star, Settings } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 
@@ -24,6 +24,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       href: "/dashboard/bookings",
       label: "Citas",
       icon: Calendar,
+    },
+    tenant.businessType === "SMARTLINK" && {
+      href: "/dashboard/smartlink",
+      label: "Smartlink",
+      icon: Link2,
     },
     { href: "/dashboard/reviews", label: "Reseñas", icon: Star },
     { href: "/dashboard/settings", label: "Ajustes", icon: Settings },

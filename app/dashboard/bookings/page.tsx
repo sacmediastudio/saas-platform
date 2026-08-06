@@ -8,9 +8,11 @@ export default async function BookingsPage() {
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
-  // El módulo de citas es solo para negocios de servicios — un restaurante
-  // no debería poder llegar aquí ni por URL directa.
-  if (tenant.businessType !== "SMALL_BUSINESS") redirect("/dashboard/menu");
+  // El módulo de citas es solo para negocios de servicios — otros tipos
+  // de negocio no deberían poder llegar aquí ni por URL directa.
+  if (tenant.businessType !== "SMALL_BUSINESS") {
+    redirect(tenant.businessType === "RESTAURANT" ? "/dashboard/menu" : "/dashboard/smartlink");
+  }
 
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);

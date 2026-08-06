@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 
 export default function SignupPage() {
   const router = useRouter();
-  const [businessType, setBusinessType] = useState<"RESTAURANT" | "SMALL_BUSINESS">("RESTAURANT");
+  const [businessType, setBusinessType] = useState<"RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK">("RESTAURANT");
   const [form, setForm] = useState({ businessName: "", name: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -37,7 +37,13 @@ export default function SignupPage() {
         return;
       }
 
-      router.push("/dashboard/menu");
+      const destination =
+        businessType === "RESTAURANT"
+          ? "/dashboard/menu"
+          : businessType === "SMALL_BUSINESS"
+          ? "/dashboard/bookings"
+          : "/dashboard/smartlink";
+      router.push(destination);
       router.refresh();
     } catch (err) {
       // Fallo de red (sin conexión, CORS, servidor caído, etc.)
@@ -56,6 +62,7 @@ export default function SignupPage() {
           [
             { value: "RESTAURANT", label: "Restaurante" },
             { value: "SMALL_BUSINESS", label: "Negocio de servicios" },
+            { value: "SMARTLINK", label: "Smartlink" },
           ] as const
         ).map((opt) => (
           <button
@@ -64,11 +71,12 @@ export default function SignupPage() {
             onClick={() => setBusinessType(opt.value)}
             style={{
               flex: 1,
-              padding: "10px 8px",
+              padding: "10px 6px",
               borderRadius: 8,
-              fontSize: 13,
+              fontSize: 12,
               border: businessType === opt.value ? "1.5px solid #333" : "1px solid #ddd",
               background: businessType === opt.value ? "#f5f5f5" : "white",
+              color: "#1a1a1a",
             }}
           >
             {opt.label}

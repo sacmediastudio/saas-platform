@@ -13,16 +13,16 @@ npm run db:seed             # carga 2 negocios de ejemplo con datos
 npm run dev
 ```
 
-> **Nota sobre despliegues:** el script `build` (usado por Railway y
-> plataformas similares) ahora corre `prisma db push` automáticamente
-> antes de compilar. Esto significa que cada vez que cambiemos el
-> esquema de la base de datos, no hace falta correr
-> `railway run npx prisma db push` a mano — se aplica solo en cada
-> deploy. Si algún cambio de esquema pudiera **borrar datos** (por
-> ejemplo, quitar una columna que ya tiene información), el build va a
-> fallar a propósito en vez de aplicar el cambio solo — en ese caso sí
-> hay que intervenir a mano y decidir conscientemente qué hacer con esos
-> datos.
+> **Nota sobre despliegues (específico de Railway):** el script `start`
+> corre `prisma db push` antes de `next start`, no el `build`. Esto es
+> intencional: en Railway, el contenedor de *build* no tiene acceso a la
+> red privada donde vive la base de datos (`*.railway.internal`) — esa
+> red solo está disponible una vez que el contenedor está corriendo. Si
+> pones `prisma db push` en el `build`, vas a ver un error `P1001: Can't
+> reach database server`. Con el esquema sincronizándose en el arranque,
+> cada deploy sigue aplicando cambios de esquema automáticamente, sin
+> depender de correr `railway run npx prisma db push` a mano — solo que
+> ahora pasa en el momento correcto del ciclo de deploy.
 
 Necesitas una base PostgreSQL corriendo. La forma más rápida en local:
 
@@ -102,6 +102,15 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       contacto, moneda (afecta cómo se muestran todos los precios, en
       dashboard y páginas públicas), colores de fondo/texto de la página
       pública, y cerrar sesión
+- [x] Tercer pilar: **Smartlink** (`/dashboard/smartlink` +
+      `/link/[slug]`) — un perfil tipo Linktree con foto, nombre y una
+      lista de links reordenable (sitio web, WhatsApp, teléfono, redes
+      sociales, Maps, o un link personalizado). WhatsApp y teléfono se
+      arman automáticamente como `wa.me/...` y `tel:...`; el resto son
+      URLs directas que el usuario pega. El signup ahora tiene 3
+      opciones de tipo de negocio, y cada dashboard solo muestra el
+      módulo que le corresponde (con guard de redirección también por
+      URL directa, igual que los otros dos módulos)
 
 ## Qué falta (siguiente iteración)
 
