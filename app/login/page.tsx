@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+const GREEN = "#002D09";
+const LIME = "#E7FF00";
+
 export default function LoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
@@ -44,7 +47,14 @@ export default function LoginPage() {
 
   return (
     <div style={{ maxWidth: 340, margin: "5rem auto", padding: "0 1rem" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 20 }}>Inicia sesión</h1>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="https://horizons-cdn.hostinger.com/b813dbf4-80d8-4273-909f-1be06d6fe65f/76cf4d8e200c8f15791d1acaf0cabf5b.png"
+        alt="Zertoo"
+        style={{ height: 36, margin: "0 auto 32px", display: "block" }}
+      />
+
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, color: GREEN }}>Inicia sesión</h1>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <input
@@ -67,14 +77,25 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={loading}
-          style={{ padding: "10px 0", borderRadius: 8, background: "#1a1a1a", color: "white", fontWeight: 500, marginTop: 6 }}
+          style={{
+            padding: "11px 0",
+            borderRadius: 999,
+            background: LIME,
+            color: GREEN,
+            fontWeight: 700,
+            fontSize: 14,
+            marginTop: 6,
+          }}
         >
           {loading ? "Entrando..." : "Entrar"}
         </button>
       </form>
 
       <p style={{ fontSize: 13, color: "#666", marginTop: 16, textAlign: "center" }}>
-        ¿No tienes cuenta? <a href="/signup" style={{ textDecoration: "underline" }}>Regístrate</a>
+        ¿No tienes cuenta?{" "}
+        <a href="/signup" style={{ textDecoration: "underline", color: GREEN, fontWeight: 600 }}>
+          Regístrate
+        </a>
       </p>
     </div>
   );
@@ -82,7 +103,7 @@ export default function LoginPage() {
 
 const inputStyle: React.CSSProperties = {
   padding: "10px 12px",
-  borderRadius: 8,
+  borderRadius: 10,
   border: "1px solid #ddd",
   fontSize: 14,
 };

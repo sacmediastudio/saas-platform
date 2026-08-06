@@ -119,6 +119,18 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       categoría activa mientras el usuario hace scroll; lista de platos
       sin fotos, con precio alineado a la derecha; botón flotante de
       "Llamar" si el negocio tiene teléfono configurado
+- [x] Landing page (`/`) — **réplica exacta del sitio real** (portada
+      desde el export de código de zertoo.app: mismos componentes,
+      mismo copy, mismas imágenes reales alojadas en tu CDN de
+      Hostinger, misma paleta en HSL, tipografía Plus Jakarta Sans, y
+      las animaciones de scroll con `framer-motion` — incluye el header
+      con menú hamburguesa animado en mobile, el marquee infinito, el
+      subrayado animado en "minutos", el acordeón de FAQ, y la banda de
+      CTA final. Única desviación intencional: los botones "Empieza
+      gratis" enlazan a `/signup` (con `?type=X` en los de precios, que
+      preselecciona el tipo de negocio) en vez de anclar a `#top` como
+      en la plantilla original, porque en nuestro caso sí existe un
+      signup funcional para enlazar.
 
 ## Qué falta (siguiente iteración)
 

@@ -92,7 +92,7 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
           </button>
           <button
             onClick={() => setModal("booking")}
-            className="flex items-center gap-1.5 text-sm font-medium bg-white text-neutral-900 px-3.5 h-9 rounded-lg hover:bg-neutral-200"
+            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:bg-[#cfe600]"
           >
             <Plus size={16} aria-hidden />
             Nueva cita
@@ -388,7 +388,7 @@ function BlockScheduleModal({ staff, onClose }: { staff: StaffOption[]; onClose:
         </p>
         <button
           onClick={onClose}
-          className="w-full py-2 rounded-lg bg-white text-neutral-900 text-sm font-medium"
+          className="w-full py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600]"
         >
           Listo
         </button>
@@ -497,7 +497,7 @@ function ModalActions({
       <button
         type="submit"
         disabled={saving}
-        className="flex-1 py-2 rounded-lg bg-white text-neutral-900 text-sm font-medium disabled:opacity-50"
+        className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600] disabled:opacity-50"
       >
         {saving ? "Guardando..." : submitLabel}
       </button>

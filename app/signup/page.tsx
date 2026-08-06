@@ -1,11 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+const GREEN = "#002D09";
+const LIME = "#E7FF00";
+const GREEN_TINT = "#eaf2e6";
+
+type BusinessType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
+
+function isBusinessType(v: string | null): v is BusinessType {
+  return v === "RESTAURANT" || v === "SMALL_BUSINESS" || v === "SMARTLINK";
+}
 
 export default function SignupPage() {
+  return (
+    <Suspense fallback={null}>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
+function SignupForm() {
   const router = useRouter();
-  const [businessType, setBusinessType] = useState<"RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK">("RESTAURANT");
+  const searchParams = useSearchParams();
+  const preselected = searchParams.get("type");
+
+  const [businessType, setBusinessType] = useState<BusinessType>(
+    isBusinessType(preselected) ? preselected : "RESTAURANT"
+  );
   const [form, setForm] = useState({ businessName: "", name: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -54,7 +77,14 @@ export default function SignupPage() {
 
   return (
     <div style={{ maxWidth: 380, margin: "4rem auto", padding: "0 1rem" }}>
-      <h1 style={{ fontSize: 22, fontWeight: 600, marginBottom: 4 }}>Crea tu cuenta</h1>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="https://horizons-cdn.hostinger.com/b813dbf4-80d8-4273-909f-1be06d6fe65f/76cf4d8e200c8f15791d1acaf0cabf5b.png"
+        alt="Zertoo"
+        style={{ height: 36, margin: "0 auto 32px", display: "block" }}
+      />
+
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, color: GREEN }}>Crea tu cuenta</h1>
       <p style={{ color: "#666", marginBottom: 24, fontSize: 14 }}>14 días gratis, sin tarjeta</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
@@ -72,11 +102,12 @@ export default function SignupPage() {
             style={{
               flex: 1,
               padding: "10px 6px",
-              borderRadius: 8,
+              borderRadius: 10,
               fontSize: 12,
-              border: businessType === opt.value ? "1.5px solid #333" : "1px solid #ddd",
-              background: businessType === opt.value ? "#f5f5f5" : "white",
-              color: "#1a1a1a",
+              fontWeight: 600,
+              border: businessType === opt.value ? `1.5px solid ${GREEN}` : "1px solid #ddd",
+              background: businessType === opt.value ? GREEN_TINT : "white",
+              color: GREEN,
             }}
           >
             {opt.label}
@@ -120,14 +151,25 @@ export default function SignupPage() {
         <button
           type="submit"
           disabled={loading}
-          style={{ padding: "10px 0", borderRadius: 8, background: "#1a1a1a", color: "white", fontWeight: 500, marginTop: 6 }}
+          style={{
+            padding: "11px 0",
+            borderRadius: 999,
+            background: LIME,
+            color: GREEN,
+            fontWeight: 700,
+            fontSize: 14,
+            marginTop: 6,
+          }}
         >
           {loading ? "Creando cuenta..." : "Crear cuenta"}
         </button>
       </form>
 
       <p style={{ fontSize: 13, color: "#666", marginTop: 16, textAlign: "center" }}>
-        ¿Ya tienes cuenta? <a href="/login" style={{ textDecoration: "underline" }}>Inicia sesión</a>
+        ¿Ya tienes cuenta?{" "}
+        <a href="/login" style={{ textDecoration: "underline", color: GREEN, fontWeight: 600 }}>
+          Inicia sesión
+        </a>
       </p>
     </div>
   );
@@ -135,7 +177,7 @@ export default function SignupPage() {
 
 const inputStyle: React.CSSProperties = {
   padding: "10px 12px",
-  borderRadius: 8,
+  borderRadius: 10,
   border: "1px solid #ddd",
   fontSize: 14,
 };

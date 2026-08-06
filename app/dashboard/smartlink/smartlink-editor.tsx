@@ -115,7 +115,7 @@ export default function SmartLinkEditor({
         <h1 className="text-xl font-semibold">Tu Smartlink</h1>
         <button
           onClick={() => setModal({ mode: "create" })}
-          className="flex items-center gap-1.5 text-sm font-medium bg-white text-neutral-900 px-3.5 h-9 rounded-lg hover:bg-neutral-200"
+          className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:bg-[#cfe600]"
         >
           <Plus size={16} aria-hidden />
           Agregar link
@@ -322,7 +322,7 @@ function LinkModal({
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 rounded-lg bg-white text-neutral-900 text-sm font-medium disabled:opacity-50"
+              className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600] disabled:opacity-50"
             >
               {saving ? "Guardando..." : mode === "create" ? "Agregar" : "Guardar"}
             </button>

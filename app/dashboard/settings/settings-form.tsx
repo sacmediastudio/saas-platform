@@ -227,7 +227,7 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="flex items-center gap-1.5 bg-white text-neutral-900 text-sm font-medium px-4 h-9 rounded-lg hover:bg-neutral-200 disabled:opacity-50"
+          className="flex items-center gap-1.5 bg-[#E7FF00] text-[#002D09] text-sm font-medium px-4 h-9 rounded-lg hover:bg-[#cfe600] disabled:opacity-50"
         >
           {saving ? "Guardando..." : "Guardar cambios"}
         </button>

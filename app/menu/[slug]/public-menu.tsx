@@ -126,22 +126,41 @@ export default function PublicMenu({
       {featuredItems.length > 0 && (
         <div className="px-5 py-8 max-w-xl mx-auto">
           <h2 className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4">Destacados</h2>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-5">
             {featuredItems.map((item) => (
               <div
                 key={item.id}
-                className="rounded-xl border-2 px-5 py-4"
-                style={{ borderColor: "currentColor" }}
+                className="rounded-2xl overflow-hidden border"
+                style={{ borderColor: "currentColor", opacity: 1 }}
               >
-                <div className="flex items-baseline justify-between gap-3">
-                  <p className="text-lg font-bold">{item.name}</p>
-                  <span className="text-base font-bold shrink-0">
-                    {formatCurrency(item.price, tenant.currency)}
+                <div className="relative w-full aspect-[4/3] bg-black/10">
+                  {item.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center text-4xl font-bold opacity-20"
+                      style={{ backgroundColor: "currentColor" }}
+                    >
+                      <span style={{ color: tenant.themeBgColor }}>{item.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-black/75 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <Star size={12} className="fill-white" aria-hidden />
+                    Destacado
                   </span>
                 </div>
-                {item.description && (
-                  <p className="text-sm opacity-70 mt-1">{item.description}</p>
-                )}
+                <div className="px-5 py-4" style={{ backgroundColor: tenant.themeBgColor }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xl font-bold leading-tight">{item.name}</p>
+                    <span className="text-xl font-bold text-red-600 shrink-0">
+                      {formatCurrency(item.price, tenant.currency)}
+                    </span>
+                  </div>
+                  {item.description && (
+                    <p className="text-sm opacity-60 mt-2">{item.description}</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
