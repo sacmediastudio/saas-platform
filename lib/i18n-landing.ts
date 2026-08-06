@@ -74,9 +74,9 @@ export const translations = {
       perMonth: "/mo",
       start: "Start free",
       plans: [
-        { name: "Smartlink", price: "19.90", for: "Profiles and creators", points: ["Unlimited links", "WhatsApp and Instagram", "Map location", "Custom page"] },
+        { name: "Smartlink", price: "19.90", for: "Profiles and creators", points: ["Unlimited links", "WhatsApp and Instagram", "Map location", "Custom page"], highlight: false },
         { name: "Appointment businesses", price: "39.90", for: "Service businesses with a schedule", points: ["Online bookings", "Time-slot blocking", "Automatic confirmations", "Customer reviews"], highlight: true },
-        { name: "Restaurants", price: "49.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Reviews and local currency"] },
+        { name: "Restaurants", price: "49.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Reviews and local currency"], highlight: false },
       ],
       trust: ["No contracts or penalties", "Instant publishing", "Optimized for mobile"],
     },
@@ -178,9 +178,9 @@ export const translations = {
       perMonth: "/mes",
       start: "Empieza gratis",
       plans: [
-        { name: "Smartlink", price: "19.90", for: "Perfiles y creadores", points: ["Links ilimitados", "WhatsApp e Instagram", "Ubicación en mapa", "Página personalizada"] },
+        { name: "Smartlink", price: "19.90", for: "Perfiles y creadores", points: ["Links ilimitados", "WhatsApp e Instagram", "Ubicación en mapa", "Página personalizada"], highlight: false },
         { name: "Negocios de citas", price: "39.90", for: "Servicios con agenda", points: ["Reservas online", "Bloqueo de horarios", "Confirmaciones automáticas", "Reseñas de clientes"], highlight: true },
-        { name: "Restaurantes", price: "49.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Reseñas y moneda local"] },
+        { name: "Restaurantes", price: "49.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Reseñas y moneda local"], highlight: false },
       ],
       trust: ["Sin contratos ni penalizaciones", "Publicación inmediata", "Optimizado para móvil"],
     },
