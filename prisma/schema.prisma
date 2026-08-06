@@ -60,6 +60,7 @@ model Tenant {
   // Perfil público del negocio (usado en /menu/[slug] y /book/[slug])
   logoUrl       String?
   heroImageUrl  String?
+  heroTagline   String?
   contactEmail  String?
   contactPhone  String?
   address       String?
@@ -120,6 +121,7 @@ model MenuItem {
   price       Decimal        @db.Decimal(10, 2)
   imageUrl    String?
   status      MenuItemStatus @default(AVAILABLE)
+  featured    Boolean        @default(false)
   allergens   String[]       @default([])
   sortOrder   Int            @default(0)
   createdAt   DateTime       @default(now())

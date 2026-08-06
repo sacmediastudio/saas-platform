@@ -9,6 +9,7 @@ const updateSchema = z.object({
   name: z.string().min(1).optional(),
   logoUrl: z.string().min(1).nullable().optional(),
   heroImageUrl: z.string().min(1).nullable().optional(),
+  heroTagline: z.string().max(200).nullable().optional(),
   contactEmail: z.string().email().nullable().optional().or(z.literal("")),
   contactPhone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),

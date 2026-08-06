@@ -9,6 +9,7 @@ const createSchema = z.object({
   description: z.string().optional(),
   price: z.number().positive(),
   imageUrl: z.string().min(1).optional(), // acepta URL http(s) o data URI (foto subida por el usuario)
+  featured: z.boolean().default(false),
   allergens: z.array(z.string()).default([]),
 });
 

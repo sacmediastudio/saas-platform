@@ -111,6 +111,14 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       opciones de tipo de negocio, y cada dashboard solo muestra el
       módulo que le corresponde (con guard de redirección también por
       URL directa, igual que los otros dos módulos)
+- [x] Rediseño completo de `/menu/[slug]`: hero de pantalla completa con
+      foto principal, nombre y descripción corta (editables en Ajustes),
+      botón "Ver menú" que hace scroll suave; sección de "Destacados"
+      (hasta 2 platos marcados como tal desde el dashboard); nav de
+      categorías pegajosa (sticky) con scroll-spy que resalta la
+      categoría activa mientras el usuario hace scroll; lista de platos
+      sin fotos, con precio alineado a la derecha; botón flotante de
+      "Llamar" si el negocio tiene teléfono configurado
 
 ## Qué falta (siguiente iteración)
 

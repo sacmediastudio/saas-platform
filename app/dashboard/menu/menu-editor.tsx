@@ -12,6 +12,7 @@ interface MenuItem {
   price: number;
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   imageUrl: string | null;
+  featured: boolean;
 }
 interface Category {
   id: string;
@@ -219,7 +220,14 @@ export default function MenuEditor({
                         <div className="w-10 h-10 rounded-lg bg-neutral-800 shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{item.name}</p>
+                        <p className="font-medium text-sm flex items-center gap-1.5">
+                          {item.name}
+                          {item.featured && (
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 font-normal">
+                              ★ Destacado
+                            </span>
+                          )}
+                        </p>
                         {item.description && (
                           <p className="text-xs text-neutral-400 mt-0.5">{item.description}</p>
                         )}
@@ -301,6 +309,7 @@ function DishModal({
     price: item ? String(item.price) : "",
     categoryId: item?.categoryId ?? categories[0]?.id ?? "",
     imageUrl: (item?.imageUrl ?? null) as string | null,
+    featured: item?.featured ?? false,
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -347,6 +356,7 @@ function DishModal({
           description: form.description || undefined,
           price,
           imageUrl: form.imageUrl,
+          featured: form.featured,
           ...(mode === "create" ? { allergens: [] } : {}),
         }),
       });
@@ -441,6 +451,16 @@ function DishModal({
             className={inputClass}
           />
         </Field>
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.featured}
+            onChange={(e) => setForm({ ...form, featured: e.target.checked })}
+            className="w-4 h-4 accent-white"
+          />
+          Destacar este plato en el menú público
+        </label>
 
         <Field label="Descripción (opcional)">
           <textarea

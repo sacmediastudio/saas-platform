@@ -10,6 +10,7 @@ const updateSchema = z.object({
   status: z.enum(["AVAILABLE", "SOLD_OUT", "SEASONAL"]).optional(),
   categoryId: z.string().optional(),
   imageUrl: z.string().min(1).nullable().optional(),
+  featured: z.boolean().optional(),
 });
 
 async function findOwnedItem(tenantId: string, id: string) {
