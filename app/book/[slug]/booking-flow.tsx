@@ -24,12 +24,16 @@ export default function BookingFlow({
   currency,
   themeBgColor,
   themeTextColor,
+  buttonColor,
+  buttonTextColor,
 }: {
   tenantName: string;
   services: ServiceOption[];
   currency: string;
   themeBgColor: string;
   themeTextColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
 }) {
   const [step, setStep] = useState(1);
   const [service, setService] = useState<ServiceOption | null>(null);
@@ -106,9 +110,8 @@ export default function BookingFlow({
               <div
                 key={s.id}
                 onClick={() => setService(s)}
-                className={`flex justify-between items-center rounded-lg px-3 py-2.5 cursor-pointer border ${
-                  service?.id === s.id ? "border-neutral-900 border-[1.5px]" : "border-neutral-200"
-                }`}
+                className="flex justify-between items-center rounded-lg px-3 py-2.5 cursor-pointer border"
+                style={{ borderColor: service?.id === s.id ? buttonColor : "#e5e5e5", borderWidth: service?.id === s.id ? 1.5 : 1 }}
               >
                 <div>
                   <p className="text-sm font-medium">{s.name}</p>
@@ -121,7 +124,8 @@ export default function BookingFlow({
           <button
             disabled={!service}
             onClick={() => setStep(2)}
-            className="w-full py-2.5 rounded-lg mt-4 bg-neutral-900 text-white text-sm font-medium disabled:opacity-40"
+            className="w-full py-2.5 rounded-lg mt-4 text-sm font-medium disabled:opacity-40"
+            style={{ backgroundColor: buttonColor, color: buttonTextColor }}
           >
             Continuar
           </button>
@@ -136,9 +140,8 @@ export default function BookingFlow({
               <span
                 key={d.toISOString()}
                 onClick={() => setDay(d)}
-                className={`flex-1 text-center rounded-lg py-2 text-xs cursor-pointer border ${
-                  d.toDateString() === day.toDateString() ? "border-neutral-900 border-[1.5px]" : "border-neutral-200"
-                }`}
+                className="flex-1 text-center rounded-lg py-2 text-xs cursor-pointer border"
+                style={{ borderColor: d.toDateString() === day.toDateString() ? buttonColor : "#e5e5e5", borderWidth: d.toDateString() === day.toDateString() ? 1.5 : 1 }}
               >
                 {d.toLocaleDateString("es", { weekday: "short", day: "numeric" })}
               </span>
@@ -149,9 +152,8 @@ export default function BookingFlow({
               <span
                 key={h}
                 onClick={() => setTime(h)}
-                className={`text-center rounded-lg py-2 text-sm cursor-pointer border ${
-                  time === h ? "border-neutral-900 border-[1.5px]" : "border-neutral-200"
-                }`}
+                className="text-center rounded-lg py-2 text-sm cursor-pointer border"
+                style={{ borderColor: time === h ? buttonColor : "#e5e5e5", borderWidth: time === h ? 1.5 : 1 }}
               >
                 {h}
               </span>
@@ -164,7 +166,8 @@ export default function BookingFlow({
             <button
               disabled={!time}
               onClick={() => setStep(3)}
-              className="flex-1 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-medium disabled:opacity-40"
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40"
+              style={{ backgroundColor: buttonColor, color: buttonTextColor }}
             >
               Continuar
             </button>
@@ -202,7 +205,8 @@ export default function BookingFlow({
             <button
               disabled={!customer.name || !customer.email || status === "sending"}
               onClick={confirm}
-              className="flex-1 py-2.5 rounded-lg bg-neutral-900 text-white text-sm font-medium disabled:opacity-40"
+              className="flex-1 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40"
+              style={{ backgroundColor: buttonColor, color: buttonTextColor }}
             >
               {status === "sending" ? "Enviando..." : "Confirmar"}
             </button>

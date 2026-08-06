@@ -24,10 +24,10 @@ interface StaffOption {
 }
 
 const statusStyles: Record<BookingRow["status"], { label: string; className: string }> = {
-  PENDING: { label: "Pendiente", className: "bg-amber-950 text-amber-400" },
-  CONFIRMED: { label: "Confirmada", className: "bg-green-950 text-green-400" },
-  CANCELLED: { label: "Cancelada", className: "bg-red-950 text-red-400" },
-  COMPLETED: { label: "Completada", className: "bg-neutral-800 text-neutral-400" },
+  PENDING: { label: "Pendiente", className: "bg-amber-50 text-amber-700" },
+  CONFIRMED: { label: "Confirmada", className: "bg-green-50 text-green-700" },
+  CANCELLED: { label: "Cancelada", className: "bg-red-50 text-red-700" },
+  COMPLETED: { label: "Completada", className: "bg-[#F7F8F4] text-[#343233]/70" },
 };
 
 export default function BookingsView({ initialBookings, slug }: { initialBookings: BookingRow[]; slug: string }) {
@@ -85,46 +85,46 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
         <div className="flex gap-2">
           <button
             onClick={() => setModal("block")}
-            className="flex items-center gap-1.5 text-sm font-medium border border-neutral-700 px-3 h-9 rounded-lg hover:bg-neutral-800"
+            className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
           >
             <Lock size={15} aria-hidden />
             Bloquear horario
           </button>
           <button
             onClick={() => setModal("booking")}
-            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:bg-[#cfe600]"
+            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
           >
             <Plus size={16} aria-hidden />
             Nueva cita
           </button>
         </div>
       </div>
-      <p className="text-sm text-neutral-400 mb-6">
+      <p className="text-sm text-[#343233]/70 mb-6">
         {bookings.length} citas · {confirmedCount} confirmadas
       </p>
 
-      <div className="flex items-center gap-2 bg-neutral-800/60 rounded-lg px-3 py-2 mb-6">
-        <span className="text-sm text-neutral-300 truncate flex-1">{publicUrl}</span>
-        <button onClick={copyLink} className="text-neutral-400 hover:text-neutral-100 shrink-0">
+      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
+        <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
+        <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
           {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         </button>
       </div>
 
       {bookings.length === 0 && (
-        <p className="text-sm text-neutral-500">No hay citas agendadas para hoy.</p>
+        <p className="text-sm text-[#343233]/60">No hay citas agendadas para hoy.</p>
       )}
 
-      <div className="border border-neutral-800 rounded-lg overflow-hidden divide-y divide-neutral-800">
+      <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
         {bookings.map((b) => {
           const s = statusStyles[b.status];
           return (
             <div key={b.id} className="flex items-center gap-3 px-3.5 py-2.5">
-              <span className="text-sm text-neutral-400 w-14">
+              <span className="text-sm text-[#343233]/70 w-14">
                 {new Date(b.datetime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
               </span>
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-sm">{b.serviceName}</p>
-                <p className="text-xs text-neutral-400 mt-0.5">
+                <p className="text-xs text-[#343233]/70 mt-0.5">
                   {b.customerName}
                   {b.staffName ? ` · con ${b.staffName}` : ""}
                 </p>
@@ -134,7 +134,7 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
                 <button
                   onClick={() => updateStatus(b.id, "CONFIRMED")}
                   disabled={updating === b.id}
-                  className="text-xs px-2.5 py-1 rounded-md border border-neutral-700 hover:bg-neutral-800"
+                  className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
                 >
                   Confirmar
                 </button>
@@ -143,7 +143,7 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
                 <button
                   onClick={() => updateStatus(b.id, "CANCELLED")}
                   disabled={updating === b.id}
-                  className="text-xs px-2.5 py-1 rounded-md border border-neutral-700 hover:bg-neutral-800"
+                  className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
                 >
                   Cancelar
                 </button>
@@ -319,7 +319,7 @@ function NewBookingModal({
           />
         </Field>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <ModalActions saving={saving} onClose={onClose} submitLabel="Crear cita" />
       </form>
@@ -383,12 +383,12 @@ function BlockScheduleModal({ staff, onClose }: { staff: StaffOption[]; onClose:
   if (done) {
     return (
       <ModalShell title="Horario bloqueado" onClose={onClose}>
-        <p className="text-sm text-neutral-400 mb-4">
+        <p className="text-sm text-[#343233]/70 mb-4">
           Ese horario ya no aparecerá disponible para nuevas reservas.
         </p>
         <button
           onClick={onClose}
-          className="w-full py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600]"
+          className="w-full py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105"
         >
           Listo
         </button>
@@ -456,7 +456,7 @@ function BlockScheduleModal({ staff, onClose }: { staff: StaffOption[]; onClose:
           />
         </Field>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <ModalActions saving={saving} onClose={onClose} submitLabel="Bloquear" />
       </form>
@@ -465,12 +465,12 @@ function BlockScheduleModal({ staff, onClose }: { staff: StaffOption[]; onClose:
 }
 
 const inputClass =
-  "w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-neutral-500";
+  "w-full bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1 flex-1">
-      <span className="text-xs text-neutral-400">{label}</span>
+      <span className="text-xs text-[#343233]/70">{label}</span>
       {children}
     </label>
   );
@@ -490,14 +490,14 @@ function ModalActions({
       <button
         type="button"
         onClick={onClose}
-        className="flex-1 py-2 rounded-lg border border-neutral-700 text-sm hover:bg-neutral-800"
+        className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
       >
         Cancelar
       </button>
       <button
         type="submit"
         disabled={saving}
-        className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600] disabled:opacity-50"
+        className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
       >
         {saving ? "Guardando..." : submitLabel}
       </button>
@@ -516,10 +516,10 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-sm p-5">
+      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-neutral-500 hover:text-neutral-200">
+          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>

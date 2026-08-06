@@ -20,9 +20,9 @@ interface Category {
 }
 
 const statusStyles: Record<MenuItem["status"], { label: string; className: string }> = {
-  AVAILABLE: { label: "Disponible", className: "bg-green-950 text-green-400" },
-  SOLD_OUT: { label: "Agotado", className: "bg-red-950 text-red-400" },
-  SEASONAL: { label: "Temporada", className: "bg-amber-950 text-amber-400" },
+  AVAILABLE: { label: "Disponible", className: "bg-green-50 text-green-700" },
+  SOLD_OUT: { label: "Agotado", className: "bg-red-50 text-red-700" },
+  SEASONAL: { label: "Temporada", className: "bg-amber-50 text-amber-700" },
 };
 
 // Reduce cualquier foto a un JPEG pequeño en base64 antes de subirla.
@@ -137,12 +137,12 @@ export default function MenuEditor({
       <div className="flex items-start justify-between mb-6">
         <div>
           <h1 className="text-xl font-semibold">Tu menú</h1>
-          <p className="text-sm text-neutral-400 mt-1">Gestiona platos, precios y disponibilidad</p>
+          <p className="text-sm text-[#343233]/70 mt-1">Gestiona platos, precios y disponibilidad</p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => setCategoryModal({ mode: "create" })}
-            className="flex items-center gap-1.5 text-sm font-medium border border-neutral-700 px-3 h-9 rounded-lg hover:bg-neutral-800"
+            className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
           >
             <Plus size={16} aria-hidden />
             Nueva categoría
@@ -150,7 +150,7 @@ export default function MenuEditor({
           <button
             onClick={() => setDishModal({ mode: "create" })}
             disabled={categories.length === 0}
-            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:bg-[#cfe600] disabled:opacity-40"
+            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105 disabled:opacity-40"
           >
             <Plus size={16} aria-hidden />
             Agregar plato
@@ -158,9 +158,9 @@ export default function MenuEditor({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 bg-neutral-800/60 rounded-lg px-3 py-2 mb-6">
-        <span className="text-sm text-neutral-300 truncate flex-1">{publicUrl}</span>
-        <button onClick={copyLink} className="text-neutral-400 hover:text-neutral-100 shrink-0">
+      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
+        <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
+        <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
           {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         </button>
       </div>
@@ -172,7 +172,7 @@ export default function MenuEditor({
       </div>
 
       {categories.length === 0 && (
-        <p className="text-sm text-neutral-500 mb-4">
+        <p className="text-sm text-[#343233]/60 mb-4">
           Todavía no tienes categorías. Crea la primera para poder agregar platos.
         </p>
       )}
@@ -182,19 +182,19 @@ export default function MenuEditor({
         return (
           <div key={cat.id} className="mb-6">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-medium text-neutral-400">{cat.name}</h2>
+              <h2 className="text-sm font-medium text-[#343233]/70">{cat.name}</h2>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCategoryModal({ mode: "edit", category: cat })}
                   aria-label={`Renombrar ${cat.name}`}
-                  className="text-neutral-500 hover:text-neutral-200"
+                  className="text-[#343233]/60 hover:text-[#002D09]"
                 >
                   <Pencil size={13} aria-hidden />
                 </button>
                 <button
                   onClick={() => deleteCategory(cat)}
                   aria-label={`Borrar ${cat.name}`}
-                  className="text-neutral-500 hover:text-red-400"
+                  className="text-[#343233]/60 hover:text-red-600"
                 >
                   <Trash2 size={13} aria-hidden />
                 </button>
@@ -202,9 +202,9 @@ export default function MenuEditor({
             </div>
 
             {catItems.length === 0 ? (
-              <p className="text-xs text-neutral-600">Sin platos todavía.</p>
+              <p className="text-xs text-[#343233]/40">Sin platos todavía.</p>
             ) : (
-              <div className="border border-neutral-800 rounded-lg overflow-hidden divide-y divide-neutral-800">
+              <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
                 {catItems.map((item) => {
                   const s = statusStyles[item.status];
                   return (
@@ -217,19 +217,19 @@ export default function MenuEditor({
                           className="w-10 h-10 rounded-lg object-cover shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-neutral-800 shrink-0" />
+                        <div className="w-10 h-10 rounded-lg bg-[#F7F8F4] shrink-0" />
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm flex items-center gap-1.5">
                           {item.name}
                           {item.featured && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950 text-amber-400 font-normal">
+                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-normal">
                               ★ Destacado
                             </span>
                           )}
                         </p>
                         {item.description && (
-                          <p className="text-xs text-neutral-400 mt-0.5">{item.description}</p>
+                          <p className="text-xs text-[#343233]/70 mt-0.5">{item.description}</p>
                         )}
                       </div>
                       <span className="text-sm font-medium">{formatCurrency(item.price, currency)}</span>
@@ -243,7 +243,7 @@ export default function MenuEditor({
                       <button
                         onClick={() => setDishModal({ mode: "edit", item })}
                         aria-label={`Editar ${item.name}`}
-                        className="text-neutral-500 hover:text-neutral-200"
+                        className="text-[#343233]/60 hover:text-[#002D09]"
                       >
                         <Pencil size={15} aria-hidden />
                       </button>
@@ -251,7 +251,7 @@ export default function MenuEditor({
                         onClick={() => deleteDish(item)}
                         disabled={saving === item.id}
                         aria-label={`Borrar ${item.name}`}
-                        className="text-neutral-500 hover:text-red-400"
+                        className="text-[#343233]/60 hover:text-red-600"
                       >
                         <Trash2 size={15} aria-hidden />
                       </button>
@@ -392,12 +392,12 @@ function DishModal({
               // eslint-disable-next-line @next/next/no-img-element
               <img src={form.imageUrl} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
             ) : (
-              <div className="w-14 h-14 rounded-lg bg-neutral-800 flex items-center justify-center shrink-0 text-neutral-600">
+              <div className="w-14 h-14 rounded-lg bg-[#F7F8F4] flex items-center justify-center shrink-0 text-[#343233]/40">
                 <ImageIcon size={20} aria-hidden />
               </div>
             )}
             <div className="flex flex-col gap-1">
-              <label className="text-xs px-2.5 py-1.5 rounded-md border border-neutral-700 hover:bg-neutral-800 cursor-pointer w-fit">
+              <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer w-fit">
                 {processingImage ? "Procesando..." : "Subir foto"}
                 <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
@@ -405,7 +405,7 @@ function DishModal({
                 <button
                   type="button"
                   onClick={() => setForm((f) => ({ ...f, imageUrl: null }))}
-                  className="text-xs text-neutral-500 hover:text-red-400 text-left"
+                  className="text-xs text-[#343233]/60 hover:text-red-600 text-left"
                 >
                   Quitar foto
                 </button>
@@ -472,7 +472,7 @@ function DishModal({
           />
         </Field>
 
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <ModalActions
           saving={saving || processingImage}
@@ -549,7 +549,7 @@ function CategoryModal({
             autoFocus
           />
         </Field>
-        {error && <p className="text-red-400 text-sm">{error}</p>}
+        {error && <p className="text-red-600 text-sm">{error}</p>}
         <ModalActions saving={saving} onClose={onClose} submitLabel={mode === "create" ? "Crear" : "Guardar"} />
       </form>
     </ModalShell>
@@ -557,12 +557,12 @@ function CategoryModal({
 }
 
 const inputClass =
-  "w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-neutral-500";
+  "w-full bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40";
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-xs text-neutral-400">{label}</span>
+      <span className="text-xs text-[#343233]/70">{label}</span>
       {children}
     </label>
   );
@@ -582,14 +582,14 @@ function ModalActions({
       <button
         type="button"
         onClick={onClose}
-        className="flex-1 py-2 rounded-lg border border-neutral-700 text-sm hover:bg-neutral-800"
+        className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
       >
         Cancelar
       </button>
       <button
         type="submit"
         disabled={saving}
-        className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600] disabled:opacity-50"
+        className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
       >
         {saving ? "Guardando..." : submitLabel}
       </button>
@@ -608,10 +608,10 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-neutral-500 hover:text-neutral-200">
+          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -623,8 +623,8 @@ function ModalShell({
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="bg-neutral-800/60 rounded-lg p-4">
-      <p className="text-sm text-neutral-400">{label}</p>
+    <div className="bg-[#F7F8F4] rounded-lg p-4">
+      <p className="text-sm text-[#343233]/70">{label}</p>
       <p className="text-2xl font-semibold mt-1">{value}</p>
     </div>
   );

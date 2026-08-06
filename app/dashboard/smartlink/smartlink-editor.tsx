@@ -115,29 +115,29 @@ export default function SmartLinkEditor({
         <h1 className="text-xl font-semibold">Tu Smartlink</h1>
         <button
           onClick={() => setModal({ mode: "create" })}
-          className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:bg-[#cfe600]"
+          className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
         >
           <Plus size={16} aria-hidden />
           Agregar link
         </button>
       </div>
-      <p className="text-sm text-neutral-400 mb-4">
+      <p className="text-sm text-[#343233]/70 mb-4">
         Foto y nombre se editan en{" "}
-        <Link href="/dashboard/settings" className="underline hover:text-neutral-200">
+        <Link href="/dashboard/settings" className="underline hover:text-[#002D09]">
           Ajustes
         </Link>
         .
       </p>
 
-      <div className="flex items-center gap-2 bg-neutral-800/60 rounded-lg px-3 py-2 mb-6">
-        <span className="text-sm text-neutral-300 truncate flex-1">{publicUrl}</span>
-        <button onClick={copyLink} className="text-neutral-400 hover:text-neutral-100 shrink-0">
+      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
+        <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
+        <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
           {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         </button>
       </div>
 
       {sortedItems.length === 0 && (
-        <p className="text-sm text-neutral-500">Todavía no tienes links. Agrega el primero.</p>
+        <p className="text-sm text-[#343233]/60">Todavía no tienes links. Agrega el primero.</p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -147,19 +147,19 @@ export default function SmartLinkEditor({
           return (
             <div
               key={item.id}
-              className="flex items-center gap-3 border border-neutral-800 rounded-lg px-3.5 py-2.5"
+              className="flex items-center gap-3 border border-[#002D09]/10 rounded-lg px-3.5 py-2.5"
             >
-              <Icon size={16} className="text-neutral-400 shrink-0" aria-hidden />
+              <Icon size={16} className="text-[#343233]/70 shrink-0" aria-hidden />
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{item.label}</p>
-                <p className="text-xs text-neutral-500 truncate">{meta.label}</p>
+                <p className="text-xs text-[#343233]/60 truncate">{meta.label}</p>
               </div>
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => move(item, -1)}
                   disabled={idx === 0}
                   aria-label="Mover arriba"
-                  className="text-neutral-500 hover:text-neutral-200 disabled:opacity-30"
+                  className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
                 >
                   <ArrowUp size={14} aria-hidden />
                 </button>
@@ -167,14 +167,14 @@ export default function SmartLinkEditor({
                   onClick={() => move(item, 1)}
                   disabled={idx === sortedItems.length - 1}
                   aria-label="Mover abajo"
-                  className="text-neutral-500 hover:text-neutral-200 disabled:opacity-30"
+                  className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
                 >
                   <ArrowDown size={14} aria-hidden />
                 </button>
                 <button
                   onClick={() => setModal({ mode: "edit", item })}
                   aria-label={`Editar ${item.label}`}
-                  className="text-neutral-500 hover:text-neutral-200 ml-1"
+                  className="text-[#343233]/60 hover:text-[#002D09] ml-1"
                 >
                   <Pencil size={14} aria-hidden />
                 </button>
@@ -182,7 +182,7 @@ export default function SmartLinkEditor({
                   onClick={() => deleteItem(item)}
                   disabled={busy === item.id}
                   aria-label={`Borrar ${item.label}`}
-                  className="text-neutral-500 hover:text-red-400"
+                  className="text-[#343233]/60 hover:text-red-600"
                 >
                   <Trash2 size={14} aria-hidden />
                 </button>
@@ -263,10 +263,10 @@ function LinkModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-neutral-900 border border-neutral-800 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{mode === "create" ? "Agregar link" : "Editar link"}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-neutral-500 hover:text-neutral-200">
+          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -274,7 +274,7 @@ function LinkModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {mode === "create" && (
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-neutral-400">Tipo</span>
+              <span className="text-xs text-[#343233]/70">Tipo</span>
               <select
                 value={type}
                 onChange={(e) => {
@@ -294,12 +294,12 @@ function LinkModal({
           )}
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-neutral-400">Nombre a mostrar</span>
+            <span className="text-xs text-[#343233]/70">Nombre a mostrar</span>
             <input value={label} onChange={(e) => setLabel(e.target.value)} required className={inputClass} />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-neutral-400">{meta.helper}</span>
+            <span className="text-xs text-[#343233]/70">{meta.helper}</span>
             <input
               value={value}
               onChange={(e) => setValue(e.target.value)}
@@ -309,20 +309,20 @@ function LinkModal({
             />
           </label>
 
-          {error && <p className="text-red-400 text-sm">{error}</p>}
+          {error && <p className="text-red-600 text-sm">{error}</p>}
 
           <div className="flex gap-2 mt-1">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2 rounded-lg border border-neutral-700 text-sm hover:bg-neutral-800"
+              className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:bg-[#cfe600] disabled:opacity-50"
+              className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
             >
               {saving ? "Guardando..." : mode === "create" ? "Agregar" : "Guardar"}
             </button>
@@ -334,4 +334,4 @@ function LinkModal({
 }
 
 const inputClass =
-  "w-full bg-neutral-800 border border-neutral-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-neutral-500";
+  "w-full bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40";

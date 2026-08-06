@@ -30,6 +30,8 @@ interface TenantData {
   currency: string;
   themeBgColor: string;
   themeTextColor: string;
+  buttonColor: string;
+  buttonTextColor: string;
 }
 
 export default function PublicMenu({
@@ -114,7 +116,8 @@ export default function PublicMenu({
           )}
           <button
             onClick={scrollToMenu}
-            className="flex items-center gap-1.5 bg-white text-neutral-900 text-sm font-semibold px-6 py-3 rounded-full hover:bg-neutral-100 transition-colors"
+            className="flex items-center gap-1.5 text-sm font-semibold px-6 py-3 rounded-full hover:brightness-105 transition-all"
+            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
           >
             Ver menú
             <ChevronDown size={16} aria-hidden />
@@ -184,13 +187,13 @@ export default function PublicMenu({
               onClick={() => scrollToCategory(cat.id)}
               className="text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-opacity"
               style={{
-                backgroundColor: activeCategory === cat.id ? "currentColor" : "transparent",
+                backgroundColor: activeCategory === cat.id ? tenant.buttonColor : "transparent",
                 opacity: activeCategory === cat.id ? 1 : 0.6,
               }}
             >
               <span
                 style={{
-                  color: activeCategory === cat.id ? tenant.themeBgColor : tenant.themeTextColor,
+                  color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
                 }}
               >
                 {cat.name}
@@ -253,8 +256,8 @@ export default function PublicMenu({
           )}
           <a
             href={`/review/${tenant.slug}`}
-            className="flex items-center justify-center gap-1.5 w-full py-2.5 text-sm font-medium border rounded-lg opacity-90 hover:opacity-100"
-            style={{ borderColor: "currentColor" }}
+            className="flex items-center justify-center gap-1.5 w-full py-2.5 text-sm font-semibold rounded-full hover:brightness-105 transition-all"
+            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
           >
             <Star size={14} aria-hidden />
             Dejar una reseña
@@ -285,7 +288,8 @@ export default function PublicMenu({
       {tenant.contactPhone && (
         <a
           href={`tel:${tenant.contactPhone.replace(/\s+/g, "")}`}
-          className="fixed bottom-5 right-5 z-30 flex items-center gap-2 bg-white text-neutral-900 text-sm font-semibold px-4 py-3 rounded-full shadow-lg hover:bg-neutral-100"
+          className="fixed bottom-5 right-5 z-30 flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full shadow-lg hover:brightness-105 transition-all"
+          style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
         >
           <Phone size={15} aria-hidden />
           Llamar

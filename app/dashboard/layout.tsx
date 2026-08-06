@@ -4,6 +4,8 @@ import { UtensilsCrossed, Calendar, Link2, Star, Settings } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 
+const LOGO = "/logo.svg";
+
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await getSession();
   if (!session) redirect("/login");
@@ -11,9 +13,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
 
-  // El nav solo muestra el módulo que corresponde al tipo de negocio:
-  // un restaurante ve "Menú" y no "Citas"; un negocio de servicios ve
-  // "Citas" y no "Menú". Reseñas, Ajustes son comunes a ambos.
+  // El nav solo muestra el módulo que corresponde al tipo de negocio.
   const navItems = [
     tenant.businessType === "RESTAURANT" && {
       href: "/dashboard/menu",
@@ -35,23 +35,29 @@ export default async function DashboardLayout({ children }: { children: React.Re
   ].filter(Boolean) as { href: string; label: string; icon: typeof Star }[];
 
   return (
-    <div className="min-h-screen bg-neutral-900 text-neutral-100 grid grid-cols-[220px_1fr]">
-      <aside className="border-r border-neutral-800 p-4 flex flex-col gap-1">
-        <div className="flex items-center gap-2 px-2 pb-5">
+    <div className="min-h-screen bg-white text-[#002D09] grid grid-cols-[240px_1fr]">
+      <aside className="border-r border-[#002D09]/[0.08] p-5 flex flex-col gap-6">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={LOGO} alt="Zertoo" className="h-7 w-auto" />
+
+        <div className="flex items-center gap-2.5 px-1">
           {tenant.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={tenant.logoUrl} alt="" className="w-7 h-7 rounded-lg object-cover shrink-0" />
+            <img src={tenant.logoUrl} alt="" className="w-8 h-8 rounded-lg object-cover shrink-0" />
           ) : (
-            <div className="w-7 h-7 rounded-lg bg-white shrink-0" />
+            <div className="w-8 h-8 rounded-lg bg-[#F7F8F4] flex items-center justify-center shrink-0 text-xs font-bold">
+              {tenant.name.charAt(0).toUpperCase()}
+            </div>
           )}
-          <span className="text-sm font-medium">{tenant.name}</span>
+          <span className="text-sm font-semibold truncate">{tenant.name}</span>
         </div>
+
         <nav className="flex flex-col gap-0.5">
           {navItems.map(({ href, label, icon: Icon }) => (
             <Link
               key={href}
               href={href}
-              className="flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm text-neutral-400 hover:bg-neutral-800 hover:text-neutral-100 aria-[current=page]:bg-neutral-800 aria-[current=page]:text-neutral-100 transition-colors"
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#343233] hover:bg-[#F7F8F4] hover:text-[#002D09] aria-[current=page]:bg-[#002D09] aria-[current=page]:text-white transition-colors"
             >
               <Icon size={16} aria-hidden />
               {label}

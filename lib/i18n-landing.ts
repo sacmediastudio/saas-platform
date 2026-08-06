@@ -1,0 +1,213 @@
+export type Lang = "en" | "es";
+
+export const translations = {
+  en: {
+    nav: { products: "Products", hardware: "NFC Hardware", pricing: "Pricing", faq: "FAQ", viewPlans: "View plans", start: "Start free" },
+    hero: {
+      badge: "Digital menu, appointments and smartlink in one platform",
+      titlePrefix: "Your business, online in",
+      titleHighlight: "minutes",
+      subtitle:
+        "Digital menu for restaurants, an appointment system for service businesses, or a link-in-bio page to show everything you offer. Pick yours and get started today.",
+      ctaPrimary: "Start free",
+      ctaSecondary: "View plans",
+      note: "14-day free trial. No credit card required.",
+      publishedIn: "Published in",
+      panelUrl: "panel.zertoo.com",
+    },
+    ticker: ["Digital menu", "Online bookings", "Smartlink", "NFC hardware", "Reviews", "Custom domain", "Local payments"],
+    products: {
+      title: "One product, three ways to use it",
+      subtitle:
+        "Not every business needs the same thing. That's why Zertoo offers three different experiences built on the same platform.",
+      moreInfo: "Learn more",
+      items: [
+        {
+          id: "restaurants",
+          name: "Restaurants",
+          price: "49.90",
+          desc: "Your restaurant's menu, always up to date.",
+          benefits: ["Photos for every dish", "Unlimited categories", "Sold-out items", "Highlight your dishes", "Custom page", "Customer reviews", "Local currency"],
+        },
+        {
+          id: "appointments",
+          name: "Appointment businesses",
+          price: "39.90",
+          desc: "Your schedule, organized — no calls or missed messages.",
+          benefits: ["Real-time schedule", "Online bookings", "Time-slot blocking", "Automatic confirmations", "No phone calls", "Customer reviews"],
+        },
+        {
+          id: "smartlink",
+          name: "Smartlink",
+          price: "19.90",
+          desc: "Everything you offer, in one link, ready to share.",
+          benefits: ["Unlimited links", "Direct WhatsApp", "Instagram and social", "Map location", "Custom page"],
+        },
+      ],
+    },
+    hardware: {
+      badge: "Hardware",
+      title: "Tap the phone. That's it.",
+      subtitle: "Optional accessories that connect the physical world to your Zertoo page in a single gesture.",
+      consult: "Ask about pricing",
+      items: [
+        {
+          title: "NFC Stand",
+          eyebrow: "For tables and counters",
+          copy: "Your customer taps their phone on the stand and the menu opens by itself. No apps, no downloads, no waiting for someone to bring the menu.",
+          bullets: ["Activates on tap", "Works with iPhone and Android", "Includes backup QR code", "Non-slip base, matte finish"],
+          price: "From $24.90",
+        },
+        {
+          title: "NFC Card",
+          eyebrow: "For introducing yourself in person",
+          copy: "A smart matte-black business card. One tap and the other person instantly sees your smartlink, your socials and your WhatsApp.",
+          bullets: ["One tap shares your whole profile", "Matte-black PVC with engraving", "Reprogrammable when your link changes", "Never wears out or expires"],
+          price: "From $14.90",
+        },
+      ],
+    },
+    pricing: {
+      title: "Clear pricing, no surprises",
+      subtitle: "One plan per business, billed monthly, cancel anytime. All plans include a 14-day free trial.",
+      mostChosen: "Most popular",
+      perMonth: "/mo",
+      start: "Start free",
+      plans: [
+        { name: "Smartlink", price: "19.90", for: "Profiles and creators", points: ["Unlimited links", "WhatsApp and Instagram", "Map location", "Custom page"] },
+        { name: "Appointment businesses", price: "39.90", for: "Service businesses with a schedule", points: ["Online bookings", "Time-slot blocking", "Automatic confirmations", "Customer reviews"], highlight: true },
+        { name: "Restaurants", price: "49.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Reviews and local currency"] },
+      ],
+      trust: ["No contracts or penalties", "Instant publishing", "Optimized for mobile"],
+    },
+    faq: {
+      title: "Frequently asked questions",
+      subtitle: "Still have a question? Write to us at hola@zertoo.com and we'll reply the same day.",
+      items: [
+        { q: "Do I need technical knowledge to get started?", a: "No. You create your account, choose your business type and fill in your details. In under ten minutes your page is live and ready to share." },
+        { q: "What does the 14-day trial include?", a: "Full access to every feature of the plan you choose, with no limits and no credit card required. If you don't continue, your page simply pauses." },
+        { q: "Can I change plans later?", a: "Yes. You can upgrade or downgrade whenever you want from your dashboard. The change applies on your next billing cycle." },
+        { q: "Is the NFC hardware required?", a: "No, it's an optional add-on. Zertoo works with just a link or a QR code — the NFC stand and card just make the in-person experience faster." },
+        { q: "Can I use my own domain?", a: "Yes. You can connect your own domain or keep your zertoo.com/yourbusiness address, included in every plan." },
+      ],
+    },
+    ctaBand: {
+      title: "Start today and share your link this afternoon",
+      subtitle: "14-day free trial. No credit card required.",
+      primary: "Start free",
+      secondary: "See all three products",
+    },
+    footer: {
+      tagline: "Digitalize your business with a menu, a schedule, or a smartlink.",
+      contact: "Contact",
+      products: "Products",
+      pricing: "Pricing",
+      faq: "FAQ",
+      copyright: "All rights reserved.",
+    },
+  },
+  es: {
+    nav: { products: "Productos", hardware: "Hardware NFC", pricing: "Precios", faq: "Preguntas", viewPlans: "Ver planes", start: "Empieza gratis" },
+    hero: {
+      badge: "Menú digital, citas y smartlink en una plataforma",
+      titlePrefix: "Tu negocio, listo en internet en",
+      titleHighlight: "minutos",
+      subtitle:
+        "Menú digital para restaurantes, sistema de citas para negocios de servicios, o un perfil de enlaces para mostrar todo lo tuyo en un solo link. Elige el tuyo y empieza hoy.",
+      ctaPrimary: "Empieza gratis",
+      ctaSecondary: "Ver planes",
+      note: "14 días gratis. Sin tarjeta de crédito.",
+      publishedIn: "Publicado en",
+      panelUrl: "panel.zertoo.com",
+    },
+    ticker: ["Menú digital", "Reservas online", "Smartlink", "Hardware NFC", "Reseñas", "Dominio propio", "Pagos locales"],
+    products: {
+      title: "Un producto, tres formas de usarlo",
+      subtitle: "No todos los negocios necesitan lo mismo. Por eso Zertoo ofrece tres experiencias diferentes construidas sobre la misma plataforma.",
+      moreInfo: "Más información",
+      items: [
+        {
+          id: "restaurantes",
+          name: "Restaurantes",
+          price: "49.90",
+          desc: "El menú de tu restaurante, siempre actualizado.",
+          benefits: ["Fotos de cada plato", "Categorías ilimitadas", "Productos agotados", "Destaca tus platos", "Página personalizada", "Reseñas de clientes", "Moneda local"],
+        },
+        {
+          id: "citas",
+          name: "Negocios de citas",
+          price: "39.90",
+          desc: "Tu agenda ordenada, sin llamadas ni mensajes perdidos.",
+          benefits: ["Agenda en tiempo real", "Reservas online", "Bloqueo de horarios", "Confirmaciones automáticas", "Sin llamadas", "Reseñas de clientes"],
+        },
+        {
+          id: "smartlink",
+          name: "Smartlink",
+          price: "19.90",
+          desc: "Todo lo tuyo en un solo enlace, listo para compartir.",
+          benefits: ["Links ilimitados", "WhatsApp directo", "Instagram y redes", "Ubicación en mapa", "Página personalizada"],
+        },
+      ],
+    },
+    hardware: {
+      badge: "Hardware",
+      title: "Acerca el teléfono. Y ya está.",
+      subtitle: "Accesorios opcionales que conectan el mundo físico con tu página de Zertoo en un solo gesto.",
+      consult: "Consultar",
+      items: [
+        {
+          title: "Stand NFC",
+          eyebrow: "Para mesas y mostrador",
+          copy: "Tu cliente acerca el teléfono al stand y el menú se abre solo. Sin apps, sin descargar nada, sin esperar a que alguien traiga la carta.",
+          bullets: ["Se activa al acercar el teléfono", "Compatible con iPhone y Android", "Incluye código QR de respaldo", "Base antideslizante, acabado mate"],
+          price: "Desde $24.90",
+        },
+        {
+          title: "Tarjeta NFC",
+          eyebrow: "Para presentarte en persona",
+          copy: "Una tarjeta de presentación inteligente en negro mate. Un toque y la otra persona ve tu smartlink, tus redes y tu WhatsApp al instante.",
+          bullets: ["Un toque comparte todo tu perfil", "PVC negro mate con grabado", "Reprogramable cuando cambies de link", "No se gasta ni caduca"],
+          price: "Desde $14.90",
+        },
+      ],
+    },
+    pricing: {
+      title: "Precios claros, sin sorpresas",
+      subtitle: "Un solo plan por negocio, facturación mensual y cancelación cuando quieras. Todos incluyen 14 días gratis.",
+      mostChosen: "Más elegido",
+      perMonth: "/mes",
+      start: "Empieza gratis",
+      plans: [
+        { name: "Smartlink", price: "19.90", for: "Perfiles y creadores", points: ["Links ilimitados", "WhatsApp e Instagram", "Ubicación en mapa", "Página personalizada"] },
+        { name: "Negocios de citas", price: "39.90", for: "Servicios con agenda", points: ["Reservas online", "Bloqueo de horarios", "Confirmaciones automáticas", "Reseñas de clientes"], highlight: true },
+        { name: "Restaurantes", price: "49.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Reseñas y moneda local"] },
+      ],
+      trust: ["Sin contratos ni penalizaciones", "Publicación inmediata", "Optimizado para móvil"],
+    },
+    faq: {
+      title: "Preguntas frecuentes",
+      subtitle: "¿Te queda alguna duda? Escríbenos a hola@zertoo.com y te respondemos el mismo día.",
+      items: [
+        { q: "¿Necesito conocimientos técnicos para empezar?", a: "No. Creas tu cuenta, eliges tu tipo de negocio y completas tu información. En menos de diez minutos tu página está publicada y lista para compartir." },
+        { q: "¿Qué incluye la prueba de 14 días?", a: "Acceso completo a todas las funciones del plan que elijas, sin límites y sin pedirte tarjeta de crédito. Si no continúas, tu página simplemente se pausa." },
+        { q: "¿Puedo cambiar de plan más adelante?", a: "Sí. Puedes subir o bajar de plan cuando quieras desde tu panel. El cambio se aplica en el siguiente ciclo de facturación." },
+        { q: "¿El hardware NFC es obligatorio?", a: "No, es un complemento. Zertoo funciona con un enlace o un código QR; el stand y la tarjeta NFC solo hacen la experiencia más inmediata en persona." },
+        { q: "¿Puedo usar mi propio dominio?", a: "Sí. Puedes conectar tu dominio propio o quedarte con tu dirección zertoo.com/tunegocio incluida en todos los planes." },
+      ],
+    },
+    ctaBand: {
+      title: "Empieza hoy y comparte tu link esta misma tarde",
+      subtitle: "14 días gratis. Sin tarjeta de crédito.",
+      primary: "Empieza gratis",
+      secondary: "Ver los tres productos",
+    },
+    footer: {
+      tagline: "Digitaliza tu negocio con un menú, una agenda o un smartlink.",
+      contact: "Contacto",
+      products: "Productos",
+      pricing: "Precios",
+      faq: "Preguntas",
+      copyright: "Todos los derechos reservados.",
+    },
+  },
+} as const;

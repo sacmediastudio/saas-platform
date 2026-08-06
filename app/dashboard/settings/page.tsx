@@ -13,6 +13,7 @@ export default async function SettingsPage() {
       tenant={{
         name: tenant.name,
         slug: tenant.slug,
+        businessType: tenant.businessType,
         logoUrl: tenant.logoUrl,
         heroImageUrl: tenant.heroImageUrl,
         heroTagline: tenant.heroTagline,
@@ -22,6 +23,8 @@ export default async function SettingsPage() {
         currency: tenant.currency,
         themeBgColor: tenant.themeBgColor,
         themeTextColor: tenant.themeTextColor,
+        buttonColor: tenant.buttonColor,
+        buttonTextColor: tenant.buttonTextColor,
       }}
     />
   );

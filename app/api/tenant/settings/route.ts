@@ -22,6 +22,14 @@ const updateSchema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
     .optional(),
+  buttonColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+    .optional(),
+  buttonTextColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+    .optional(),
 });
 
 export async function GET() {

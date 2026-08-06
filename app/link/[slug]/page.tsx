@@ -46,50 +46,71 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
     orderBy: { sortOrder: "asc" },
   });
 
+  const hasBgImage = Boolean(tenant.heroImageUrl);
+
   return (
-    <div
-      className="max-w-sm mx-auto min-h-screen px-6 pt-14 pb-10 flex flex-col items-center"
-      style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor }}
-    >
-      {tenant.logoUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={tenant.logoUrl}
-          alt={tenant.name}
-          className="w-24 h-24 rounded-full object-cover mb-4"
-        />
-      ) : (
-        <div
-          className="w-24 h-24 rounded-full mb-4 flex items-center justify-center text-2xl font-semibold"
-          style={{ backgroundColor: tenant.themeTextColor, color: tenant.themeBgColor }}
-        >
-          {tenant.name.charAt(0).toUpperCase()}
-        </div>
+    <div className="relative min-h-screen" style={{ backgroundColor: tenant.themeBgColor }}>
+      {hasBgImage && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={tenant.heroImageUrl!}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Overlay oscuro para que el texto siga siendo legible sobre
+              cualquier foto de fondo, sin importar qué tan clara sea. */}
+          <div className="absolute inset-0 bg-black/45" />
+        </>
       )}
 
-      <p className="text-lg font-semibold text-center mb-8">{tenant.name}</p>
-
-      <div className="w-full flex flex-col gap-3">
-        {items.map((item) => {
-          const Icon = ICONS[item.type] ?? Link2;
-          return (
-            <a
-              key={item.id}
-              href={hrefFor(item.type, item.value)}
-              target={item.type === "PHONE" ? undefined : "_blank"}
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border hover:opacity-80 transition-opacity"
-              style={{ borderColor: "currentColor" }}
-            >
-              <Icon size={18} aria-hidden />
-              <span className="text-sm font-medium">{item.label}</span>
-            </a>
-          );
-        })}
-
-        {items.length === 0 && (
-          <p className="text-sm text-center opacity-60">Este perfil todavía no tiene links.</p>
+      <div
+        className="relative z-10 max-w-sm mx-auto min-h-screen px-6 pt-14 pb-10 flex flex-col items-center"
+        style={{ color: hasBgImage ? "#ffffff" : tenant.themeTextColor }}
+      >
+        {tenant.logoUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={tenant.logoUrl}
+            alt={tenant.name}
+            className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-white/40"
+          />
+        ) : (
+          <div
+            className="w-24 h-24 rounded-full mb-4 flex items-center justify-center text-2xl font-semibold"
+            style={{
+              backgroundColor: hasBgImage ? "rgba(255,255,255,0.15)" : tenant.themeTextColor,
+              color: hasBgImage ? "#ffffff" : tenant.themeBgColor,
+            }}
+          >
+            {tenant.name.charAt(0).toUpperCase()}
+          </div>
         )}
+
+        <p className="text-lg font-semibold text-center mb-8">{tenant.name}</p>
+
+        <div className="w-full flex flex-col gap-3">
+          {items.map((item) => {
+            const Icon = ICONS[item.type] ?? Link2;
+            return (
+              <a
+                key={item.id}
+                href={hrefFor(item.type, item.value)}
+                target={item.type === "PHONE" ? undefined : "_blank"}
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl font-medium hover:brightness-105 transition-all"
+                style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+              >
+                <Icon size={18} aria-hidden />
+                <span className="text-sm">{item.label}</span>
+              </a>
+            );
+          })}
+
+          {items.length === 0 && (
+            <p className="text-sm text-center opacity-70">Este perfil todavía no tiene links.</p>
+          )}
+        </div>
       </div>
     </div>
   );

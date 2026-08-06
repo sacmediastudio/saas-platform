@@ -22,6 +22,8 @@ export default async function PublicBookingPage({ params }: { params: { slug: st
       currency={tenant.currency}
       themeBgColor={tenant.themeBgColor}
       themeTextColor={tenant.themeTextColor}
+      buttonColor={tenant.buttonColor}
+      buttonTextColor={tenant.buttonTextColor}
     />
   );
 }

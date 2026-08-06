@@ -131,6 +131,26 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       preselecciona el tipo de negocio) en vez de anclar a `#top` como
       en la plantilla original, porque en nuestro caso sí existe un
       signup funcional para enlazar.
+- [x] **Rebranding completo de los 3 dashboards**: tema claro (blanco/
+      verde bosque/lima), con el logo de Zertoo en la parte superior del
+      sidebar en los tres módulos (Menú, Citas, Smartlink), reemplazando
+      el tema oscuro genérico anterior.
+- [x] **Colores personalizables por negocio**: además de fondo y texto
+      (que ya existían), ahora cada negocio puede elegir el color de sus
+      botones y el color del texto de esos botones, desde Ajustes — y
+      se aplica en las 3 páginas públicas (`/menu`, `/book`, `/link`) a
+      todos los CTA (Ver menú, Continuar, Confirmar, Dejar reseña,
+      Llamar, cada link del Smartlink).
+- [x] **Imagen de fondo para Smartlink**: reutiliza el mismo campo de
+      "foto principal" de Ajustes (con la etiqueta adaptada según el
+      tipo de negocio), pero en Smartlink se muestra como fondo de toda
+      la página con un overlay oscuro para que el texto siga siendo
+      legible sobre cualquier foto.
+- [x] **Selector de idioma en la landing** (`EN`/`ES` en el header,
+      inglés por defecto) — diccionario completo de traducciones en
+      `lib/i18n-landing.ts`. *Nota: esto cubre solo la landing pública;
+      el dashboard, login y signup siguen en español únicamente — hacer
+      toda la app bilingüe sería un proyecto aparte.*
 
 ## Qué falta (siguiente iteración)
 

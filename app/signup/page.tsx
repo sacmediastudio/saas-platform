@@ -79,7 +79,7 @@ function SignupForm() {
     <div style={{ maxWidth: 380, margin: "4rem auto", padding: "0 1rem" }}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="https://horizons-cdn.hostinger.com/b813dbf4-80d8-4273-909f-1be06d6fe65f/76cf4d8e200c8f15791d1acaf0cabf5b.png"
+        src="/logo.svg"
         alt="Zertoo"
         style={{ height: 36, margin: "0 auto 32px", display: "block" }}
       />
