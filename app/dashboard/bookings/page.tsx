@@ -34,5 +34,5 @@ export default async function BookingsPage() {
     staffName: b.staff?.name ?? null,
   }));
 
-  return <BookingsView initialBookings={serialized} />;
+  return <BookingsView initialBookings={serialized} slug={tenant.slug} />;
 }

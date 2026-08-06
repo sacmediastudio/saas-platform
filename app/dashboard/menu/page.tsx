@@ -28,5 +28,12 @@ export default async function MenuPage() {
   // Serializar Decimal -> number para pasarlo a un client component.
   const serializedItems = items.map((i) => ({ ...i, price: Number(i.price) }));
 
-  return <MenuEditor categories={categories} initialItems={serializedItems} currency={tenant.currency} />;
+  return (
+    <MenuEditor
+      categories={categories}
+      initialItems={serializedItems}
+      currency={tenant.currency}
+      slug={tenant.slug}
+    />
+  );
 }

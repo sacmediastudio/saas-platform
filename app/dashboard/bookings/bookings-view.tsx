@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Lock, X } from "lucide-react";
+import { Plus, Lock, X, Copy, Check } from "lucide-react";
 
 interface BookingRow {
   id: string;
@@ -30,12 +30,25 @@ const statusStyles: Record<BookingRow["status"], { label: string; className: str
   COMPLETED: { label: "Completada", className: "bg-neutral-800 text-neutral-400" },
 };
 
-export default function BookingsView({ initialBookings }: { initialBookings: BookingRow[] }) {
+export default function BookingsView({ initialBookings, slug }: { initialBookings: BookingRow[]; slug: string }) {
   const [bookings, setBookings] = useState(initialBookings);
   const [updating, setUpdating] = useState<string | null>(null);
   const [modal, setModal] = useState<"none" | "booking" | "block">("none");
   const [services, setServices] = useState<ServiceOption[]>([]);
   const [staff, setStaff] = useState<StaffOption[]>([]);
+  const [copied, setCopied] = useState(false);
+
+  const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/book/${slug}` : `/book/${slug}`;
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // no crítico si el navegador bloquea el acceso al portapapeles
+    }
+  }
 
   // Cargamos servicios y staff solo cuando se abre un modal que los
   // necesita, no en cada render del dashboard.
@@ -89,6 +102,13 @@ export default function BookingsView({ initialBookings }: { initialBookings: Boo
       <p className="text-sm text-neutral-400 mb-6">
         {bookings.length} citas · {confirmedCount} confirmadas
       </p>
+
+      <div className="flex items-center gap-2 bg-neutral-800/60 rounded-lg px-3 py-2 mb-6">
+        <span className="text-sm text-neutral-300 truncate flex-1">{publicUrl}</span>
+        <button onClick={copyLink} className="text-neutral-400 hover:text-neutral-100 shrink-0">
+          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
+        </button>
+      </div>
 
       {bookings.length === 0 && (
         <p className="text-sm text-neutral-500">No hay citas agendadas para hoy.</p>

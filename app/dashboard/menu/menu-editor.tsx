@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Image as ImageIcon } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 
 interface MenuItem {
@@ -57,10 +57,12 @@ export default function MenuEditor({
   categories: initialCategories,
   initialItems,
   currency,
+  slug,
 }: {
   categories: Category[];
   initialItems: MenuItem[];
   currency: string;
+  slug: string;
 }) {
   const [categories, setCategories] = useState(initialCategories);
   const [items, setItems] = useState(initialItems);
@@ -69,6 +71,19 @@ export default function MenuEditor({
   const [categoryModal, setCategoryModal] = useState<{ mode: "create" | "edit"; category?: Category } | null>(
     null
   );
+  const [copied, setCopied] = useState(false);
+
+  const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/menu/${slug}` : `/menu/${slug}`;
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // no crítico si el navegador bloquea el acceso al portapapeles
+    }
+  }
 
   const activeCount = items.filter((i) => i.status !== "SOLD_OUT").length;
 
@@ -140,6 +155,13 @@ export default function MenuEditor({
             Agregar plato
           </button>
         </div>
+      </div>
+
+      <div className="flex items-center gap-2 bg-neutral-800/60 rounded-lg px-3 py-2 mb-6">
+        <span className="text-sm text-neutral-300 truncate flex-1">{publicUrl}</span>
+        <button onClick={copyLink} className="text-neutral-400 hover:text-neutral-100 shrink-0">
+          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
+        </button>
       </div>
 
       <div className="grid grid-cols-3 gap-3 mb-7">
