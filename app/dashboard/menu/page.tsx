@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getViewsLast7Days } from "@/lib/analytics";
+import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import MenuEditor from "./menu-editor";
 
 export default async function MenuPage() {
@@ -9,10 +10,11 @@ export default async function MenuPage() {
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
-  // El módulo de menú es solo para restaurantes — otros tipos de negocio
+  // El módulo de menú puede o no estar activo para este negocio — otros
   // no deberían poder llegar aquí ni por URL directa.
-  if (tenant.businessType !== "RESTAURANT") {
-    redirect(tenant.businessType === "SMALL_BUSINESS" ? "/dashboard/bookings" : "/dashboard/smartlink");
+  const enabledModules = getEnabledModules(tenant);
+  if (!enabledModules.includes("RESTAURANT")) {
+    redirect(moduleDashboardPath(enabledModules[0]));
   }
 
   const [categories, items, reviews, viewsLast7Days] = await Promise.all([

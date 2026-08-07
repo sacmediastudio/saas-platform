@@ -255,6 +255,35 @@ usan `onDelete: Cascade` desde `Tenant`.
 - [ ] Reemplazar los estilos inline por Tailwind/componentes reutilizables
       — están así para que cada archivo sea legible de un vistazo
 
+## Módulos escalables por negocio
+
+Un negocio ya no está "encajonado" en un solo tipo. `Tenant.businessType`
+sigue existiendo (es el módulo con el que empezó, se usa en el signup),
+pero el acceso real a cada dashboard y página pública se decide con
+`Tenant.enabledModules` (un array) — así un restaurante puede activar
+Smartlink más adelante, o un Smartlink puede agregar Citas, sin perder
+nada de lo que ya tenía.
+
+- **`/dashboard/modules`** — nueva página donde el dueño activa/desactiva
+  cada módulo. Siempre debe quedar al menos uno activo.
+- **Desactivar no borra nada** — un módulo apagado deja de aparecer en
+  el nav y su página pública devuelve 404, pero sus datos (platos,
+  citas, links) siguen en la base por si lo reactivan.
+- **`lib/modules.ts`** centraliza toda esta lógica (`getEnabledModules`,
+  rutas de cada módulo) — es el único lugar que hay que tocar si se
+  agrega un cuarto módulo en el futuro.
+- **Compatibilidad con cuentas viejas**: si `enabledModules` está vacío
+  (cuentas creadas antes de este cambio), `getEnabledModules()` cae de
+  vuelta a `businessType` — ninguna cuenta existente pierde acceso a lo
+  que ya tenía, sin necesitar una migración de datos manual.
+
+**Simplificación conocida**: el resumen de `/admin` (desglose "por tipo
+de negocio") sigue agrupando por `businessType` (el módulo inicial), no
+por todos los módulos activos de cada uno — así que un negocio con
+Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
+original. Es una simplificación aceptable para una vista general, pero
+si te importa el conteo exacto por módulo, se puede ajustar.
+
 ## Stack
 
 Next.js 14 · TypeScript · Prisma · PostgreSQL · Zod (validación) · bcryptjs +

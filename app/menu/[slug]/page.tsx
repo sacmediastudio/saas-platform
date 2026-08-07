@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { recordPageView } from "@/lib/analytics";
+import { getEnabledModules } from "@/lib/modules";
 import PublicMenu from "./public-menu";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -11,7 +12,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function PublicMenuPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
-  if (!tenant || tenant.businessType !== "RESTAURANT") notFound();
+  if (!tenant || !getEnabledModules(tenant).includes("RESTAURANT")) notFound();
 
   await recordPageView(tenant.id, "MENU");
 

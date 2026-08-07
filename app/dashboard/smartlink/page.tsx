@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getViewsLast7Days } from "@/lib/analytics";
+import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import SmartLinkEditor from "./smartlink-editor";
 
 export default async function SmartLinkPage() {
@@ -9,8 +10,9 @@ export default async function SmartLinkPage() {
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
-  if (tenant.businessType !== "SMARTLINK") {
-    redirect(tenant.businessType === "RESTAURANT" ? "/dashboard/menu" : "/dashboard/bookings");
+  const enabledModules = getEnabledModules(tenant);
+  if (!enabledModules.includes("SMARTLINK")) {
+    redirect(moduleDashboardPath(enabledModules[0]));
   }
 
   const [items, viewsLast7Days] = await Promise.all([

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getViewsLast7Days } from "@/lib/analytics";
+import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import BookingsView from "./bookings-view";
 
 export default async function BookingsPage() {
@@ -9,10 +10,11 @@ export default async function BookingsPage() {
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
-  // El módulo de citas es solo para negocios de servicios — otros tipos
-  // de negocio no deberían poder llegar aquí ni por URL directa.
-  if (tenant.businessType !== "SMALL_BUSINESS") {
-    redirect(tenant.businessType === "RESTAURANT" ? "/dashboard/menu" : "/dashboard/smartlink");
+  // El módulo de citas puede o no estar activo para este negocio — otros
+  // no deberían poder llegar aquí ni por URL directa.
+  const enabledModules = getEnabledModules(tenant);
+  if (!enabledModules.includes("SMALL_BUSINESS")) {
+    redirect(moduleDashboardPath(enabledModules[0]));
   }
 
   const startOfDay = new Date();

@@ -3,35 +3,39 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings } from "lucide-react";
+import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks } from "lucide-react";
 
 const LOGO = "/logo.svg";
 
-type BusinessType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
+type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
+
+const MODULE_NAV: Record<ModuleType, { href: string; label: string; icon: any }> = {
+  RESTAURANT: { href: "/dashboard/menu", label: "Menú", icon: UtensilsCrossed },
+  SMALL_BUSINESS: { href: "/dashboard/bookings", label: "Citas", icon: Calendar },
+  SMARTLINK: { href: "/dashboard/smartlink", label: "Smartlink", icon: Link2 },
+};
+const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"];
 
 export default function DashboardShell({
   tenant,
-  businessType,
+  enabledModules,
   children,
 }: {
   tenant: { name: string; logoUrl: string | null };
-  businessType: BusinessType;
+  enabledModules: ModuleType[];
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  // El nav solo muestra el módulo que corresponde al tipo de negocio.
-  // Se construye acá (no en el server component padre) porque los
-  // íconos son componentes de React — no se pueden pasar como prop
-  // de un Server Component a un Client Component.
+  // El nav muestra un link por cada módulo activo del negocio (puede
+  // ser más de uno), en un orden fijo, más las secciones comunes.
   const navItems = [
-    businessType === "RESTAURANT" && { href: "/dashboard/menu", label: "Menú", icon: UtensilsCrossed },
-    businessType === "SMALL_BUSINESS" && { href: "/dashboard/bookings", label: "Citas", icon: Calendar },
-    businessType === "SMARTLINK" && { href: "/dashboard/smartlink", label: "Smartlink", icon: Link2 },
+    ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
     { href: "/dashboard/reviews", label: "Reseñas", icon: Star },
+    { href: "/dashboard/modules", label: "Módulos", icon: Blocks },
     { href: "/dashboard/settings", label: "Ajustes", icon: Settings },
-  ].filter(Boolean) as { href: string; label: string; icon: typeof Star }[];
+  ];
 
   const TenantBadge = ({ size = "w-8 h-8" }: { size?: string }) =>
     tenant.logoUrl ? (

@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
         name: businessName,
         slug: slugify(businessName),
         businessType,
+        enabledModules: [businessType],
         plan: "STARTER",
       },
     });

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getEnabledModules } from "@/lib/modules";
 import DashboardShell from "@/components/dashboard-shell";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -29,7 +30,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <DashboardShell
       tenant={{ name: tenant.name, logoUrl: tenant.logoUrl }}
-      businessType={tenant.businessType}
+      enabledModules={getEnabledModules(tenant)}
     >
       {children}
     </DashboardShell>

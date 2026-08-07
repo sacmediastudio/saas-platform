@@ -52,6 +52,12 @@ model Tenant {
   name             String
   slug             String       @unique
   businessType     BusinessType
+  // Módulos activos de verdad. businessType queda como el "módulo con
+  // el que empezó" (se sigue usando para el signup y como valor por
+  // defecto), pero el acceso real a cada dashboard/página pública se
+  // decide con este array — así un negocio puede tener Menú + Smartlink
+  // a la vez, por ejemplo. Ver lib/modules.ts.
+  enabledModules   BusinessType[] @default([])
   plan             Plan         @default(STARTER)
   stripeCustomerId String?      @unique
   createdAt        DateTime     @default(now())

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { recordPageView } from "@/lib/analytics";
+import { getEnabledModules } from "@/lib/modules";
 
 const ICONS: Record<string, any> = {
   WEBSITE: Globe,
@@ -37,7 +38,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function PublicSmartLinkPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
-  if (!tenant || tenant.businessType !== "SMARTLINK") notFound();
+  if (!tenant || !getEnabledModules(tenant).includes("SMARTLINK")) notFound();
 
   await recordPageView(tenant.id, "LINK");
 

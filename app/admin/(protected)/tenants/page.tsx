@@ -1,10 +1,5 @@
 import { db } from "@/lib/db";
-
-const TYPE_LABELS: Record<string, string> = {
-  RESTAURANT: "Restaurante",
-  SMALL_BUSINESS: "Citas",
-  SMARTLINK: "Smartlink",
-};
+import { getEnabledModules, MODULE_LABELS } from "@/lib/modules";
 
 export default async function AdminTenantsPage({
   searchParams,
@@ -24,7 +19,9 @@ export default async function AdminTenantsPage({
             ],
           }
         : {}),
-      ...(type ? { businessType: type as any } : {}),
+      // Cubre tanto tenants nuevos (con enabledModules poblado) como
+      // cuentas viejas donde ese array todavía está vacío.
+      ...(type ? { OR: [{ businessType: type as any }, { enabledModules: { has: type as any } }] } : {}),
     },
     include: { subscription: true },
     orderBy: { createdAt: "desc" },
@@ -47,8 +44,8 @@ export default async function AdminTenantsPage({
           defaultValue={type}
           className="bg-white border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
         >
-          <option value="">Todos los tipos</option>
-          <option value="RESTAURANT">Restaurantes</option>
+          <option value="">Todos los módulos</option>
+          <option value="RESTAURANT">Menú</option>
           <option value="SMALL_BUSINESS">Citas</option>
           <option value="SMARTLINK">Smartlink</option>
         </select>
@@ -58,32 +55,41 @@ export default async function AdminTenantsPage({
       </form>
 
       <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
-        {tenants.map((t) => (
-          <a
-            key={t.id}
-            href={`/admin/tenants/${t.id}`}
-            className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-[#F7F8F4]"
-          >
-            <div className="flex-1 min-w-[180px]">
-              <p className="text-sm font-medium flex items-center gap-2">
-                {t.name}
-                {t.suspended && (
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-semibold">
-                    SUSPENDIDO
+        {tenants.map((t) => {
+          const modules = getEnabledModules(t);
+          return (
+            <a
+              key={t.id}
+              href={`/admin/tenants/${t.id}`}
+              className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3 hover:bg-[#F7F8F4]"
+            >
+              <div className="flex-1 min-w-[180px]">
+                <p className="text-sm font-medium flex items-center gap-2">
+                  {t.name}
+                  {t.suspended && (
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-700 font-semibold">
+                      SUSPENDIDO
+                    </span>
+                  )}
+                </p>
+                <p className="text-xs text-[#343233]/60">/{t.slug}</p>
+              </div>
+              <div className="flex gap-1">
+                {modules.map((m) => (
+                  <span key={m} className="text-xs px-2 py-1 rounded-md bg-[#F7F8F4]">
+                    {MODULE_LABELS[m]}
                   </span>
-                )}
-              </p>
-              <p className="text-xs text-[#343233]/60">/{t.slug}</p>
-            </div>
-            <span className="text-xs px-2 py-1 rounded-md bg-[#F7F8F4]">{TYPE_LABELS[t.businessType]}</span>
-            <span className="text-xs text-[#343233]/60 capitalize">
-              {t.subscription?.status ?? "sin suscripción"}
-            </span>
-            <span className="text-xs text-[#343233]/50 ml-auto">
-              {t.createdAt.toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" })}
-            </span>
-          </a>
-        ))}
+                ))}
+              </div>
+              <span className="text-xs text-[#343233]/60 capitalize">
+                {t.subscription?.status ?? "sin suscripción"}
+              </span>
+              <span className="text-xs text-[#343233]/50 ml-auto">
+                {t.createdAt.toLocaleDateString("es", { day: "numeric", month: "short", year: "numeric" })}
+              </span>
+            </a>
+          );
+        })}
         {tenants.length === 0 && (
           <p className="px-4 py-6 text-sm text-[#343233]/60">No hay negocios que coincidan con la búsqueda.</p>
         )}

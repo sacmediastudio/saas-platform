@@ -1,19 +1,8 @@
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
+import { getEnabledModules, modulePublicPrefix, MODULE_LABELS } from "@/lib/modules";
 import TenantActions from "@/components/tenant-actions";
 import SubscriptionEditor from "@/components/subscription-editor";
-
-const TYPE_LABELS: Record<string, string> = {
-  RESTAURANT: "Restaurante",
-  SMALL_BUSINESS: "Negocio de citas",
-  SMARTLINK: "Smartlink",
-};
-
-const PUBLIC_PATH: Record<string, string> = {
-  RESTAURANT: "menu",
-  SMALL_BUSINESS: "book",
-  SMARTLINK: "link",
-};
 
 export default async function AdminTenantDetailPage({ params }: { params: { id: string } }) {
   const tenant = await db.tenant.findUnique({
@@ -29,7 +18,9 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
     db.review.count({ where: { tenantId: tenant.id } }),
   ]);
 
-  const publicUrl = `/${PUBLIC_PATH[tenant.businessType]}/${tenant.slug}`;
+  const enabledModules = getEnabledModules(tenant);
+  const countByModule = { RESTAURANT: menuItemCount, SMALL_BUSINESS: bookingCount, SMARTLINK: smartLinkItemCount };
+  const countLabel = { RESTAURANT: "Platos", SMALL_BUSINESS: "Citas", SMARTLINK: "Links" };
 
   return (
     <div className="max-w-2xl">
@@ -45,24 +36,30 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
           )}
         </h1>
       </div>
-      <p className="text-sm text-[#343233]/70 mb-6">
-        {TYPE_LABELS[tenant.businessType]} ·{" "}
-        <a href={publicUrl} target="_blank" rel="noopener noreferrer" className="underline hover:text-[#002D09]">
-          {publicUrl}
-        </a>
-      </p>
+      <div className="flex flex-wrap items-center gap-2 mb-6">
+        {enabledModules.map((m) => (
+          <a
+            key={m}
+            href={`/${modulePublicPrefix(m)}/${tenant.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs px-2.5 py-1 rounded-md bg-[#F7F8F4] hover:bg-[#eee] underline"
+          >
+            {MODULE_LABELS[m]}
+          </a>
+        ))}
+      </div>
 
       <div className="mb-8">
         <TenantActions tenantId={tenant.id} tenantName={tenant.name} suspended={tenant.suspended} />
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
-        {tenant.businessType === "RESTAURANT" && <Stat label="Platos" value={menuItemCount} />}
-        {tenant.businessType === "SMALL_BUSINESS" && <Stat label="Citas" value={bookingCount} />}
-        {tenant.businessType === "SMARTLINK" && <Stat label="Links" value={smartLinkItemCount} />}
+        {enabledModules.map((m) => (
+          <Stat key={m} label={countLabel[m]} value={countByModule[m]} />
+        ))}
         <Stat label="Reseñas" value={reviewCount} />
         <Stat label="Plan" value={tenant.plan} />
-        <Stat label="Moneda" value={tenant.currency} />
       </div>
 
       <Section title="Suscripción">
@@ -97,6 +94,8 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
 
       <Section title="Datos generales">
         <Row label="Slug" value={tenant.slug} />
+        <Row label="Moneda" value={tenant.currency} />
+        <Row label="Módulo inicial" value={MODULE_LABELS[tenant.businessType]} />
         <Row label="Creado" value={tenant.createdAt.toLocaleString("es")} />
         <Row label="Última actualización" value={tenant.updatedAt.toLocaleString("es")} />
         <Row label="ID" value={tenant.id} />
