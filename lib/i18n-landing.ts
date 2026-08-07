@@ -2,16 +2,16 @@ export type Lang = "en" | "es";
 
 export const translations = {
   en: {
-    nav: { products: "Products", hardware: "NFC Hardware", pricing: "Pricing", faq: "FAQ", viewPlans: "View plans", start: "Start free" },
+    nav: { products: "Products", hardware: "NFC Hardware", pricing: "Pricing", faq: "FAQ", viewPlans: "View plans", login: "Log in", start: "Start free" },
     hero: {
       badge: "Digital menu, appointments and smartlink in one platform",
-      titlePrefix: "Your business, online in",
-      titleHighlight: "minutes",
+      titlePrefix: "One platform. Every connection with your",
+      titleHighlight: "customers.",
       subtitle:
         "Digital menu for restaurants, an appointment system for service businesses, or a link-in-bio page to show everything you offer. Pick yours and get started today.",
       ctaPrimary: "Start free",
       ctaSecondary: "View plans",
-      note: "14-day free trial. No credit card required.",
+      note: "7-day free trial. No credit card required.",
       publishedIn: "Published in",
       panelUrl: "panel.zertoo.com",
     },
@@ -69,7 +69,7 @@ export const translations = {
     },
     pricing: {
       title: "Clear pricing, no surprises",
-      subtitle: "One plan per business, billed monthly, cancel anytime. All plans include a 14-day free trial.",
+      subtitle: "One plan per business, billed monthly, cancel anytime. All plans include a 7-day free trial.",
       mostChosen: "Most popular",
       perMonth: "/mo",
       start: "Start free",
@@ -85,7 +85,7 @@ export const translations = {
       subtitle: "Still have a question? Write to us at hola@zertoo.com and we'll reply the same day.",
       items: [
         { q: "Do I need technical knowledge to get started?", a: "No. You create your account, choose your business type and fill in your details. In under ten minutes your page is live and ready to share." },
-        { q: "What does the 14-day trial include?", a: "Full access to every feature of the plan you choose, with no limits and no credit card required. If you don't continue, your page simply pauses." },
+        { q: "What does the 7-day trial include?", a: "Full access to every feature of the plan you choose, with no limits and no credit card required. If you don't continue, your page simply pauses." },
         { q: "Can I change plans later?", a: "Yes. You can upgrade or downgrade whenever you want from your dashboard. The change applies on your next billing cycle." },
         { q: "Is the NFC hardware required?", a: "No, it's an optional add-on. Zertoo works with just a link or a QR code — the NFC stand and card just make the in-person experience faster." },
         { q: "Can I use my own domain?", a: "Yes. You can connect your own domain or keep your zertoo.com/yourbusiness address, included in every plan." },
@@ -93,7 +93,7 @@ export const translations = {
     },
     ctaBand: {
       title: "Start today and share your link this afternoon",
-      subtitle: "14-day free trial. No credit card required.",
+      subtitle: "7-day free trial. No credit card required.",
       primary: "Start free",
       secondary: "See all three products",
     },
@@ -107,16 +107,16 @@ export const translations = {
     },
   },
   es: {
-    nav: { products: "Productos", hardware: "Hardware NFC", pricing: "Precios", faq: "Preguntas", viewPlans: "Ver planes", start: "Empieza gratis" },
+    nav: { products: "Productos", hardware: "Hardware NFC", pricing: "Precios", faq: "Preguntas", viewPlans: "Ver planes", login: "Iniciar sesión", start: "Empieza gratis" },
     hero: {
       badge: "Menú digital, citas y smartlink en una plataforma",
-      titlePrefix: "Tu negocio, listo en internet en",
-      titleHighlight: "minutos",
+      titlePrefix: "Una plataforma. Cada conexión con tus",
+      titleHighlight: "clientes.",
       subtitle:
         "Menú digital para restaurantes, sistema de citas para negocios de servicios, o un perfil de enlaces para mostrar todo lo tuyo en un solo link. Elige el tuyo y empieza hoy.",
       ctaPrimary: "Empieza gratis",
       ctaSecondary: "Ver planes",
-      note: "14 días gratis. Sin tarjeta de crédito.",
+      note: "7 días gratis. Sin tarjeta de crédito.",
       publishedIn: "Publicado en",
       panelUrl: "panel.zertoo.com",
     },
@@ -173,7 +173,7 @@ export const translations = {
     },
     pricing: {
       title: "Precios claros, sin sorpresas",
-      subtitle: "Un solo plan por negocio, facturación mensual y cancelación cuando quieras. Todos incluyen 14 días gratis.",
+      subtitle: "Un solo plan por negocio, facturación mensual y cancelación cuando quieras. Todos incluyen 7 días gratis.",
       mostChosen: "Más elegido",
       perMonth: "/mes",
       start: "Empieza gratis",
@@ -189,7 +189,7 @@ export const translations = {
       subtitle: "¿Te queda alguna duda? Escríbenos a hola@zertoo.com y te respondemos el mismo día.",
       items: [
         { q: "¿Necesito conocimientos técnicos para empezar?", a: "No. Creas tu cuenta, eliges tu tipo de negocio y completas tu información. En menos de diez minutos tu página está publicada y lista para compartir." },
-        { q: "¿Qué incluye la prueba de 14 días?", a: "Acceso completo a todas las funciones del plan que elijas, sin límites y sin pedirte tarjeta de crédito. Si no continúas, tu página simplemente se pausa." },
+        { q: "¿Qué incluye la prueba de 7 días?", a: "Acceso completo a todas las funciones del plan que elijas, sin límites y sin pedirte tarjeta de crédito. Si no continúas, tu página simplemente se pausa." },
         { q: "¿Puedo cambiar de plan más adelante?", a: "Sí. Puedes subir o bajar de plan cuando quieras desde tu panel. El cambio se aplica en el siguiente ciclo de facturación." },
         { q: "¿El hardware NFC es obligatorio?", a: "No, es un complemento. Zertoo funciona con un enlace o un código QR; el stand y la tarjeta NFC solo hacen la experiencia más inmediata en persona." },
         { q: "¿Puedo usar mi propio dominio?", a: "Sí. Puedes conectar tu dominio propio o quedarte con tu dirección zertoo.com/tunegocio incluida en todos los planes." },
@@ -197,7 +197,7 @@ export const translations = {
     },
     ctaBand: {
       title: "Empieza hoy y comparte tu link esta misma tarde",
-      subtitle: "14 días gratis. Sin tarjeta de crédito.",
+      subtitle: "7 días gratis. Sin tarjeta de crédito.",
       primary: "Empieza gratis",
       secondary: "Ver los tres productos",
     },

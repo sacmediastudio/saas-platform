@@ -28,7 +28,7 @@ export const authTranslations = {
     },
     signup: {
       title: "Create your account",
-      subtitle: "14-day free trial, no credit card",
+      subtitle: "7-day free trial, no credit card",
       businessTypes: { RESTAURANT: "Restaurant", SMALL_BUSINESS: "Service business", SMARTLINK: "Smartlink" },
       businessName: "Business name",
       yourName: "Your name",
@@ -68,7 +68,7 @@ export const authTranslations = {
     },
     signup: {
       title: "Crea tu cuenta",
-      subtitle: "14 días gratis, sin tarjeta",
+      subtitle: "7 días gratis, sin tarjeta",
       businessTypes: { RESTAURANT: "Restaurante", SMALL_BUSINESS: "Negocio de servicios", SMARTLINK: "Smartlink" },
       businessName: "Nombre del negocio",
       yourName: "Tu nombre",
