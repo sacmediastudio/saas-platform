@@ -10,8 +10,10 @@ import {
   Linkedin,
   MapPin,
   Link2,
+  Contact,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import { recordPageView } from "@/lib/analytics";
 
 const ICONS: Record<string, any> = {
   WEBSITE: Globe,
@@ -24,19 +26,9 @@ const ICONS: Record<string, any> = {
   YOUTUBE: Youtube,
   LINKEDIN: Linkedin,
   MAPS: MapPin,
+  VCARD: Contact,
   CUSTOM: Link2,
 };
-
-function hrefFor(type: string, value: string): string {
-  if (type === "WHATSAPP") {
-    const digits = value.replace(/\D/g, "");
-    return `https://wa.me/${digits}`;
-  }
-  if (type === "PHONE") {
-    return `tel:${value.replace(/\s+/g, "")}`;
-  }
-  return value;
-}
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug }, select: { name: true } });
@@ -46,6 +38,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function PublicSmartLinkPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
   if (!tenant || tenant.businessType !== "SMARTLINK") notFound();
+
+  await recordPageView(tenant.id, "LINK");
 
   const items = await db.smartLinkItem.findMany({
     where: { tenantId: tenant.id },
@@ -111,8 +105,8 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
             return (
               <a
                 key={item.id}
-                href={hrefFor(item.type, item.value)}
-                target={item.type === "PHONE" ? undefined : "_blank"}
+                href={`/api/smartlink-items/${item.id}/go`}
+                target={item.type === "PHONE" || item.type === "VCARD" ? undefined : "_blank"}
                 rel="noopener noreferrer"
                 className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl font-medium hover:brightness-105 transition-all"
                 style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}

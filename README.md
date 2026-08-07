@@ -173,6 +173,24 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       centrado, semi-transparente, en `/menu`, `/book` y `/link`. En
       Smartlink se invierte a blanco automáticamente cuando el negocio
       tiene una foto de fondo (para que siga siendo visible).
+- [x] **vCard descargable en Smartlink**: nuevo tipo de link "Guardar
+      contacto" — al tocarlo, descarga un `.vcf` armado con el nombre,
+      teléfono, correo y dirección configurados en Ajustes. No requiere
+      llenar ningún campo extra al crearlo.
+- [x] **Analíticas básicas en los 3 módulos**: tabla `PageView` que
+      registra cada visita a `/menu`, `/book` y `/link`. Los 3
+      dashboards muestran vistas de los últimos 7 días; Menú y Citas
+      también muestran el rating promedio real (antes decían "—");
+      Smartlink muestra clics totales y por link individual (cada link
+      pasa por `/api/smartlink-items/[id]/go`, que cuenta el clic y
+      redirige — así funciona sin JavaScript).
+- [x] **Los 3 dashboards son responsive**: la sidebar fija de escritorio
+      se convierte en una barra superior con menú hamburguesa en mobile
+      (`components/dashboard-shell.tsx`); las cards de estadísticas
+      apilan en una columna en pantallas angostas; las filas de platos,
+      citas y links se reorganizan para no desbordarse (la info
+      principal queda en un grupo, los precios/badges/acciones en otro
+      que puede pasar a una segunda línea si no cabe).
 
 ## Qué falta (siguiente iteración)
 

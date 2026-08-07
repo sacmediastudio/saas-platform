@@ -59,11 +59,15 @@ export default function MenuEditor({
   initialItems,
   currency,
   slug,
+  viewsLast7Days,
+  avgRating,
 }: {
   categories: Category[];
   initialItems: MenuItem[];
   currency: string;
   slug: string;
+  viewsLast7Days: number;
+  avgRating: number | null;
 }) {
   const [categories, setCategories] = useState(initialCategories);
   const [items, setItems] = useState(initialItems);
@@ -134,7 +138,7 @@ export default function MenuEditor({
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
           <h1 className="text-xl font-semibold">Tu menú</h1>
           <p className="text-sm text-[#343233]/70 mt-1">Gestiona platos, precios y disponibilidad</p>
@@ -165,10 +169,10 @@ export default function MenuEditor({
         </button>
       </div>
 
-      <div className="grid grid-cols-3 gap-3 mb-7">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
         <StatCard label="Platos activos" value={activeCount} />
-        <StatCard label="Vistas del menú (7d)" value="—" />
-        <StatCard label="Rating promedio" value="—" />
+        <StatCard label="Vistas del menú (7d)" value={viewsLast7Days} />
+        <StatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
       </div>
 
       {categories.length === 0 && (
@@ -208,30 +212,33 @@ export default function MenuEditor({
                 {catItems.map((item) => {
                   const s = statusStyles[item.status];
                   return (
-                    <div key={item.id} className="flex items-center gap-3 px-3.5 py-2.5">
-                      {item.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-10 h-10 rounded-lg object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-lg bg-[#F7F8F4] shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm flex items-center gap-1.5">
-                          {item.name}
-                          {item.featured && (
-                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-normal">
-                              ★ Destacado
-                            </span>
-                          )}
-                        </p>
-                        {item.description && (
-                          <p className="text-xs text-[#343233]/70 mt-0.5">{item.description}</p>
+                    <div key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5">
+                      <div className="flex items-center gap-3 flex-1 min-w-[160px]">
+                        {item.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.imageUrl}
+                            alt={item.name}
+                            className="w-10 h-10 rounded-lg object-cover shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-[#F7F8F4] shrink-0" />
                         )}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm flex items-center gap-1.5 flex-wrap">
+                            {item.name}
+                            {item.featured && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-normal">
+                                ★ Destacado
+                              </span>
+                            )}
+                          </p>
+                          {item.description && (
+                            <p className="text-xs text-[#343233]/70 mt-0.5">{item.description}</p>
+                          )}
+                        </div>
                       </div>
+                      <div className="flex items-center gap-2 ml-auto">
                       <span className="text-sm font-medium">{formatCurrency(item.price, currency)}</span>
                       <button
                         onClick={() => cycleStatus(item)}
@@ -255,6 +262,7 @@ export default function MenuEditor({
                       >
                         <Trash2 size={15} aria-hidden />
                       </button>
+                      </div>
                     </div>
                   );
                 })}

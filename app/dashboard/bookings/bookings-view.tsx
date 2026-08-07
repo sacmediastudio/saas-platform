@@ -30,7 +30,19 @@ const statusStyles: Record<BookingRow["status"], { label: string; className: str
   COMPLETED: { label: "Completada", className: "bg-[#F7F8F4] text-[#343233]/70" },
 };
 
-export default function BookingsView({ initialBookings, slug }: { initialBookings: BookingRow[]; slug: string }) {
+export default function BookingsView({
+  initialBookings,
+  slug,
+  viewsLast7Days,
+  totalBookings,
+  avgRating,
+}: {
+  initialBookings: BookingRow[];
+  slug: string;
+  viewsLast7Days: number;
+  totalBookings: number;
+  avgRating: number | null;
+}) {
   const [bookings, setBookings] = useState(initialBookings);
   const [updating, setUpdating] = useState<string | null>(null);
   const [modal, setModal] = useState<"none" | "booking" | "block">("none");
@@ -80,7 +92,7 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
 
   return (
     <div>
-      <div className="flex items-start justify-between mb-1">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
         <h1 className="text-xl font-semibold">Agenda de hoy</h1>
         <div className="flex gap-2">
           <button
@@ -103,6 +115,12 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
         {bookings.length} citas · {confirmedCount} confirmadas
       </p>
 
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <StatCard label="Vistas (7 días)" value={viewsLast7Days} />
+        <StatCard label="Citas totales" value={totalBookings} />
+        <StatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+      </div>
+
       <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
         <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
         <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
@@ -118,17 +136,20 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
         {bookings.map((b) => {
           const s = statusStyles[b.status];
           return (
-            <div key={b.id} className="flex items-center gap-3 px-3.5 py-2.5">
-              <span className="text-sm text-[#343233]/70 w-14">
-                {new Date(b.datetime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm">{b.serviceName}</p>
-                <p className="text-xs text-[#343233]/70 mt-0.5">
-                  {b.customerName}
-                  {b.staffName ? ` · con ${b.staffName}` : ""}
-                </p>
+            <div key={b.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5">
+              <div className="flex items-center gap-3 flex-1 min-w-[160px]">
+                <span className="text-sm text-[#343233]/70 w-14 shrink-0">
+                  {new Date(b.datetime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm">{b.serviceName}</p>
+                  <p className="text-xs text-[#343233]/70 mt-0.5">
+                    {b.customerName}
+                    {b.staffName ? ` · con ${b.staffName}` : ""}
+                  </p>
+                </div>
               </div>
+              <div className="flex items-center gap-2 ml-auto">
               <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
               {b.status === "PENDING" && (
                 <button
@@ -148,6 +169,7 @@ export default function BookingsView({ initialBookings, slug }: { initialBooking
                   Cancelar
                 </button>
               )}
+              </div>
             </div>
           );
         })}
@@ -525,6 +547,15 @@ function ModalShell({
         </div>
         {children}
       </div>
+    </div>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-[#F7F8F4] rounded-lg p-4">
+      <p className="text-sm text-[#343233]/70">{label}</p>
+      <p className="text-2xl font-semibold mt-1">{value}</p>
     </div>
   );
 }

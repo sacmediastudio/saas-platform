@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getViewsLast7Days } from "@/lib/analytics";
 import BookingsView from "./bookings-view";
 
 export default async function BookingsPage() {
@@ -19,11 +20,16 @@ export default async function BookingsPage() {
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
 
-  const bookings = await db.booking.findMany({
-    where: { tenantId: session.tenantId, datetime: { gte: startOfDay, lte: endOfDay } },
-    include: { service: true, staff: true },
-    orderBy: { datetime: "asc" },
-  });
+  const [bookings, totalBookings, reviews, viewsLast7Days] = await Promise.all([
+    db.booking.findMany({
+      where: { tenantId: session.tenantId, datetime: { gte: startOfDay, lte: endOfDay } },
+      include: { service: true, staff: true },
+      orderBy: { datetime: "asc" },
+    }),
+    db.booking.count({ where: { tenantId: session.tenantId } }),
+    db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),
+    getViewsLast7Days(session.tenantId, "BOOK"),
+  ]);
 
   const serialized = bookings.map((b) => ({
     id: b.id,
@@ -34,5 +40,16 @@ export default async function BookingsPage() {
     staffName: b.staff?.name ?? null,
   }));
 
-  return <BookingsView initialBookings={serialized} slug={tenant.slug} />;
+  const avgRating =
+    reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
+
+  return (
+    <BookingsView
+      initialBookings={serialized}
+      slug={tenant.slug}
+      viewsLast7Days={viewsLast7Days}
+      totalBookings={totalBookings}
+      avgRating={avgRating}
+    />
+  );
 }

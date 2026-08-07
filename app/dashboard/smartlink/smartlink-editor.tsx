@@ -20,6 +20,8 @@ import {
   Link2,
   Copy,
   Check,
+  Contact,
+  MousePointerClick,
 } from "lucide-react";
 
 type LinkType =
@@ -33,14 +35,16 @@ type LinkType =
   | "YOUTUBE"
   | "LINKEDIN"
   | "MAPS"
+  | "VCARD"
   | "CUSTOM";
 
 interface SmartLinkItem {
   id: string;
   type: LinkType;
   label: string;
-  value: string;
+  value: string | null;
   sortOrder: number;
+  clickCount: number;
 }
 
 const TYPE_META: Record<LinkType, { label: string; icon: any; placeholder: string; helper: string }> = {
@@ -54,15 +58,18 @@ const TYPE_META: Record<LinkType, { label: string; icon: any; placeholder: strin
   YOUTUBE: { label: "YouTube", icon: Youtube, placeholder: "https://youtube.com/@tucanal", helper: "URL completa del canal" },
   LINKEDIN: { label: "LinkedIn", icon: Linkedin, placeholder: "https://linkedin.com/company/tunegocio", helper: "URL completa del perfil" },
   MAPS: { label: "Ubicación (Maps)", icon: MapPin, placeholder: "https://maps.app.goo.gl/...", helper: "Copia el link de 'Compartir' desde Google Maps" },
+  VCARD: { label: "Guardar contacto (vCard)", icon: Contact, placeholder: "", helper: "Usa el correo, teléfono y dirección de Ajustes — no necesitas escribir nada aquí" },
   CUSTOM: { label: "Link personalizado", icon: Link2, placeholder: "https://...", helper: "Cualquier URL" },
 };
 
 export default function SmartLinkEditor({
   tenant,
   initialItems,
+  viewsLast7Days,
 }: {
   tenant: { name: string; slug: string; logoUrl: string | null };
   initialItems: SmartLinkItem[];
+  viewsLast7Days: number;
 }) {
   const [items, setItems] = useState(initialItems);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; item?: SmartLinkItem } | null>(null);
@@ -111,7 +118,7 @@ export default function SmartLinkEditor({
 
   return (
     <div className="max-w-lg">
-      <div className="flex items-start justify-between mb-1">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
         <h1 className="text-xl font-semibold">Tu Smartlink</h1>
         <button
           onClick={() => setModal({ mode: "create" })}
@@ -136,6 +143,11 @@ export default function SmartLinkEditor({
         </button>
       </div>
 
+      <div className="grid grid-cols-2 gap-3 mb-6">
+        <StatCard label="Vistas (7 días)" value={viewsLast7Days} />
+        <StatCard label="Clics totales" value={items.reduce((sum, i) => sum + i.clickCount, 0)} />
+      </div>
+
       {sortedItems.length === 0 && (
         <p className="text-sm text-[#343233]/60">Todavía no tienes links. Agrega el primero.</p>
       )}
@@ -147,13 +159,20 @@ export default function SmartLinkEditor({
           return (
             <div
               key={item.id}
-              className="flex items-center gap-3 border border-[#002D09]/10 rounded-lg px-3.5 py-2.5"
+              className="flex flex-wrap items-center gap-x-3 gap-y-2 border border-[#002D09]/10 rounded-lg px-3.5 py-2.5"
             >
-              <Icon size={16} className="text-[#343233]/70 shrink-0" aria-hidden />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{item.label}</p>
-                <p className="text-xs text-[#343233]/60 truncate">{meta.label}</p>
+              <div className="flex items-center gap-3 flex-1 min-w-[140px]">
+                <Icon size={16} className="text-[#343233]/70 shrink-0" aria-hidden />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{item.label}</p>
+                  <p className="text-xs text-[#343233]/60 truncate">{meta.label}</p>
+                </div>
               </div>
+              <div className="flex items-center gap-2 ml-auto">
+              <span className="flex items-center gap-1 text-xs text-[#343233]/50 shrink-0">
+                <MousePointerClick size={12} aria-hidden />
+                {item.clickCount}
+              </span>
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => move(item, -1)}
@@ -186,6 +205,7 @@ export default function SmartLinkEditor({
                 >
                   <Trash2 size={14} aria-hidden />
                 </button>
+              </div>
               </div>
             </div>
           );
@@ -300,13 +320,15 @@ function LinkModal({
 
           <label className="flex flex-col gap-1">
             <span className="text-xs text-[#343233]/70">{meta.helper}</span>
-            <input
-              value={value}
-              onChange={(e) => setValue(e.target.value)}
-              required
-              placeholder={meta.placeholder}
-              className={inputClass}
-            />
+            {type !== "VCARD" && (
+              <input
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                required
+                placeholder={meta.placeholder}
+                className={inputClass}
+              />
+            )}
           </label>
 
           {error && <p className="text-red-600 text-sm">{error}</p>}
@@ -335,3 +357,12 @@ function LinkModal({
 
 const inputClass =
   "w-full bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40";
+
+function StatCard({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-[#F7F8F4] rounded-lg p-4">
+      <p className="text-sm text-[#343233]/70">{label}</p>
+      <p className="text-2xl font-semibold mt-1">{value}</p>
+    </div>
+  );
+}

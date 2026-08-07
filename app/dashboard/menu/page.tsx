@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getViewsLast7Days } from "@/lib/analytics";
 import MenuEditor from "./menu-editor";
 
 export default async function MenuPage() {
@@ -14,7 +15,7 @@ export default async function MenuPage() {
     redirect(tenant.businessType === "SMALL_BUSINESS" ? "/dashboard/bookings" : "/dashboard/smartlink");
   }
 
-  const [categories, items] = await Promise.all([
+  const [categories, items, reviews, viewsLast7Days] = await Promise.all([
     db.menuCategory.findMany({
       where: { tenantId: session.tenantId },
       orderBy: { sortOrder: "asc" },
@@ -23,10 +24,14 @@ export default async function MenuPage() {
       where: { tenantId: session.tenantId },
       orderBy: { sortOrder: "asc" },
     }),
+    db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),
+    getViewsLast7Days(session.tenantId, "MENU"),
   ]);
 
   // Serializar Decimal -> number para pasarlo a un client component.
   const serializedItems = items.map((i) => ({ ...i, price: Number(i.price) }));
+  const avgRating =
+    reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
 
   return (
     <MenuEditor
@@ -34,6 +39,8 @@ export default async function MenuPage() {
       initialItems={serializedItems}
       currency={tenant.currency}
       slug={tenant.slug}
+      viewsLast7Days={viewsLast7Days}
+      avgRating={avgRating}
     />
   );
 }

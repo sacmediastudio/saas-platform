@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { recordPageView } from "@/lib/analytics";
 import BookingFlow from "./booking-flow";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -11,6 +12,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function PublicBookingPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
   if (!tenant) notFound();
+
+  await recordPageView(tenant.id, "BOOK");
 
   const services = await db.service.findMany({ where: { tenantId: tenant.id } });
   const serialized = services.map((s) => ({

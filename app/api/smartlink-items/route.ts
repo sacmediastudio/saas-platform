@@ -14,14 +14,20 @@ const TYPES = [
   "YOUTUBE",
   "LINKEDIN",
   "MAPS",
+  "VCARD",
   "CUSTOM",
 ] as const;
 
-const createSchema = z.object({
-  type: z.enum(TYPES),
-  label: z.string().min(1),
-  value: z.string().min(1),
-});
+const createSchema = z
+  .object({
+    type: z.enum(TYPES),
+    label: z.string().min(1),
+    value: z.string().optional(),
+  })
+  .refine((data) => data.type === "VCARD" || (data.value && data.value.length > 0), {
+    message: "Este tipo de link necesita un valor",
+    path: ["value"],
+  });
 
 export async function GET() {
   const session = await requireTenant();

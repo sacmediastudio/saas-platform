@@ -79,6 +79,7 @@ model Tenant {
   bookings       Booking[]
   reviews        Review[]
   smartLinkItems SmartLinkItem[]
+  pageViews      PageView[]
   subscription   Subscription?
 
   @@map("tenants")
@@ -246,6 +247,7 @@ enum SmartLinkType {
   YOUTUBE
   LINKEDIN
   MAPS
+  VCARD
   CUSTOM
 }
 
@@ -256,8 +258,11 @@ model SmartLinkItem {
   label     String
   // Para WHATSAPP: solo dígitos (se arma el link wa.me al mostrarlo).
   // Para PHONE: número tal cual (se arma el link tel: al mostrarlo).
+  // Para VCARD: no se usa — el archivo .vcf se arma con los datos de
+  // contacto del negocio (Ajustes), así que puede ir vacío.
   // Para el resto: una URL completa que se usa directo como href.
-  value     String
+  value      String?
+  clickCount Int      @default(0)
   sortOrder Int           @default(0)
   createdAt DateTime      @default(now())
 
@@ -265,6 +270,24 @@ model SmartLinkItem {
 
   @@index([tenantId])
   @@map("smartlink_items")
+}
+
+enum PageViewKind {
+  MENU
+  BOOK
+  LINK
+}
+
+model PageView {
+  id        String       @id @default(cuid())
+  tenantId  String
+  kind      PageViewKind
+  createdAt DateTime     @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, kind, createdAt])
+  @@map("page_views")
 }
 
 // ---------- Billing ----------
