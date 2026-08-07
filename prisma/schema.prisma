@@ -70,6 +70,10 @@ model Tenant {
   buttonColor      String @default("#E7FF00")
   buttonTextColor  String @default("#002D09")
 
+  // El panel de admin puede suspender una cuenta (ej. impago, abuso).
+  // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
+  suspended Boolean @default(false)
+
   users          User[]
   menuCategories MenuCategory[]
   menuItems      MenuItem[]
@@ -291,6 +295,37 @@ model PageView {
 }
 
 // ---------- Billing ----------
+
+// ---------- Panel de administración de Zertoo ----------
+// Completamente separado del modelo User (que son los dueños de cada
+// negocio cliente). No hay signup público para esto — se crea con el
+// script prisma/create-admin.ts.
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  @@map("admin_users")
+}
+
+// Registro de cada acción sensible hecha desde /admin, para poder
+// revisar después quién hizo qué y cuándo. Guardamos el email/nombre
+// del admin y del tenant "planos" (no solo el id) para que el log siga
+// siendo legible incluso si esa cuenta se borra más adelante.
+model AdminActivityLog {
+  id         String   @id @default(cuid())
+  adminEmail String
+  action     String // SUSPEND | UNSUSPEND | DELETE_TENANT | UPDATE_SUBSCRIPTION
+  tenantId   String?
+  tenantName String
+  details    String?
+  createdAt  DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("admin_activity_log")
+}
 
 model Subscription {
   id                   String   @id @default(cuid())

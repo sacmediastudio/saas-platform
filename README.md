@@ -192,6 +192,47 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       principal queda en un grupo, los precios/badges/acciones en otro
       que puede pasar a una segunda línea si no cabe).
 
+## Panel de administración (`/admin`)
+
+Completamente separado de las cuentas de tus clientes — tu propio login,
+tu propia cookie de sesión, sin ninguna relación con `User`/`Tenant`.
+
+**Crear tu primer usuario admin** (no hay signup público, a propósito):
+
+```bash
+npx tsx prisma/create-admin.ts "tu@correo.com" "tu-contraseña" "Tu Nombre"
+```
+
+En producción, corre ese mismo comando contra la base de Railway:
+
+```bash
+railway run npx tsx prisma/create-admin.ts "tu@correo.com" "tu-contraseña" "Tu Nombre"
+```
+
+Luego entra en `/admin/login`.
+
+**Qué incluye:**
+- `/admin` — resumen: negocios totales, nuevos últimos 7/30 días,
+  desglose por tipo de negocio y por estado de suscripción, últimos
+  registrados
+- `/admin/tenants` — lista de todos los negocios, con búsqueda por
+  nombre/slug y filtro por tipo
+- `/admin/tenants/[id]` — detalle de un negocio: usuarios, contacto,
+  **edición manual del plan y estado de suscripción** (útil mientras no
+  esté conectado Stripe), conteos (platos/citas/links según el tipo), y
+  botones para **suspender/reactivar** o **borrar por completo** la
+  cuenta
+- `/admin/activity` — log de las últimas 100 acciones hechas desde el
+  panel (quién suspendió/reactivó/borró una cuenta o cambió un plan, y
+  cuándo) — útil si en algún momento son varias personas con acceso al
+  panel
+
+**Suspender una cuenta** bloquea de inmediato el dashboard de ese
+negocio (redirige a `/suspended`) — no borra nada, se puede revertir.
+**Borrar una cuenta** es permanente y elimina todo lo asociado (usuarios,
+platos, citas, links, reseñas) porque todas las relaciones del schema
+usan `onDelete: Cascade` desde `Tenant`.
+
 ## Qué falta (siguiente iteración)
 
 - [ ] **Configurar Resend de verdad** antes de tener usuarios reales —

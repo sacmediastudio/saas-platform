@@ -23,6 +23,8 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Sin correo verificado, no se puede usar el dashboard — evita cuentas
   // creadas por bots y confirma que el dueño realmente controla ese correo.
   if (user && !user.emailVerified) redirect("/verify-email");
+  // Una cuenta suspendida desde el panel de admin no puede usar el dashboard.
+  if (tenant.suspended) redirect("/suspended");
 
   return (
     <DashboardShell
