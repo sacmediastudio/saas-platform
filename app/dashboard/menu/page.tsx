@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getViewsLast7Days } from "@/lib/analytics";
+import { getViewsTrend, getTotalViews } from "@/lib/analytics";
 import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import MenuEditor from "./menu-editor";
 
@@ -17,7 +17,7 @@ export default async function MenuPage() {
     redirect(moduleDashboardPath(enabledModules[0]));
   }
 
-  const [categories, items, reviews, viewsLast7Days] = await Promise.all([
+  const [categories, items, reviews, viewsTrend, totalViews] = await Promise.all([
     db.menuCategory.findMany({
       where: { tenantId: session.tenantId },
       orderBy: { sortOrder: "asc" },
@@ -27,7 +27,8 @@ export default async function MenuPage() {
       orderBy: { sortOrder: "asc" },
     }),
     db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),
-    getViewsLast7Days(session.tenantId, "MENU"),
+    getViewsTrend(session.tenantId, "MENU"),
+    getTotalViews(session.tenantId, "MENU"),
   ]);
 
   // Serializar Decimal -> number para pasarlo a un client component.
@@ -41,7 +42,9 @@ export default async function MenuPage() {
       initialItems={serializedItems}
       currency={tenant.currency}
       slug={tenant.slug}
-      viewsLast7Days={viewsLast7Days}
+      viewsLast7Days={viewsTrend.current}
+      viewsChangePercent={viewsTrend.changePercent}
+      totalViews={totalViews}
       avgRating={avgRating}
     />
   );

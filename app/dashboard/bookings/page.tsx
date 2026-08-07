@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getViewsLast7Days } from "@/lib/analytics";
+import { getViewsTrend, getTotalViews } from "@/lib/analytics";
 import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import BookingsView from "./bookings-view";
 
@@ -21,17 +21,28 @@ export default async function BookingsPage() {
   startOfDay.setHours(0, 0, 0, 0);
   const endOfDay = new Date();
   endOfDay.setHours(23, 59, 59, 999);
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [bookings, totalBookings, reviews, viewsLast7Days] = await Promise.all([
-    db.booking.findMany({
-      where: { tenantId: session.tenantId, datetime: { gte: startOfDay, lte: endOfDay } },
-      include: { service: true, staff: true },
-      orderBy: { datetime: "asc" },
-    }),
-    db.booking.count({ where: { tenantId: session.tenantId } }),
-    db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),
-    getViewsLast7Days(session.tenantId, "BOOK"),
-  ]);
+  const [bookings, totalBookings, bookingsLast7Days, reviews, viewsTrend, totalViews, bookingsByService] =
+    await Promise.all([
+      db.booking.findMany({
+        where: { tenantId: session.tenantId, datetime: { gte: startOfDay, lte: endOfDay } },
+        include: { service: true, staff: true },
+        orderBy: { datetime: "asc" },
+      }),
+      db.booking.count({ where: { tenantId: session.tenantId } }),
+      db.booking.count({ where: { tenantId: session.tenantId, createdAt: { gte: sevenDaysAgo } } }),
+      db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),
+      getViewsTrend(session.tenantId, "BOOK"),
+      getTotalViews(session.tenantId, "BOOK"),
+      db.booking.groupBy({
+        by: ["serviceId"],
+        where: { tenantId: session.tenantId },
+        _count: true,
+        orderBy: { _count: { serviceId: "desc" } },
+        take: 5,
+      }),
+    ]);
 
   const serialized = bookings.map((b) => ({
     id: b.id,
@@ -45,13 +56,24 @@ export default async function BookingsPage() {
   const avgRating =
     reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
 
+  const serviceIds = bookingsByService.map((b) => b.serviceId);
+  const services = await db.service.findMany({ where: { id: { in: serviceIds } } });
+  const topServices = bookingsByService.map((b) => ({
+    name: services.find((s) => s.id === b.serviceId)?.name ?? "Servicio eliminado",
+    count: b._count,
+  }));
+
   return (
     <BookingsView
       initialBookings={serialized}
       slug={tenant.slug}
-      viewsLast7Days={viewsLast7Days}
+      viewsLast7Days={viewsTrend.current}
+      viewsChangePercent={viewsTrend.changePercent}
+      totalViews={totalViews}
       totalBookings={totalBookings}
+      bookingsLast7Days={bookingsLast7Days}
       avgRating={avgRating}
+      topServices={topServices}
     />
   );
 }

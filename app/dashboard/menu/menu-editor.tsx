@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
+import TrendStatCard from "@/components/trend-stat-card";
 
 interface MenuItem {
   id: string;
@@ -60,6 +61,8 @@ export default function MenuEditor({
   currency,
   slug,
   viewsLast7Days,
+  viewsChangePercent,
+  totalViews,
   avgRating,
 }: {
   categories: Category[];
@@ -67,6 +70,8 @@ export default function MenuEditor({
   currency: string;
   slug: string;
   viewsLast7Days: number;
+  viewsChangePercent: number | null;
+  totalViews: number;
   avgRating: number | null;
 }) {
   const [categories, setCategories] = useState(initialCategories);
@@ -169,10 +174,11 @@ export default function MenuEditor({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-7">
-        <StatCard label="Platos activos" value={activeCount} />
-        <StatCard label="Vistas del menú (7d)" value={viewsLast7Days} />
-        <StatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
+        <TrendStatCard label="Platos activos" value={activeCount} />
+        <TrendStatCard label="Vistas totales" value={totalViews} />
+        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
       </div>
 
       {categories.length === 0 && (
@@ -625,15 +631,6 @@ function ModalShell({
         </div>
         {children}
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="bg-[#F7F8F4] rounded-lg p-4">
-      <p className="text-sm text-[#343233]/70">{label}</p>
-      <p className="text-2xl font-semibold mt-1">{value}</p>
     </div>
   );
 }

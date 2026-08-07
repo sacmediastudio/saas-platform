@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { getViewsLast7Days } from "@/lib/analytics";
+import { getViewsTrend, getTotalViews } from "@/lib/analytics";
 import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import SmartLinkEditor from "./smartlink-editor";
 
@@ -15,19 +15,28 @@ export default async function SmartLinkPage() {
     redirect(moduleDashboardPath(enabledModules[0]));
   }
 
-  const [items, viewsLast7Days] = await Promise.all([
+  const [items, viewsTrend, totalViews, clicksByType] = await Promise.all([
     db.smartLinkItem.findMany({
       where: { tenantId: session.tenantId },
       orderBy: { sortOrder: "asc" },
     }),
-    getViewsLast7Days(session.tenantId, "LINK"),
+    getViewsTrend(session.tenantId, "LINK"),
+    getTotalViews(session.tenantId, "LINK"),
+    db.smartLinkItem.groupBy({
+      by: ["type"],
+      where: { tenantId: session.tenantId },
+      _sum: { clickCount: true },
+    }),
   ]);
 
   return (
     <SmartLinkEditor
       tenant={{ name: tenant.name, slug: tenant.slug, logoUrl: tenant.logoUrl }}
       initialItems={items}
-      viewsLast7Days={viewsLast7Days}
+      viewsLast7Days={viewsTrend.current}
+      viewsChangePercent={viewsTrend.changePercent}
+      totalViews={totalViews}
+      clicksByType={Object.fromEntries(clicksByType.map((c) => [c.type, c._sum.clickCount ?? 0]))}
     />
   );
 }

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Plus, Lock, X, Copy, Check } from "lucide-react";
+import TrendStatCard from "@/components/trend-stat-card";
 
 interface BookingRow {
   id: string;
@@ -22,6 +23,10 @@ interface StaffOption {
   id: string;
   name: string;
 }
+interface TopService {
+  name: string;
+  count: number;
+}
 
 const statusStyles: Record<BookingRow["status"], { label: string; className: string }> = {
   PENDING: { label: "Pendiente", className: "bg-amber-50 text-amber-700" },
@@ -34,14 +39,22 @@ export default function BookingsView({
   initialBookings,
   slug,
   viewsLast7Days,
+  viewsChangePercent,
+  totalViews,
   totalBookings,
+  bookingsLast7Days,
   avgRating,
+  topServices,
 }: {
   initialBookings: BookingRow[];
   slug: string;
   viewsLast7Days: number;
+  viewsChangePercent: number | null;
+  totalViews: number;
   totalBookings: number;
+  bookingsLast7Days: number;
   avgRating: number | null;
+  topServices: TopService[];
 }) {
   const [bookings, setBookings] = useState(initialBookings);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -115,11 +128,27 @@ export default function BookingsView({
         {bookings.length} citas · {confirmedCount} confirmadas
       </p>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <StatCard label="Vistas (7 días)" value={viewsLast7Days} />
-        <StatCard label="Citas totales" value={totalBookings} />
-        <StatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+        <TrendStatCard label="Vistas totales" value={totalViews} />
+        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard label="Reservas (7 días)" value={bookingsLast7Days} />
+        <TrendStatCard label="Citas totales" value={totalBookings} />
+        <TrendStatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
       </div>
+
+      {topServices.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold mb-2">Servicios más reservados</h2>
+          <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
+            {topServices.map((s) => (
+              <div key={s.name} className="flex items-center gap-3 px-4 py-2.5">
+                <span className="text-sm flex-1">{s.name}</span>
+                <span className="text-sm font-semibold">{s.count} reserva{s.count === 1 ? "" : "s"}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
         <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
@@ -547,15 +576,6 @@ function ModalShell({
         </div>
         {children}
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="bg-[#F7F8F4] rounded-lg p-4">
-      <p className="text-sm text-[#343233]/70">{label}</p>
-      <p className="text-2xl font-semibold mt-1">{value}</p>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import TrendStatCard from "@/components/trend-stat-card";
 import {
   Plus,
   Pencil,
@@ -66,10 +67,16 @@ export default function SmartLinkEditor({
   tenant,
   initialItems,
   viewsLast7Days,
+  viewsChangePercent,
+  totalViews,
+  clicksByType,
 }: {
   tenant: { name: string; slug: string; logoUrl: string | null };
   initialItems: SmartLinkItem[];
   viewsLast7Days: number;
+  viewsChangePercent: number | null;
+  totalViews: number;
+  clicksByType: Partial<Record<LinkType, number>>;
 }) {
   const [items, setItems] = useState(initialItems);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; item?: SmartLinkItem } | null>(null);
@@ -143,10 +150,37 @@ export default function SmartLinkEditor({
         </button>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        <StatCard label="Vistas (7 días)" value={viewsLast7Days} />
-        <StatCard label="Clics totales" value={items.reduce((sum, i) => sum + i.clickCount, 0)} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+        <TrendStatCard label="Vistas totales" value={totalViews} />
+        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard
+          label="Clics totales"
+          value={Object.values(clicksByType).reduce((sum, n) => sum + n, 0)}
+        />
       </div>
+
+      {Object.keys(clicksByType).length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-sm font-semibold mb-2">Clics por tipo</h2>
+          <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
+            {(Object.entries(clicksByType) as [LinkType, number][])
+              .sort((a, b) => b[1] - a[1])
+              .map(([type, count]) => {
+                const meta = TYPE_META[type];
+                const Icon = meta.icon;
+                return (
+                  <div key={type} className="flex items-center gap-3 px-4 py-2.5">
+                    <Icon size={15} className="text-[#343233]/70 shrink-0" aria-hidden />
+                    <span className="text-sm flex-1">{meta.label}</span>
+                    <span className="text-sm font-semibold">
+                      {count} {type === "VCARD" ? "descargas" : "clics"}
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+      )}
 
       {sortedItems.length === 0 && (
         <p className="text-sm text-[#343233]/60">Todavía no tienes links. Agrega el primero.</p>
@@ -357,12 +391,3 @@ function LinkModal({
 
 const inputClass =
   "w-full bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40";
-
-function StatCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="bg-[#F7F8F4] rounded-lg p-4">
-      <p className="text-sm text-[#343233]/70">{label}</p>
-      <p className="text-2xl font-semibold mt-1">{value}</p>
-    </div>
-  );
-}
