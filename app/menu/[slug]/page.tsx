@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import PublicMenu from "./public-menu";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const tenant = await db.tenant.findUnique({ where: { slug: params.slug }, select: { name: true } });
+  return { title: tenant ? `Zertoo | ${tenant.name}` : "Zertoo" };
+}
 
 export default async function PublicMenuPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });

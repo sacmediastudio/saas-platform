@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import {
   Globe,
   MessageCircle,
@@ -35,6 +36,11 @@ function hrefFor(type: string, value: string): string {
     return `tel:${value.replace(/\s+/g, "")}`;
   }
   return value;
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const tenant = await db.tenant.findUnique({ where: { slug: params.slug }, select: { name: true } });
+  return { title: tenant ? `Zertoo | ${tenant.name}` : "Zertoo" };
 }
 
 export default async function PublicSmartLinkPage({ params }: { params: { slug: string } }) {
@@ -87,7 +93,17 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
           </div>
         )}
 
-        <p className="text-lg font-semibold text-center mb-8">{tenant.name}</p>
+        <p className={`text-2xl font-bold text-center ${tenant.heroTagline ? "mb-1" : "mb-8"}`}>
+          {tenant.name}
+        </p>
+        {tenant.heroTagline && (
+          <p
+            className="text-sm text-center mb-8 max-w-[280px] leading-relaxed"
+            style={{ opacity: hasBgImage ? 0.85 : 0.65 }}
+          >
+            {tenant.heroTagline}
+          </p>
+        )}
 
         <div className="w-full flex flex-col gap-3">
           {items.map((item) => {
@@ -110,6 +126,16 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
           {items.length === 0 && (
             <p className="text-sm text-center opacity-70">Este perfil todavía no tiene links.</p>
           )}
+        </div>
+
+        <div className="pt-10 pb-2 opacity-50">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/logo.svg"
+            alt="Zertoo"
+            className="h-4 w-auto"
+            style={hasBgImage ? { filter: "brightness(0) invert(1)" } : undefined}
+          />
         </div>
       </div>
     </div>

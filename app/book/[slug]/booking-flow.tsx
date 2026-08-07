@@ -20,6 +20,7 @@ const HOURS = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"];
 
 export default function BookingFlow({
   tenantName,
+  tenantTagline,
   services,
   currency,
   themeBgColor,
@@ -28,6 +29,7 @@ export default function BookingFlow({
   buttonTextColor,
 }: {
   tenantName: string;
+  tenantTagline: string | null;
   services: ServiceOption[];
   currency: string;
   themeBgColor: string;
@@ -91,6 +93,10 @@ export default function BookingFlow({
         <p className="text-sm opacity-70">
           Te llegará una confirmación a {customer.email} cuando el negocio confirme tu cita.
         </p>
+        <div className="flex justify-center pt-10 opacity-50">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto" />
+        </div>
       </div>
     );
   }
@@ -100,7 +106,9 @@ export default function BookingFlow({
       className="max-w-sm mx-auto min-h-screen px-4 pt-10"
       style={{ backgroundColor: themeBgColor, color: themeTextColor }}
     >
-      <p className="text-sm font-medium mb-5">Reservar en {tenantName}</p>
+      <p className="text-base font-semibold mb-1">Reservar en {tenantName}</p>
+      {tenantTagline && <p className="text-xs opacity-60 mb-5 leading-relaxed">{tenantTagline}</p>}
+      {!tenantTagline && <div className="mb-4" />}
 
       {step === 1 && (
         <div>
@@ -213,6 +221,11 @@ export default function BookingFlow({
           </div>
         </div>
       )}
+
+      <div className="flex justify-center py-8 opacity-50">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto" />
+      </div>
     </div>
   );
 }

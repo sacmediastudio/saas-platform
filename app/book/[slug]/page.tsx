@@ -1,6 +1,12 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import BookingFlow from "./booking-flow";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const tenant = await db.tenant.findUnique({ where: { slug: params.slug }, select: { name: true } });
+  return { title: tenant ? `Zertoo | ${tenant.name}` : "Zertoo" };
+}
 
 export default async function PublicBookingPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
@@ -18,6 +24,7 @@ export default async function PublicBookingPage({ params }: { params: { slug: st
   return (
     <BookingFlow
       tenantName={tenant.name}
+      tenantTagline={tenant.heroTagline}
       services={serialized}
       currency={tenant.currency}
       themeBgColor={tenant.themeBgColor}

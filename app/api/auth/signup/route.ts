@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { signSession, sessionCookieName } from "@/lib/auth";
+import { sendVerificationEmail, generateVerificationCode } from "@/lib/email";
 
 const schema = z.object({
   businessName: z.string().min(1),
@@ -41,6 +42,8 @@ export async function POST(req: NextRequest) {
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
+  const verificationCode = generateVerificationCode();
+  const verificationCodeExpiresAt = new Date(Date.now() + 15 * 60_000); // 15 min
 
   const { tenant, user } = await db.$transaction(async (tx: Prisma.TransactionClient) => {
     const tenant = await tx.tenant.create({
@@ -52,7 +55,17 @@ export async function POST(req: NextRequest) {
       },
     });
     const user = await tx.user.create({
-      data: { tenantId: tenant.id, email, passwordHash, name, role: "OWNER" },
+      data: {
+        tenantId: tenant.id,
+        email,
+        passwordHash,
+        name,
+        role: "OWNER",
+        emailVerified: false,
+        verificationCode,
+        verificationCodeExpiresAt,
+        verificationCodeSentAt: new Date(),
+      },
     });
     await tx.subscription.create({
       data: { tenantId: tenant.id, plan: "STARTER", status: "trialing" },
@@ -63,6 +76,12 @@ export async function POST(req: NextRequest) {
     }
     return { tenant, user };
   });
+
+  // No bloqueamos el signup si el envío de correo falla — el código ya
+  // quedó guardado y la persona puede pedir que se lo reenvíen.
+  await sendVerificationEmail(email, verificationCode, businessName).catch((err) =>
+    console.error("No se pudo enviar el correo de verificación:", err)
+  );
 
   const token = signSession({ userId: user.id, tenantId: tenant.id, role: "OWNER" });
   const res = NextResponse.json({ tenant: { slug: tenant.slug } }, { status: 201 });

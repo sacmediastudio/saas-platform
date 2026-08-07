@@ -60,13 +60,7 @@ function SignupForm() {
         return;
       }
 
-      const destination =
-        businessType === "RESTAURANT"
-          ? "/dashboard/menu"
-          : businessType === "SMALL_BUSINESS"
-          ? "/dashboard/bookings"
-          : "/dashboard/smartlink";
-      router.push(destination);
+      router.push("/verify-email");
       router.refresh();
     } catch (err) {
       // Fallo de red (sin conexión, CORS, servidor caído, etc.)

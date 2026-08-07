@@ -93,6 +93,15 @@ model User {
   role         UserRole @default(OWNER)
   createdAt    DateTime @default(now())
 
+  // Default en `true` a propósito: así las cuentas que ya existían antes
+  // de este campo no quedan bloqueadas sin querer. El signup nuevo
+  // sobrescribe esto a `false` explícitamente para las cuentas que sí
+  // deben verificar su correo.
+  emailVerified              Boolean   @default(true)
+  verificationCode           String?
+  verificationCodeExpiresAt  DateTime?
+  verificationCodeSentAt     DateTime?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])

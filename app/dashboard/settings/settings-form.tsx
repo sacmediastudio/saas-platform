@@ -140,18 +140,26 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
           shape="wide"
         />
 
-        {form.businessType !== "SMARTLINK" && (
-          <Field label="Descripción corta (aparece debajo de tu nombre en el menú público)">
-            <textarea
-              value={form.heroTagline ?? ""}
-              onChange={(e) => setForm({ ...form, heroTagline: e.target.value })}
-              rows={2}
-              maxLength={200}
-              placeholder="Cortes a la parrilla, cócteles tropicales y la cálida hospitalidad de la isla."
-              className={`${inputClass} resize-none`}
-            />
-          </Field>
-        )}
+        <Field
+          label={
+            form.businessType === "SMARTLINK"
+              ? "Descripción corta (aparece debajo de tu nombre)"
+              : "Descripción corta (aparece debajo de tu nombre en el menú público)"
+          }
+        >
+          <textarea
+            value={form.heroTagline ?? ""}
+            onChange={(e) => setForm({ ...form, heroTagline: e.target.value })}
+            rows={2}
+            maxLength={200}
+            placeholder={
+              form.businessType === "SMARTLINK"
+                ? "Diseñadora gráfica y fotógrafa en Buenos Aires."
+                : "Cortes a la parrilla, cócteles tropicales y la cálida hospitalidad de la isla."
+            }
+            className={`${inputClass} resize-none`}
+          />
+        </Field>
       </Section>
 
       <Section title="Contacto">

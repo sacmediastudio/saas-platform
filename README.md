@@ -151,8 +151,34 @@ tenant devuelve 404 en vez de exponer que el registro existe.
       `lib/i18n-landing.ts`. *Nota: esto cubre solo la landing pública;
       el dashboard, login y signup siguen en español únicamente — hacer
       toda la app bilingüe sería un proyecto aparte.*
+- [x] **Footer en los 3 dashboards**: logo de Zertoo + copyright, en el
+      layout compartido (`app/dashboard/layout.tsx`), así que aparece
+      automáticamente en Menú, Citas y Smartlink sin duplicar código.
+- [x] **Verificación de correo por código al registrarse**: al hacer
+      signup, se genera un código de 6 dígitos que expira en 15 minutos
+      y se manda por correo (ver `lib/email.ts`). Mientras el correo no
+      esté verificado, el layout del dashboard redirige a
+      `/verify-email` — no se puede usar la plataforma sin verificar.
+      **Importante**: sin `RESEND_API_KEY` configurada, el código se
+      imprime en los logs del servidor en vez de enviarse por correo de
+      verdad (ver la nota en `.env.example`) — esto mantiene el flujo
+      usable para probar, pero antes de lanzar con usuarios reales hay
+      que configurar esa variable. Las cuentas creadas *antes* de este
+      cambio no se ven afectadas (quedan marcadas como verificadas por
+      default, para no bloquear accesos existentes).
+- [x] **Título de pestaña dinámico** (`Zertoo | Nombre del negocio`) en
+      los 3 dashboards y en las 3 páginas públicas (`/menu`, `/book`,
+      `/link`), vía `generateMetadata` de Next.js.
+- [x] **Logo de Zertoo en el footer de las páginas públicas**: pequeño,
+      centrado, semi-transparente, en `/menu`, `/book` y `/link`. En
+      Smartlink se invierte a blanco automáticamente cuando el negocio
+      tiene una foto de fondo (para que siga siendo visible).
 
 ## Qué falta (siguiente iteración)
+
+- [ ] **Configurar Resend de verdad** antes de tener usuarios reales —
+      ahora mismo el código de verificación solo se ve en los logs del
+      servidor si no se configura `RESEND_API_KEY`.
 
 - [ ] Storage real de imágenes (S3 o Cloudflare R2). Hoy las fotos se
       guardan como data URI directo en la base de datos — funciona, pero

@@ -109,7 +109,7 @@ export default function PublicMenu({
               className="w-16 h-16 rounded-2xl object-cover mb-4 border-2 border-white/30"
             />
           )}
-          <p className="text-white text-3xl font-bold mb-2">{tenant.name}</p>
+          <p className="text-white text-4xl font-bold mb-2">{tenant.name}</p>
           <p className="text-white/70 text-xs tracking-[0.2em] uppercase mb-4">Menú</p>
           {tenant.heroTagline && (
             <p className="text-white/85 text-sm leading-relaxed mb-6">{tenant.heroTagline}</p>
@@ -283,6 +283,11 @@ export default function PublicMenu({
             )}
           </div>
         )}
+      </div>
+
+      <div className="flex justify-center py-6 opacity-50">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto" />
       </div>
 
       {tenant.contactPhone && (
