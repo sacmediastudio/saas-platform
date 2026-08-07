@@ -249,8 +249,6 @@ usan `onDelete: Cascade` desde `Tenant`.
 - [ ] Envío de email/SMS de confirmación (SendGrid/Twilio) al crear o
       confirmar un booking — hay un `TODO` marcado en el código exacto
       donde va
-- [ ] Página `/review/[slug]` para que el cliente deje su reseña (el
-      endpoint `POST /api/reviews` ya existe y funciona)
 - [ ] Tests automatizados de los endpoints de API
 - [ ] Reemplazar los estilos inline por Tailwind/componentes reutilizables
       — están así para que cada archivo sea legible de un vistazo
@@ -283,6 +281,16 @@ por todos los módulos activos de cada uno — así que un negocio con
 Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
+
+## Página pública de reseñas (`/review/[slug]`)
+
+Funciona para cualquier tipo de negocio (no está atada a un módulo
+específico). Selector de estrellas interactivo, nombre y comentario
+opcional, usa los colores de marca del negocio igual que las otras 3
+páginas públicas. Enlazada desde:
+- `/menu/[slug]` — botón debajo de la lista de platos
+- `/book/[slug]` — link en la pantalla de "Reserva enviada"
+- `/link/[slug]` — link debajo de la lista de enlaces
 
 ## Stack
 

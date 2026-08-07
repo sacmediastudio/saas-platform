@@ -28,6 +28,7 @@ export default async function PublicBookingPage({ params }: { params: { slug: st
   return (
     <BookingFlow
       tenantName={tenant.name}
+      tenantSlug={tenant.slug}
       tenantTagline={tenant.heroTagline}
       services={serialized}
       currency={tenant.currency}

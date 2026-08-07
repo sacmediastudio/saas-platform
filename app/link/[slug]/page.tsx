@@ -123,7 +123,15 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
           )}
         </div>
 
-        <div className="pt-10 pb-2 opacity-50">
+        <a
+          href={`/review/${tenant.slug}`}
+          className="text-sm font-medium underline pt-8"
+          style={{ opacity: 0.7 }}
+        >
+          Dejar una reseña
+        </a>
+
+        <div className="pt-6 pb-2 opacity-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo.svg"

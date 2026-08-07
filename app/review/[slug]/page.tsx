@@ -1,0 +1,28 @@
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { db } from "@/lib/db";
+import ReviewForm from "./review-form";
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const tenant = await db.tenant.findUnique({ where: { slug: params.slug }, select: { name: true } });
+  return { title: tenant ? `Zertoo | Reseña para ${tenant.name}` : "Zertoo" };
+}
+
+export default async function PublicReviewPage({ params }: { params: { slug: string } }) {
+  const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
+  if (!tenant) notFound();
+
+  return (
+    <ReviewForm
+      tenant={{
+        name: tenant.name,
+        slug: tenant.slug,
+        logoUrl: tenant.logoUrl,
+        themeBgColor: tenant.themeBgColor,
+        themeTextColor: tenant.themeTextColor,
+        buttonColor: tenant.buttonColor,
+        buttonTextColor: tenant.buttonTextColor,
+      }}
+    />
+  );
+}

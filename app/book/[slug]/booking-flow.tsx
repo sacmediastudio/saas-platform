@@ -20,6 +20,7 @@ const HOURS = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"];
 
 export default function BookingFlow({
   tenantName,
+  tenantSlug,
   tenantTagline,
   services,
   currency,
@@ -29,6 +30,7 @@ export default function BookingFlow({
   buttonTextColor,
 }: {
   tenantName: string;
+  tenantSlug: string;
   tenantTagline: string | null;
   services: ServiceOption[];
   currency: string;
@@ -93,7 +95,14 @@ export default function BookingFlow({
         <p className="text-sm opacity-70">
           Te llegará una confirmación a {customer.email} cuando el negocio confirme tu cita.
         </p>
-        <div className="flex justify-center pt-10 opacity-50">
+        <a
+          href={`/review/${tenantSlug}`}
+          className="text-sm font-medium underline mt-6"
+          style={{ opacity: 0.8 }}
+        >
+          ¿Ya visitaste antes? Deja tu reseña
+        </a>
+        <div className="flex justify-center pt-8 opacity-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto" />
         </div>
