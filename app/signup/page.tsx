@@ -1,7 +1,8 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { authTranslations, getStoredLang, translateApiError, type Lang } from "@/lib/i18n-auth";
 
 const GREEN = "#002D09";
 const LIME = "#E7FF00";
@@ -26,12 +27,27 @@ function SignupForm() {
   const searchParams = useSearchParams();
   const preselected = searchParams.get("type");
 
+  const [lang, setLang] = useState<Lang>("en");
+  // El idioma se decide por lo que la persona eligió en la landing —
+  // no hay selector acá, solo lo heredamos.
+  useEffect(() => {
+    setLang(getStoredLang());
+  }, []);
+
   const [businessType, setBusinessType] = useState<BusinessType>(
     isBusinessType(preselected) ? preselected : "RESTAURANT"
   );
   const [form, setForm] = useState({ businessName: "", name: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const t = authTranslations[lang].signup;
+  const errors = authTranslations[lang].errors;
+  const businessTypeOptions: { value: BusinessType; label: string }[] = [
+    { value: "RESTAURANT", label: t.businessTypes.RESTAURANT },
+    { value: "SMALL_BUSINESS", label: t.businessTypes.SMALL_BUSINESS },
+    { value: "SMARTLINK", label: t.businessTypes.SMARTLINK },
+  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,10 +62,10 @@ function SignupForm() {
       });
 
       if (!res.ok) {
-        let message = `Error del servidor (${res.status})`;
+        let message = errors.generic;
         try {
           const body = await res.json();
-          if (typeof body.error === "string") message = body.error;
+          if (typeof body.error === "string") message = translateApiError(body.error, lang);
         } catch {
           // La respuesta no era JSON (ej. una página de error genérica
           // de la plataforma de hosting) — nos quedamos con el mensaje
@@ -64,7 +80,7 @@ function SignupForm() {
       router.refresh();
     } catch (err) {
       // Fallo de red (sin conexión, CORS, servidor caído, etc.)
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(errors.networkError);
       setLoading(false);
     }
   }
@@ -78,17 +94,11 @@ function SignupForm() {
         style={{ height: 36, margin: "0 auto 32px", display: "block" }}
       />
 
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, color: GREEN }}>Crea tu cuenta</h1>
-      <p style={{ color: "#666", marginBottom: 24, fontSize: 14 }}>14 días gratis, sin tarjeta</p>
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, color: GREEN }}>{t.title}</h1>
+      <p style={{ color: "#666", marginBottom: 24, fontSize: 14 }}>{t.subtitle}</p>
 
       <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-        {(
-          [
-            { value: "RESTAURANT", label: "Restaurante" },
-            { value: "SMALL_BUSINESS", label: "Negocio de servicios" },
-            { value: "SMARTLINK", label: "Smartlink" },
-          ] as const
-        ).map((opt) => (
+        {businessTypeOptions.map((opt) => (
           <button
             key={opt.value}
             type="button"
@@ -111,14 +121,14 @@ function SignupForm() {
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <input
-          placeholder="Nombre del negocio"
+          placeholder={t.businessName}
           value={form.businessName}
           onChange={(e) => setForm({ ...form, businessName: e.target.value })}
           required
           style={inputStyle}
         />
         <input
-          placeholder="Tu nombre"
+          placeholder={t.yourName}
           value={form.name}
           onChange={(e) => setForm({ ...form, name: e.target.value })}
           required
@@ -126,7 +136,7 @@ function SignupForm() {
         />
         <input
           type="email"
-          placeholder="name@correo.com"
+          placeholder={t.email}
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           required
@@ -134,7 +144,7 @@ function SignupForm() {
         />
         <input
           type="password"
-          placeholder="Contraseña (mínimo 8 caracteres)"
+          placeholder={t.password}
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
@@ -155,14 +165,14 @@ function SignupForm() {
             marginTop: 6,
           }}
         >
-          {loading ? "Creando cuenta..." : "Crear cuenta"}
+          {loading ? t.submitting : t.submit}
         </button>
       </form>
 
       <p style={{ fontSize: 13, color: "#666", marginTop: 16, textAlign: "center" }}>
-        ¿Ya tienes cuenta?{" "}
+        {t.haveAccount}{" "}
         <a href="/login" style={{ textDecoration: "underline", color: GREEN, fontWeight: 600 }}>
-          Inicia sesión
+          {t.loginLink}
         </a>
       </p>
     </div>

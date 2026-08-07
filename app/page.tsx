@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UtensilsCrossed,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import Reveal from "@/components/reveal";
 import { translations, type Lang } from "@/lib/i18n-landing";
+import { getStoredLang, setStoredLang } from "@/lib/i18n-auth";
 
 const LOGO = "/logo.svg";
 const DASHBOARD = "https://images.hostinger.com/7d431ae5-239d-4f18-8ad3-1a498cd57431.png";
@@ -455,7 +456,20 @@ function Footer({ t }: { t: (typeof translations)["en"] }) {
 }
 
 export default function HomePage() {
-  const [lang, setLang] = useState<Lang>("en");
+  const [lang, setLangState] = useState<Lang>("en");
+
+  // Al montar, recupera el idioma que la persona haya elegido antes
+  // (en esta misma visita o en una anterior), para que la landing no
+  // "olvide" su preferencia si vuelve a entrar.
+  useEffect(() => {
+    setLangState(getStoredLang());
+  }, []);
+
+  function setLang(l: Lang) {
+    setLangState(l);
+    setStoredLang(l);
+  }
+
   const t = translations[lang];
 
   return (

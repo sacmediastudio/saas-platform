@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { authTranslations, getStoredLang, translateApiError, type Lang } from "@/lib/i18n-auth";
 
 const GREEN = "#002D09";
 const LIME = "#E7FF00";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [lang, setLang] = useState<Lang>("en");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // El idioma se decide por lo que la persona eligió en la landing —
+  // no hay selector acá, solo lo heredamos.
+  useEffect(() => {
+    setLang(getStoredLang());
+  }, []);
+
+  const t = authTranslations[lang].login;
+  const errors = authTranslations[lang].errors;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,10 +36,10 @@ export default function LoginPage() {
       });
 
       if (!res.ok) {
-        let message = `Error del servidor (${res.status})`;
+        let message = errors.generic;
         try {
           const body = await res.json();
-          if (typeof body.error === "string") message = body.error;
+          if (typeof body.error === "string") message = translateApiError(body.error, lang);
         } catch {
           // Respuesta no-JSON — nos quedamos con el mensaje por defecto.
         }
@@ -40,7 +51,7 @@ export default function LoginPage() {
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(errors.networkError);
       setLoading(false);
     }
   }
@@ -54,12 +65,12 @@ export default function LoginPage() {
         style={{ height: 36, margin: "0 auto 32px", display: "block" }}
       />
 
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, color: GREEN }}>Inicia sesión</h1>
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 20, color: GREEN }}>{t.title}</h1>
 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         <input
           type="email"
-          placeholder="name@correo.com"
+          placeholder={t.email}
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.target.value })}
           required
@@ -67,7 +78,7 @@ export default function LoginPage() {
         />
         <input
           type="password"
-          placeholder="Contraseña"
+          placeholder={t.password}
           value={form.password}
           onChange={(e) => setForm({ ...form, password: e.target.value })}
           required
@@ -87,14 +98,14 @@ export default function LoginPage() {
             marginTop: 6,
           }}
         >
-          {loading ? "Entrando..." : "Entrar"}
+          {loading ? t.submitting : t.submit}
         </button>
       </form>
 
       <p style={{ fontSize: 13, color: "#666", marginTop: 16, textAlign: "center" }}>
-        ¿No tienes cuenta?{" "}
+        {t.noAccount}{" "}
         <a href="/signup" style={{ textDecoration: "underline", color: GREEN, fontWeight: 600 }}>
-          Regístrate
+          {t.signUpLink}
         </a>
       </p>
     </div>

@@ -1,13 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { authTranslations, getStoredLang, translateApiError, type Lang } from "@/lib/i18n-auth";
 
 const GREEN = "#002D09";
 const LIME = "#E7FF00";
 
 export default function VerifyEmailPage() {
   const router = useRouter();
+  const [lang, setLang] = useState<Lang>("en");
+  useEffect(() => {
+    setLang(getStoredLang());
+  }, []);
+
+  const t = authTranslations[lang].verify;
+  const errors = authTranslations[lang].errors;
+
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -28,10 +37,10 @@ export default function VerifyEmailPage() {
       });
 
       if (!res.ok) {
-        let message = "No se pudo verificar el código";
+        let message = errors.generic;
         try {
           const body = await res.json();
-          if (typeof body.error === "string") message = body.error;
+          if (typeof body.error === "string") message = translateApiError(body.error, lang);
         } catch {}
         setError(message);
         setVerifying(false);
@@ -41,7 +50,7 @@ export default function VerifyEmailPage() {
       router.push("/dashboard");
       router.refresh();
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(errors.networkError);
       setVerifying(false);
     }
   }
@@ -53,17 +62,17 @@ export default function VerifyEmailPage() {
     try {
       const res = await fetch("/api/auth/resend-verification", { method: "POST" });
       if (!res.ok) {
-        let message = "No se pudo reenviar el código";
+        let message = errors.generic;
         try {
           const body = await res.json();
-          if (typeof body.error === "string") message = body.error;
+          if (typeof body.error === "string") message = translateApiError(body.error, lang);
         } catch {}
         setError(message);
         return;
       }
-      setInfo("Te enviamos un nuevo código.");
+      setInfo(t.resent);
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(errors.networkError);
     } finally {
       setResending(false);
     }
@@ -74,10 +83,8 @@ export default function VerifyEmailPage() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/logo.svg" alt="Zertoo" style={{ height: 36, margin: "0 auto 32px", display: "block" }} />
 
-      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: GREEN }}>Verifica tu correo</h1>
-      <p style={{ color: "#666", marginBottom: 28, fontSize: 14, lineHeight: 1.5 }}>
-        Te enviamos un código de 6 dígitos. Ingrésalo aquí para activar tu cuenta.
-      </p>
+      <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8, color: GREEN }}>{t.title}</h1>
+      <p style={{ color: "#666", marginBottom: 28, fontSize: 14, lineHeight: 1.5 }}>{t.subtitle}</p>
 
       <form onSubmit={handleVerify} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         <input
@@ -113,7 +120,7 @@ export default function VerifyEmailPage() {
             opacity: verifying || code.length !== 6 ? 0.5 : 1,
           }}
         >
-          {verifying ? "Verificando..." : "Verificar"}
+          {verifying ? t.submitting : t.submit}
         </button>
       </form>
 
@@ -122,7 +129,7 @@ export default function VerifyEmailPage() {
         disabled={resending}
         style={{ marginTop: 20, fontSize: 13, color: GREEN, textDecoration: "underline", fontWeight: 600 }}
       >
-        {resending ? "Enviando..." : "Reenviar código"}
+        {resending ? t.resending : t.resend}
       </button>
     </div>
   );
