@@ -210,4 +210,4 @@ export const translations = {
       copyright: "Todos los derechos reservados.",
     },
   },
-} as const;
+};
