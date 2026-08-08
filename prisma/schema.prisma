@@ -100,6 +100,7 @@ model Tenant {
   smartLinkItems SmartLinkItem[]
   pageViews      PageView[]
   businessHours  BusinessHours[]
+  externalReviewLinks ExternalReviewLink[]
   subscription   Subscription?
 
   @@map("tenants")
@@ -317,6 +318,33 @@ model BusinessHours {
 
   @@unique([tenantId, dayOfWeek])
   @@map("business_hours")
+}
+
+// Links a plataformas externas de reseñas (Google, TripAdvisor, Yelp,
+// etc.) que el negocio puede agregar y activar/desactivar cuando
+// quiera, sin borrar la configuración. Se muestran en /review/[slug]
+// junto al formulario de reseña interno.
+enum ReviewPlatform {
+  GOOGLE
+  TRIPADVISOR
+  YELP
+  FACEBOOK
+  CUSTOM
+}
+
+model ExternalReviewLink {
+  id        String         @id @default(cuid())
+  tenantId  String
+  platform  ReviewPlatform
+  label     String
+  url       String
+  enabled   Boolean        @default(true)
+  sortOrder Int            @default(0)
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("external_review_links")
 }
 
 enum PageViewKind {

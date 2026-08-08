@@ -282,6 +282,18 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Links a plataformas externas de reseñas
+
+Desde `/dashboard/reviews` (que de paso pasé a tema claro — se había
+quedado con las clases oscuras viejas de antes del rebranding), el
+negocio puede agregar links a Google, TripAdvisor, Yelp, Facebook, u
+"Otro" (cualquier URL), cada uno con su propio **activar/desactivar**
+sin perder la configuración guardada. Se muestran en
+`/review/[slug]`, arriba del formulario de reseña interno, con un
+separador ("o déjanos tu reseña aquí"). Modelo nuevo:
+`ExternalReviewLink` (tenantId, platform, label, url, enabled,
+sortOrder).
+
 ## Sistema de disponibilidad y calendario de Citas
 
 Antes, los horarios que veía el cliente en `/book/[slug]` eran fijos

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Star } from "lucide-react";
+import { Star, ExternalLink } from "lucide-react";
 
 interface TenantData {
   name: string;
@@ -12,8 +12,20 @@ interface TenantData {
   buttonColor: string;
   buttonTextColor: string;
 }
+interface ExternalLinkData {
+  id: string;
+  platform: string;
+  label: string;
+  url: string;
+}
 
-export default function ReviewForm({ tenant }: { tenant: TenantData }) {
+export default function ReviewForm({
+  tenant,
+  externalLinks,
+}: {
+  tenant: TenantData;
+  externalLinks: ExternalLinkData[];
+}) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewerName, setReviewerName] = useState("");
@@ -118,6 +130,31 @@ export default function ReviewForm({ tenant }: { tenant: TenantData }) {
           <p className="text-lg font-semibold">Deja tu reseña</p>
           <p className="text-sm opacity-60 mt-1">¿Cómo fue tu experiencia con {tenant.name}?</p>
         </div>
+
+        {externalLinks.length > 0 && (
+          <div className="mb-8">
+            <div className="flex flex-col gap-2.5">
+              {externalLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl border text-sm font-medium hover:brightness-105 transition-all"
+                  style={{ borderColor: "currentColor", opacity: 1 }}
+                >
+                  <ExternalLink size={14} aria-hidden />
+                  {link.label}
+                </a>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 my-6 opacity-40">
+              <div className="flex-1 h-px" style={{ backgroundColor: "currentColor" }} />
+              <span className="text-xs">o déjanos tu reseña aquí</span>
+              <div className="flex-1 h-px" style={{ backgroundColor: "currentColor" }} />
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="flex items-center justify-center gap-2">

@@ -12,6 +12,11 @@ export default async function PublicReviewPage({ params }: { params: { slug: str
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
   if (!tenant) notFound();
 
+  const externalLinks = await db.externalReviewLink.findMany({
+    where: { tenantId: tenant.id, enabled: true },
+    orderBy: { sortOrder: "asc" },
+  });
+
   return (
     <ReviewForm
       tenant={{
@@ -23,6 +28,7 @@ export default async function PublicReviewPage({ params }: { params: { slug: str
         buttonColor: tenant.buttonColor,
         buttonTextColor: tenant.buttonTextColor,
       }}
+      externalLinks={externalLinks.map((l) => ({ id: l.id, platform: l.platform, label: l.label, url: l.url }))}
     />
   );
 }
