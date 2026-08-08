@@ -3,3 +3,5 @@ node_modules
 .env
 *.tsbuildinfo
 .DS_Store
+.env.save
+.env
