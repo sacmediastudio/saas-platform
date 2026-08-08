@@ -3,7 +3,10 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 
-const updateSchema = z.object({ name: z.string().min(1) });
+const updateSchema = z.object({
+  name: z.string().min(1),
+  nameEn: z.string().nullable().optional(),
+});
 
 async function findOwnedCategory(tenantId: string, id: string) {
   return db.menuCategory.findFirst({ where: { id, tenantId } });
@@ -23,7 +26,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const category = await db.menuCategory.update({
     where: { id: params.id },
-    data: { name: parsed.data.name },
+    data: { name: parsed.data.name, nameEn: parsed.data.nameEn || null },
   });
   return NextResponse.json({ category });
 }

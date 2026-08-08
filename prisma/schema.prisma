@@ -129,6 +129,10 @@ model MenuCategory {
   id        String   @id @default(cuid())
   tenantId  String
   name      String
+  // Traducción manual opcional al inglés (no automática — la escribe el
+  // dueño, para no depender de un servicio de traducción de pago y para
+  // no arriesgar traducciones incorrectas de ingredientes/alérgenos).
+  nameEn    String?
   sortOrder Int      @default(0)
 
   tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -144,6 +148,10 @@ model MenuItem {
   categoryId  String
   name        String
   description String?
+  // Traducción manual opcional de la descripción — mismo criterio que
+  // MenuCategory.nameEn. El nombre del plato nunca se traduce (puede
+  // ser cualquier cosa: una marca, un plato regional, etc.).
+  descriptionEn String?
   price       Decimal        @db.Decimal(10, 2)
   imageUrl    String?
   status      MenuItemStatus @default(AVAILABLE)

@@ -7,8 +7,9 @@ const createSchema = z.object({
   categoryId: z.string(),
   name: z.string().min(1),
   description: z.string().optional(),
+  descriptionEn: z.string().nullable().optional(),
   price: z.number().positive(),
-  imageUrl: z.string().min(1).optional(), // acepta URL http(s) o data URI (foto subida por el usuario)
+  imageUrl: z.string().min(1).nullable().optional(), // acepta URL http(s), data URI, null (sin foto), o ausente
   featured: z.boolean().default(false),
   allergens: z.array(z.string()).default([]),
 });

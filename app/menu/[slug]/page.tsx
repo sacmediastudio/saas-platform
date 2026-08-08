@@ -43,12 +43,13 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
         buttonTextColor: tenant.buttonTextColor,
         menuShowPhotos: tenant.menuShowPhotos,
       }}
-      categories={categories.map((c) => ({ id: c.id, name: c.name }))}
+      categories={categories.map((c) => ({ id: c.id, name: c.name, nameEn: c.nameEn }))}
       items={items.map((i) => ({
         id: i.id,
         categoryId: i.categoryId,
         name: i.name,
         description: i.description,
+        descriptionEn: i.descriptionEn,
         price: Number(i.price),
         status: i.status,
         featured: i.featured,

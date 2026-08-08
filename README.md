@@ -282,6 +282,19 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Menú público bilingüe (EN/ES)
+
+Toggle ES/EN en la barra de categorías de `/menu/[slug]`. **Solo se
+traducen categorías y descripciones de platos — nunca el nombre del
+plato** (puede ser cualquier cosa: una marca, un plato regional, un
+nombre propio). Sin servicio de traducción automática de por medio: el
+negocio escribe su propia versión en inglés desde el dashboard
+(`MenuCategory.nameEn`, `MenuItem.descriptionEn`, ambos opcionales). Si
+no se llenó la versión en inglés de algo, se muestra el original en
+español — nunca queda un hueco vacío. El idioma elegido se guarda igual
+que en la landing (`localStorage`, misma clave), así que si alguien
+llegó desde la landing ya en inglés, el menú abre en inglés también.
+
 ## Fotos en la lista del menú (opcional, por negocio)
 
 Por diseño, la lista completa del menú público muestra solo texto (sin

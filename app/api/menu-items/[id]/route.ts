@@ -6,6 +6,7 @@ import { requireTenant } from "@/lib/auth";
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
+  descriptionEn: z.string().nullable().optional(),
   price: z.number().positive().optional(),
   status: z.enum(["AVAILABLE", "SOLD_OUT", "SEASONAL"]).optional(),
   categoryId: z.string().optional(),

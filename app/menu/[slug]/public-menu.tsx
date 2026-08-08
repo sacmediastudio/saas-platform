@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Star, Mail, Phone, MapPin, ChevronDown, X } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
+import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
 
 interface MenuItemData {
   id: string;
   categoryId: string;
   name: string;
   description: string | null;
+  descriptionEn: string | null;
   price: number;
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   featured: boolean;
@@ -17,6 +19,7 @@ interface MenuItemData {
 interface CategoryData {
   id: string;
   name: string;
+  nameEn: string | null;
 }
 interface TenantData {
   name: string;
@@ -54,6 +57,22 @@ export default function PublicMenu({
   const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
+
+  // El nombre de cada plato NUNCA se traduce (puede ser cualquier cosa —
+  // una marca, un plato regional, etc.). Solo las categorías y las
+  // descripciones tienen una versión en inglés opcional, escrita a mano
+  // por el negocio en su dashboard — no hay traducción automática.
+  const [lang, setLang] = useState<Lang>("es");
+  useEffect(() => {
+    setLang(getStoredLang());
+  }, []);
+
+  function categoryLabel(cat: CategoryData) {
+    return lang === "en" && cat.nameEn ? cat.nameEn : cat.name;
+  }
+  function itemDescription(item: MenuItemData) {
+    return lang === "en" && item.descriptionEn ? item.descriptionEn : item.description;
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -153,7 +172,7 @@ export default function PublicMenu({
                       <span style={{ color: tenant.themeBgColor }}>{item.name.charAt(0)}</span>
                     </div>
                   )}
-                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-black/75 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                     <Star size={12} className="fill-white" aria-hidden />
                     Destacado
                   </span>
@@ -165,8 +184,8 @@ export default function PublicMenu({
                       {formatCurrency(item.price, tenant.currency)}
                     </span>
                   </div>
-                  {item.description && (
-                    <p className="text-sm opacity-60 mt-2">{item.description}</p>
+                  {itemDescription(item) && (
+                    <p className="text-sm opacity-60 mt-2">{itemDescription(item)}</p>
                   )}
                 </div>
               </div>
@@ -201,10 +220,37 @@ export default function PublicMenu({
                   color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
                 }}
               >
-                {cat.name}
+                {categoryLabel(cat)}
               </span>
             </button>
           ))}
+          <div
+            className="flex items-center rounded-full p-0.5 text-xs font-bold shrink-0 ml-auto"
+            style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
+          >
+            {(["ES", "EN"] as const).map((l) => {
+              const value = l.toLowerCase() as Lang;
+              const active = lang === value;
+              return (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => {
+                    setLang(value);
+                    setStoredLang(value);
+                  }}
+                  className="px-2 py-1 rounded-full transition-colors"
+                  style={{
+                    backgroundColor: active ? tenant.buttonColor : "transparent",
+                    color: active ? tenant.buttonTextColor : tenant.themeTextColor,
+                    opacity: active ? 1 : 0.6,
+                  }}
+                >
+                  {l}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -223,7 +269,7 @@ export default function PublicMenu({
               className="py-8 border-b"
               style={{ borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
             >
-              <h2 className="text-xl font-bold mb-5">{cat.name}</h2>
+              <h2 className="text-xl font-bold mb-5">{categoryLabel(cat)}</h2>
               <div
                 className="flex flex-col divide-y"
                 style={{ borderColor: "color-mix(in srgb, currentColor 8%, transparent)" }}
@@ -259,8 +305,8 @@ export default function PublicMenu({
                             </span>
                           )}
                         </div>
-                        {item.description && (
-                          <p className="text-sm opacity-60 mt-1">{item.description}</p>
+                        {itemDescription(item) && (
+                          <p className="text-sm opacity-60 mt-1">{itemDescription(item)}</p>
                         )}
                       </div>
                     </div>
@@ -368,8 +414,8 @@ export default function PublicMenu({
                   </span>
                 )}
               </div>
-              {zoomedItem.description && (
-                <p className="text-sm opacity-70 mt-1.5">{zoomedItem.description}</p>
+              {itemDescription(zoomedItem) && (
+                <p className="text-sm opacity-70 mt-1.5">{itemDescription(zoomedItem)}</p>
               )}
             </div>
           </div>

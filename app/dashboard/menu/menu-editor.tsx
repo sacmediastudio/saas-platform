@@ -10,6 +10,7 @@ interface MenuItem {
   categoryId: string;
   name: string;
   description: string | null;
+  descriptionEn: string | null;
   price: number;
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   imageUrl: string | null;
@@ -18,6 +19,7 @@ interface MenuItem {
 interface Category {
   id: string;
   name: string;
+  nameEn: string | null;
 }
 
 const statusStyles: Record<MenuItem["status"], { label: string; className: string }> = {
@@ -320,6 +322,7 @@ function DishModal({
   const [form, setForm] = useState({
     name: item?.name ?? "",
     description: item?.description ?? "",
+    descriptionEn: item?.descriptionEn ?? "",
     price: item ? String(item.price) : "",
     categoryId: item?.categoryId ?? categories[0]?.id ?? "",
     imageUrl: (item?.imageUrl ?? null) as string | null,
@@ -368,6 +371,7 @@ function DishModal({
           categoryId: form.categoryId,
           name: form.name,
           description: form.description || undefined,
+          descriptionEn: form.descriptionEn || null,
           price,
           imageUrl: form.imageUrl,
           featured: form.featured,
@@ -486,6 +490,16 @@ function DishModal({
           />
         </Field>
 
+        <Field label="Descripción en inglés (opcional, para la versión EN del menú)">
+          <textarea
+            value={form.descriptionEn}
+            onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
+            rows={2}
+            placeholder="Tomato, basil, garlic"
+            className={`${inputClass} resize-none`}
+          />
+        </Field>
+
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
         <ModalActions
@@ -512,6 +526,7 @@ function CategoryModal({
   onUpdated: (cat: Category) => void;
 }) {
   const [name, setName] = useState(category?.name ?? "");
+  const [nameEn, setNameEn] = useState(category?.nameEn ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
@@ -526,7 +541,7 @@ function CategoryModal({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ name, nameEn: nameEn || null }),
       });
 
       if (!res.ok) {
@@ -561,6 +576,14 @@ function CategoryModal({
             placeholder="Postres"
             className={inputClass}
             autoFocus
+          />
+        </Field>
+        <Field label="Nombre en inglés (opcional, para la versión EN del menú)">
+          <input
+            value={nameEn}
+            onChange={(e) => setNameEn(e.target.value)}
+            placeholder="Desserts"
+            className={inputClass}
           />
         </Field>
         {error && <p className="text-red-600 text-sm">{error}</p>}
