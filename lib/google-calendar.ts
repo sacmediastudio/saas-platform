@@ -8,6 +8,26 @@ export function isGoogleCalendarConfigured(): boolean {
   return Boolean(CLIENT_ID && CLIENT_SECRET && REDIRECT_URI);
 }
 
+/**
+ * De dónde sacamos la URL pública real de la app para armar los
+ * redirects de vuelta al dashboard. A propósito NO usamos req.url en
+ * las rutas de OAuth: detrás del proxy de Railway, req.url a veces
+ * refleja la dirección interna del contenedor (localhost:8080) en vez
+ * de la dirección pública real — derivarlo de GOOGLE_REDIRECT_URI (que
+ * ya sabemos que es la URL pública correcta, porque Google la exige
+ * exacta) evita ese problema por completo.
+ */
+export function getAppBaseUrl(): string {
+  if (REDIRECT_URI) {
+    try {
+      return new URL(REDIRECT_URI).origin;
+    } catch {
+      // REDIRECT_URI mal formada — seguimos al fallback de abajo.
+    }
+  }
+  return "http://localhost:3000";
+}
+
 export function getGoogleAuthUrl(state: string): string {
   const params = new URLSearchParams({
     client_id: CLIENT_ID ?? "",

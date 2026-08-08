@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
-import { exchangeCodeForTokens } from "@/lib/google-calendar";
+import { exchangeCodeForTokens, getAppBaseUrl } from "@/lib/google-calendar";
 
 export async function GET(req: NextRequest) {
   const session = await requireTenant();
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const cookieState = req.cookies.get("google_oauth_state")?.value;
 
   if (!code || !state || !cookieState || state !== cookieState) {
-    return NextResponse.redirect(new URL("/dashboard/bookings?google=error", req.url));
+    return NextResponse.redirect(new URL("/dashboard/bookings?google=error", getAppBaseUrl()));
   }
 
   try {
@@ -54,11 +54,11 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    const res = NextResponse.redirect(new URL("/dashboard/bookings?google=connected", req.url));
+    const res = NextResponse.redirect(new URL("/dashboard/bookings?google=connected", getAppBaseUrl()));
     res.cookies.set("google_oauth_state", "", { maxAge: 0, path: "/" });
     return res;
   } catch (err) {
     console.error("Error en el callback de Google Calendar:", err);
-    return NextResponse.redirect(new URL("/dashboard/bookings?google=error", req.url));
+    return NextResponse.redirect(new URL("/dashboard/bookings?google=error", getAppBaseUrl()));
   }
 }

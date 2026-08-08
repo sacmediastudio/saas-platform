@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireTenant } from "@/lib/auth";
-import { getGoogleAuthUrl, isGoogleCalendarConfigured } from "@/lib/google-calendar";
+import { getGoogleAuthUrl, isGoogleCalendarConfigured, getAppBaseUrl } from "@/lib/google-calendar";
 
 export async function GET(req: NextRequest) {
   const session = await requireTenant();
 
   if (!isGoogleCalendarConfigured()) {
-    return NextResponse.redirect(new URL("/dashboard/bookings?google=not_configured", req.url));
+    return NextResponse.redirect(new URL("/dashboard/bookings?google=not_configured", getAppBaseUrl()));
   }
 
   // El "state" es un valor aleatorio que guardamos en una cookie propia
