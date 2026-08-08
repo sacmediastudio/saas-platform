@@ -5,6 +5,7 @@ import { Plus, X, Copy, Check, Pencil, Trash2, Image as ImageIcon } from "lucide
 import TrendStatCard from "@/components/trend-stat-card";
 import BusinessHoursEditor from "@/components/business-hours-editor";
 import BookingDayCalendar from "@/components/booking-day-calendar";
+import PendingBookings from "@/components/pending-bookings";
 import { formatCurrency } from "@/lib/currency";
 
 interface ServiceOption {
@@ -211,6 +212,9 @@ export default function BookingsView({
       <div className="mb-8">
         <BusinessHoursEditor />
       </div>
+
+      {/* --- Pendientes de confirmar (sin importar el día) --- */}
+      <PendingBookings refreshKey={calendarRefreshKey} onUpdated={() => setCalendarRefreshKey((k) => k + 1)} />
 
       {/* --- Calendario --- */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">

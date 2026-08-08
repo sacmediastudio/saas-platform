@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Lock, Plus } from "lucide-react";
+import { ChevronLeft, ChevronRight, Lock, Plus, Phone, Mail } from "lucide-react";
 
 interface DayHours {
   isOpen: boolean;
@@ -14,6 +14,8 @@ interface DayBooking {
   durationMinutes: number;
   status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
   customerName: string;
+  customerEmail: string;
+  customerPhone: string | null;
   serviceName: string;
   staffName: string | null;
 }
@@ -196,34 +198,54 @@ export default function BookingDayCalendar({
               const b = row.booking;
               const s = statusStyles[b.status];
               return (
-                <div key={row.minute} className="flex flex-wrap items-center gap-2.5 px-3.5 py-2.5">
-                  <span className="text-xs text-[#343233]/60 w-16 shrink-0">{minutesToLabel(row.minute)}</span>
-                  <div className="flex-1 min-w-[140px]">
+                <div key={row.minute} className="flex flex-wrap items-start gap-2.5 px-3.5 py-2.5">
+                  <span className="text-xs text-[#343233]/60 w-16 shrink-0 pt-0.5">{minutesToLabel(row.minute)}</span>
+                  <div className="flex-1 min-w-[160px]">
                     <p className="text-sm font-medium">{b.serviceName}</p>
                     <p className="text-xs text-[#343233]/70">
                       {b.customerName}
                       {b.staffName ? ` · con ${b.staffName}` : ""} · {b.durationMinutes} min
                     </p>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
+                      {b.customerPhone && (
+                        <a
+                          href={`tel:${b.customerPhone.replace(/\s+/g, "")}`}
+                          className="flex items-center gap-1 text-xs text-[#343233]/70 hover:text-[#002D09] underline"
+                        >
+                          <Phone size={11} aria-hidden />
+                          {b.customerPhone}
+                        </a>
+                      )}
+                      <a
+                        href={`mailto:${b.customerEmail}`}
+                        className="flex items-center gap-1 text-xs text-[#343233]/70 hover:text-[#002D09] underline"
+                      >
+                        <Mail size={11} aria-hidden />
+                        {b.customerEmail}
+                      </a>
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
-                  {b.status === "PENDING" && (
-                    <button
-                      onClick={() => handleUpdateStatus(b.id, "CONFIRMED")}
-                      disabled={updating === b.id}
-                      className="text-xs px-2 py-1 rounded-md border border-[#002D09]/15 hover:bg-white"
-                    >
-                      Confirmar
-                    </button>
-                  )}
-                  {b.status !== "CANCELLED" && b.status !== "COMPLETED" && (
-                    <button
-                      onClick={() => handleUpdateStatus(b.id, "CANCELLED")}
-                      disabled={updating === b.id}
-                      className="text-xs px-2 py-1 rounded-md border border-[#002D09]/15 hover:bg-white"
-                    >
-                      Cancelar
-                    </button>
-                  )}
+                  <div className="flex items-center gap-2 shrink-0">
+                    <span className={`text-xs px-2 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
+                    {b.status === "PENDING" && (
+                      <button
+                        onClick={() => handleUpdateStatus(b.id, "CONFIRMED")}
+                        disabled={updating === b.id}
+                        className="text-xs px-2 py-1 rounded-md border border-[#002D09]/15 hover:bg-white"
+                      >
+                        Confirmar
+                      </button>
+                    )}
+                    {b.status !== "CANCELLED" && b.status !== "COMPLETED" && (
+                      <button
+                        onClick={() => handleUpdateStatus(b.id, "CANCELLED")}
+                        disabled={updating === b.id}
+                        className="text-xs px-2 py-1 rounded-md border border-[#002D09]/15 hover:bg-white"
+                      >
+                        Cancelar
+                      </button>
+                    )}
+                  </div>
                 </div>
               );
             }

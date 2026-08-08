@@ -56,6 +56,8 @@ export async function GET(req: NextRequest) {
       durationMinutes: b.service.durationMinutes,
       status: b.status,
       customerName: b.customerName,
+      customerEmail: b.customerEmail,
+      customerPhone: b.customerPhone,
       serviceName: b.service.name,
       staffName: b.staff?.name ?? null,
     })),
