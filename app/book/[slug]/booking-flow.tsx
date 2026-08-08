@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 
 interface ServiceOption {
   id: string;
   name: string;
+  description: string | null;
+  imageUrl: string | null;
   durationMinutes: number;
   price: number;
   staffId: string | null;
@@ -22,6 +25,11 @@ export default function BookingFlow({
   tenantName,
   tenantSlug,
   tenantTagline,
+  logoUrl,
+  heroImageUrl,
+  contactEmail,
+  contactPhone,
+  address,
   services,
   currency,
   themeBgColor,
@@ -32,6 +40,11 @@ export default function BookingFlow({
   tenantName: string;
   tenantSlug: string;
   tenantTagline: string | null;
+  logoUrl: string | null;
+  heroImageUrl: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  address: string | null;
   services: ServiceOption[];
   currency: string;
   themeBgColor: string;
@@ -39,13 +52,27 @@ export default function BookingFlow({
   buttonColor: string;
   buttonTextColor: string;
 }) {
-  const [step, setStep] = useState(1);
+  const [view, setView] = useState<"list" | "book">("list");
+  const [step, setStep] = useState<2 | 3>(2);
   const [service, setService] = useState<ServiceOption | null>(null);
   const [day, setDay] = useState(DAYS[0]);
   const [time, setTime] = useState<string | null>(null);
   const [customer, setCustomer] = useState({ name: "", email: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+
+  function selectService(s: ServiceOption) {
+    setService(s);
+    setStep(2);
+    setTime(null);
+    setView("book");
+  }
+
+  function backToList() {
+    setView("list");
+    setService(null);
+    setStep(2);
+  }
 
   async function confirm() {
     if (!service || !time) return;
@@ -85,6 +112,10 @@ export default function BookingFlow({
     }
   }
 
+  const hasBgImage = Boolean(heroImageUrl);
+  const hasContact = contactEmail || contactPhone || address;
+
+  // ---------- Pantalla de éxito ----------
   if (status === "done") {
     return (
       <div
@@ -95,11 +126,7 @@ export default function BookingFlow({
         <p className="text-sm opacity-70">
           Te llegará una confirmación a {customer.email} cuando el negocio confirme tu cita.
         </p>
-        <a
-          href={`/review/${tenantSlug}`}
-          className="text-sm font-medium underline mt-6"
-          style={{ opacity: 0.8 }}
-        >
+        <a href={`/review/${tenantSlug}`} className="text-sm font-medium underline mt-6 inline-block" style={{ opacity: 0.8 }}>
           ¿Ya visitaste antes? Deja tu reseña
         </a>
         <div className="flex justify-center pt-8 opacity-50">
@@ -110,55 +137,136 @@ export default function BookingFlow({
     );
   }
 
+  // ---------- Lista de servicios (pantalla principal) ----------
+  if (view === "list") {
+    return (
+      <div className="relative min-h-screen" style={{ backgroundColor: themeBgColor }}>
+        {hasBgImage && (
+          <>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={heroImageUrl!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-black/45" />
+          </>
+        )}
+
+        <div
+          className="relative z-10 max-w-md mx-auto min-h-screen px-6 pt-14 pb-10 flex flex-col items-center"
+          style={{ color: hasBgImage ? "#ffffff" : themeTextColor }}
+        >
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={logoUrl}
+              alt={tenantName}
+              className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-white/40"
+            />
+          ) : (
+            <div
+              className="w-24 h-24 rounded-full mb-4 flex items-center justify-center text-2xl font-semibold"
+              style={{
+                backgroundColor: hasBgImage ? "rgba(255,255,255,0.15)" : themeTextColor,
+                color: hasBgImage ? "#ffffff" : themeBgColor,
+              }}
+            >
+              {tenantName.charAt(0).toUpperCase()}
+            </div>
+          )}
+
+          <p className={`text-lg font-semibold text-center ${tenantTagline ? "mb-1" : "mb-2"}`}>{tenantName}</p>
+          {tenantTagline && (
+            <p className="text-sm text-center mb-2 max-w-[280px] leading-relaxed" style={{ opacity: hasBgImage ? 0.85 : 0.65 }}>
+              {tenantTagline}
+            </p>
+          )}
+          <p className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-semibold mb-8 opacity-70">
+            <Calendar size={13} aria-hidden />
+            Agendar cita
+          </p>
+
+          <div className="w-full flex flex-col gap-3">
+            {services.map((s) => (
+              <button
+                key={s.id}
+                onClick={() => selectService(s)}
+                className="flex items-center gap-3 w-full px-4 py-3.5 rounded-xl text-left hover:brightness-105 transition-all"
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+              >
+                {s.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={s.imageUrl} alt={s.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                ) : null}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{s.name}</p>
+                  <p className="text-xs opacity-70 mt-0.5">{s.durationMinutes} min</p>
+                  {s.description && <p className="text-xs opacity-70 mt-0.5 truncate">{s.description}</p>}
+                </div>
+                <span className="text-sm font-semibold shrink-0">{formatCurrency(s.price, currency)}</span>
+              </button>
+            ))}
+
+            {services.length === 0 && (
+              <p className="text-sm text-center opacity-70">Este negocio todavía no tiene servicios activos.</p>
+            )}
+          </div>
+
+          {hasContact && (
+            <div className="w-full pt-10 mt-auto text-xs opacity-70 flex flex-col gap-1.5">
+              {address && (
+                <span className="flex items-center gap-1.5">
+                  <MapPin size={13} aria-hidden /> {address}
+                </span>
+              )}
+              {contactPhone && (
+                <span className="flex items-center gap-1.5">
+                  <Phone size={13} aria-hidden /> {contactPhone}
+                </span>
+              )}
+              {contactEmail && (
+                <span className="flex items-center gap-1.5">
+                  <Mail size={13} aria-hidden /> {contactEmail}
+                </span>
+              )}
+            </div>
+          )}
+
+          <div className="pt-8 opacity-50">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo.svg"
+              alt="Zertoo"
+              className="h-4 w-auto"
+              style={hasBgImage ? { filter: "brightness(0) invert(1)" } : undefined}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- Flujo de reserva (fecha/hora + confirmación) ----------
   return (
     <div
       className="max-w-sm mx-auto min-h-screen px-4 pt-10"
       style={{ backgroundColor: themeBgColor, color: themeTextColor }}
     >
-      <p className="text-base font-semibold mb-1">Reservar en {tenantName}</p>
-      {tenantTagline && <p className="text-xs opacity-60 mb-5 leading-relaxed">{tenantTagline}</p>}
-      {!tenantTagline && <div className="mb-4" />}
-
-      {step === 1 && (
-        <div>
-          <p className="text-sm text-neutral-500 mb-2.5">Elige un servicio</p>
-          <div className="flex flex-col gap-2">
-            {services.map((s) => (
-              <div
-                key={s.id}
-                onClick={() => setService(s)}
-                className="flex justify-between items-center rounded-lg px-3 py-2.5 cursor-pointer border"
-                style={{ borderColor: service?.id === s.id ? buttonColor : "#e5e5e5", borderWidth: service?.id === s.id ? 1.5 : 1 }}
-              >
-                <div>
-                  <p className="text-sm font-medium">{s.name}</p>
-                  <p className="text-xs text-neutral-500 mt-0.5">{s.durationMinutes} min</p>
-                </div>
-                <span className="text-sm font-medium">{formatCurrency(s.price, currency)}</span>
-              </div>
-            ))}
-          </div>
-          <button
-            disabled={!service}
-            onClick={() => setStep(2)}
-            className="w-full py-2.5 rounded-lg mt-4 text-sm font-medium disabled:opacity-40"
-            style={{ backgroundColor: buttonColor, color: buttonTextColor }}
-          >
-            Continuar
-          </button>
-        </div>
-      )}
+      <button onClick={backToList} className="text-xs font-medium underline mb-4 opacity-70">
+        ← Volver a servicios
+      </button>
+      <p className="text-base font-semibold mb-5">{service?.name}</p>
 
       {step === 2 && (
         <div>
-          <p className="text-sm text-neutral-500 mb-2.5">Elige fecha y hora</p>
+          <p className="text-sm opacity-60 mb-2.5">Elige fecha y hora</p>
           <div className="flex gap-1.5 mb-3">
             {DAYS.map((d) => (
               <span
                 key={d.toISOString()}
                 onClick={() => setDay(d)}
                 className="flex-1 text-center rounded-lg py-2 text-xs cursor-pointer border"
-                style={{ borderColor: d.toDateString() === day.toDateString() ? buttonColor : "#e5e5e5", borderWidth: d.toDateString() === day.toDateString() ? 1.5 : 1 }}
+                style={{
+                  borderColor: d.toDateString() === day.toDateString() ? buttonColor : "#e5e5e5",
+                  borderWidth: d.toDateString() === day.toDateString() ? 1.5 : 1,
+                }}
               >
                 {d.toLocaleDateString("es", { weekday: "short", day: "numeric" })}
               </span>
@@ -170,14 +278,17 @@ export default function BookingFlow({
                 key={h}
                 onClick={() => setTime(h)}
                 className="text-center rounded-lg py-2 text-sm cursor-pointer border"
-                style={{ borderColor: time === h ? buttonColor : "#e5e5e5", borderWidth: time === h ? 1.5 : 1 }}
+                style={{
+                  borderColor: time === h ? buttonColor : "#e5e5e5",
+                  borderWidth: time === h ? 1.5 : 1,
+                }}
               >
                 {h}
               </span>
             ))}
           </div>
           <div className="flex gap-2 mt-4">
-            <button onClick={() => setStep(1)} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">
+            <button onClick={backToList} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">
               Atrás
             </button>
             <button
@@ -194,7 +305,7 @@ export default function BookingFlow({
 
       {step === 3 && service && (
         <div>
-          <p className="text-sm text-neutral-500 mb-2.5">Confirma tu reserva</p>
+          <p className="text-sm opacity-60 mb-2.5">Confirma tu reserva</p>
           <div className="border border-neutral-200 rounded-lg p-3 mb-3 text-sm">
             <Row label="Servicio" value={service.name} />
             <Row label="Fecha" value={day.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "short" })} />

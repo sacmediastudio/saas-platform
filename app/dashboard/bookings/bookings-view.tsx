@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Plus, Lock, X, Copy, Check } from "lucide-react";
+import { useState } from "react";
+import { Plus, Lock, X, Copy, Check, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
 import TrendStatCard from "@/components/trend-stat-card";
+import { formatCurrency } from "@/lib/currency";
 
 interface BookingRow {
   id: string;
@@ -15,6 +16,8 @@ interface BookingRow {
 interface ServiceOption {
   id: string;
   name: string;
+  description: string | null;
+  imageUrl: string | null;
   durationMinutes: number;
   price: number;
   staffId: string | null;
@@ -35,9 +38,35 @@ const statusStyles: Record<BookingRow["status"], { label: string; className: str
   COMPLETED: { label: "Completada", className: "bg-[#F7F8F4] text-[#343233]/70" },
 };
 
+// Igual que en el módulo de menú: reduce la foto a un JPEG chico en
+// base64 antes de guardarla, sin depender de un storage externo.
+function resizeImageToDataUrl(file: File, maxWidth = 480): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
+    reader.onload = () => {
+      const img = new window.Image();
+      img.onerror = () => reject(new Error("No se pudo leer la imagen"));
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("Canvas no soportado"));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.75));
+      };
+      img.src = reader.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function BookingsView({
   initialBookings,
   slug,
+  currency,
   viewsLast7Days,
   viewsChangePercent,
   totalViews,
@@ -45,9 +74,12 @@ export default function BookingsView({
   bookingsLast7Days,
   avgRating,
   topServices,
+  initialServices,
+  initialStaff,
 }: {
   initialBookings: BookingRow[];
   slug: string;
+  currency: string;
   viewsLast7Days: number;
   viewsChangePercent: number | null;
   totalViews: number;
@@ -55,12 +87,17 @@ export default function BookingsView({
   bookingsLast7Days: number;
   avgRating: number | null;
   topServices: TopService[];
+  initialServices: ServiceOption[];
+  initialStaff: StaffOption[];
 }) {
   const [bookings, setBookings] = useState(initialBookings);
+  const [services, setServices] = useState(initialServices);
+  const [staff] = useState(initialStaff);
   const [updating, setUpdating] = useState<string | null>(null);
   const [modal, setModal] = useState<"none" | "booking" | "block">("none");
-  const [services, setServices] = useState<ServiceOption[]>([]);
-  const [staff, setStaff] = useState<StaffOption[]>([]);
+  const [serviceModal, setServiceModal] = useState<{ mode: "create" | "edit"; service?: ServiceOption } | null>(
+    null
+  );
   const [copied, setCopied] = useState(false);
 
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/book/${slug}` : `/book/${slug}`;
@@ -74,18 +111,6 @@ export default function BookingsView({
       // no crítico si el navegador bloquea el acceso al portapapeles
     }
   }
-
-  // Cargamos servicios y staff solo cuando se abre un modal que los
-  // necesita, no en cada render del dashboard.
-  useEffect(() => {
-    if (modal === "none" || services.length > 0) return;
-    fetch("/api/services")
-      .then((r) => r.json())
-      .then((data) => {
-        setServices(data.services ?? []);
-        setStaff(data.staff ?? []);
-      });
-  }, [modal, services.length]);
 
   async function updateStatus(id: string, status: BookingRow["status"]) {
     setUpdating(id);
@@ -101,12 +126,90 @@ export default function BookingsView({
     setUpdating(null);
   }
 
+  async function deleteService(service: ServiceOption) {
+    if (!confirm(`¿Borrar el servicio "${service.name}"?`)) return;
+    const res = await fetch(`/api/services/${service.id}`, { method: "DELETE" });
+    if (res.ok) {
+      setServices((prev) => prev.filter((s) => s.id !== service.id));
+    } else {
+      const body = await res.json().catch(() => null);
+      alert(body?.error ?? "No se pudo borrar el servicio");
+    }
+  }
+
   const confirmedCount = bookings.filter((b) => b.status === "CONFIRMED").length;
 
   return (
     <div>
+      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
+        <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
+        <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
+          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
+        </button>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+        <TrendStatCard label="Vistas totales" value={totalViews} />
+        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard label="Reservas (7 días)" value={bookingsLast7Days} />
+        <TrendStatCard label="Citas totales" value={totalBookings} />
+        <TrendStatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+      </div>
+
+      {/* --- Servicios --- */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-        <h1 className="text-xl font-semibold">Agenda de hoy</h1>
+        <h1 className="text-xl font-semibold">Tus servicios</h1>
+        <button
+          onClick={() => setServiceModal({ mode: "create" })}
+          className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
+        >
+          <Plus size={16} aria-hidden />
+          Agregar servicio
+        </button>
+      </div>
+      <p className="text-sm text-[#343233]/70 mb-4">
+        Estos son los que tus clientes ven y eligen en tu página pública.
+      </p>
+
+      {services.length === 0 ? (
+        <p className="text-sm text-[#343233]/60 mb-8">Todavía no tienes servicios. Agrega el primero.</p>
+      ) : (
+        <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10 mb-8">
+          {services.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 px-3.5 py-2.5">
+              {s.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={s.imageUrl} alt={s.name} className="w-10 h-10 rounded-lg object-cover shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-lg bg-[#F7F8F4] shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm">{s.name}</p>
+                <p className="text-xs text-[#343233]/70 mt-0.5">{s.durationMinutes} min</p>
+              </div>
+              <span className="text-sm font-medium">{formatCurrency(s.price, currency)}</span>
+              <button
+                onClick={() => setServiceModal({ mode: "edit", service: s })}
+                aria-label={`Editar ${s.name}`}
+                className="text-[#343233]/60 hover:text-[#002D09]"
+              >
+                <Pencil size={15} aria-hidden />
+              </button>
+              <button
+                onClick={() => deleteService(s)}
+                aria-label={`Borrar ${s.name}`}
+                className="text-[#343233]/60 hover:text-red-600"
+              >
+                <Trash2 size={15} aria-hidden />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* --- Agenda --- */}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+        <h2 className="text-xl font-semibold">Agenda de hoy</h2>
         <div className="flex gap-2">
           <button
             onClick={() => setModal("block")}
@@ -128,14 +231,6 @@ export default function BookingsView({
         {bookings.length} citas · {confirmedCount} confirmadas
       </p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
-        <TrendStatCard label="Vistas totales" value={totalViews} />
-        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
-        <TrendStatCard label="Reservas (7 días)" value={bookingsLast7Days} />
-        <TrendStatCard label="Citas totales" value={totalBookings} />
-        <TrendStatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
-      </div>
-
       {topServices.length > 0 && (
         <div className="mb-6">
           <h2 className="text-sm font-semibold mb-2">Servicios más reservados</h2>
@@ -149,13 +244,6 @@ export default function BookingsView({
           </div>
         </div>
       )}
-
-      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
-        <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
-        <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
-          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
-        </button>
-      </div>
 
       {bookings.length === 0 && (
         <p className="text-sm text-[#343233]/60">No hay citas agendadas para hoy.</p>
@@ -179,25 +267,25 @@ export default function BookingsView({
                 </div>
               </div>
               <div className="flex items-center gap-2 ml-auto">
-              <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
-              {b.status === "PENDING" && (
-                <button
-                  onClick={() => updateStatus(b.id, "CONFIRMED")}
-                  disabled={updating === b.id}
-                  className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
-                >
-                  Confirmar
-                </button>
-              )}
-              {b.status !== "CANCELLED" && b.status !== "COMPLETED" && (
-                <button
-                  onClick={() => updateStatus(b.id, "CANCELLED")}
-                  disabled={updating === b.id}
-                  className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
-                >
-                  Cancelar
-                </button>
-              )}
+                <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
+                {b.status === "PENDING" && (
+                  <button
+                    onClick={() => updateStatus(b.id, "CONFIRMED")}
+                    disabled={updating === b.id}
+                    className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
+                  >
+                    Confirmar
+                  </button>
+                )}
+                {b.status !== "CANCELLED" && b.status !== "COMPLETED" && (
+                  <button
+                    onClick={() => updateStatus(b.id, "CANCELLED")}
+                    disabled={updating === b.id}
+                    className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
+                  >
+                    Cancelar
+                  </button>
+                )}
               </div>
             </div>
           );
@@ -213,7 +301,217 @@ export default function BookingsView({
         />
       )}
       {modal === "block" && <BlockScheduleModal staff={staff} onClose={() => setModal("none")} />}
+
+      {serviceModal && (
+        <ServiceModal
+          mode={serviceModal.mode}
+          service={serviceModal.service}
+          staff={staff}
+          onClose={() => setServiceModal(null)}
+          onCreated={(s) => setServices((prev) => [...prev, s])}
+          onUpdated={(s) => setServices((prev) => prev.map((x) => (x.id === s.id ? s : x)))}
+        />
+      )}
     </div>
+  );
+}
+
+function ServiceModal({
+  mode,
+  service,
+  staff,
+  onClose,
+  onCreated,
+  onUpdated,
+}: {
+  mode: "create" | "edit";
+  service?: ServiceOption;
+  staff: StaffOption[];
+  onClose: () => void;
+  onCreated: (s: ServiceOption) => void;
+  onUpdated: (s: ServiceOption) => void;
+}) {
+  const [form, setForm] = useState({
+    name: service?.name ?? "",
+    description: service?.description ?? "",
+    imageUrl: (service?.imageUrl ?? null) as string | null,
+    durationMinutes: service ? String(service.durationMinutes) : "60",
+    price: service ? String(service.price) : "",
+    staffId: service?.staffId ?? "",
+  });
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [processingImage, setProcessingImage] = useState(false);
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setProcessingImage(true);
+    try {
+      const dataUrl = await resizeImageToDataUrl(file);
+      setForm((f) => ({ ...f, imageUrl: dataUrl }));
+    } catch {
+      setError("No se pudo procesar la imagen. Intenta con otra foto.");
+    } finally {
+      setProcessingImage(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    const price = Number(form.price);
+    const durationMinutes = Number(form.durationMinutes);
+    if (!Number.isFinite(price) || price <= 0) {
+      setError("Ingresa un precio válido");
+      return;
+    }
+    if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+      setError("Ingresa una duración válida");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const url = mode === "create" ? "/api/services" : `/api/services/${service!.id}`;
+      const method = mode === "create" ? "POST" : "PATCH";
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          description: form.description || null,
+          imageUrl: form.imageUrl,
+          durationMinutes,
+          price,
+          staffId: form.staffId || null,
+        }),
+      });
+
+      if (!res.ok) {
+        let message = "No se pudo guardar el servicio";
+        try {
+          const body = await res.json();
+          if (typeof body.error === "string") message = body.error;
+        } catch {}
+        setError(message);
+        setSaving(false);
+        return;
+      }
+
+      const { service: saved } = await res.json();
+      if (mode === "create") onCreated(saved);
+      else onUpdated(saved);
+      onClose();
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setSaving(false);
+    }
+  }
+
+  return (
+    <ModalShell title={mode === "create" ? "Agregar servicio" : "Editar servicio"} onClose={onClose}>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+        <Field label="Foto (opcional)">
+          <div className="flex items-center gap-3">
+            {form.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={form.imageUrl} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
+            ) : (
+              <div className="w-14 h-14 rounded-lg bg-[#F7F8F4] flex items-center justify-center shrink-0 text-[#343233]/40">
+                <ImageIcon size={20} aria-hidden />
+              </div>
+            )}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer w-fit">
+                {processingImage ? "Procesando..." : "Subir foto"}
+                <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
+              </label>
+              {form.imageUrl && (
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, imageUrl: null }))}
+                  className="text-xs text-[#343233]/60 hover:text-red-600 text-left"
+                >
+                  Quitar foto
+                </button>
+              )}
+            </div>
+          </div>
+        </Field>
+
+        <Field label="Nombre">
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            required
+            placeholder="Corte y color"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label="Descripción (opcional)">
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={2}
+            placeholder="Incluye lavado y peinado"
+            className={`${inputClass} resize-none`}
+          />
+        </Field>
+
+        <div className="flex gap-2">
+          <Field label="Duración (min)">
+            <input
+              type="number"
+              min="1"
+              value={form.durationMinutes}
+              onChange={(e) => setForm({ ...form, durationMinutes: e.target.value })}
+              required
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Precio">
+            <input
+              type="number"
+              step="0.01"
+              min="0"
+              value={form.price}
+              onChange={(e) => setForm({ ...form, price: e.target.value })}
+              required
+              placeholder="45.00"
+              className={inputClass}
+            />
+          </Field>
+        </div>
+
+        {staff.length > 0 && (
+          <Field label="Con quién (opcional)">
+            <select
+              value={form.staffId}
+              onChange={(e) => setForm({ ...form, staffId: e.target.value })}
+              className={inputClass}
+            >
+              <option value="">Cualquiera</option>
+              {staff.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        )}
+
+        {error && <p className="text-red-600 text-sm">{error}</p>}
+
+        <ModalActions
+          saving={saving || processingImage}
+          onClose={onClose}
+          submitLabel={mode === "create" ? "Agregar" : "Guardar cambios"}
+        />
+      </form>
+    </ModalShell>
   );
 }
 
@@ -567,7 +865,7 @@ function ModalShell({
 }) {
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
-      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5">
+      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{title}</h2>
           <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">

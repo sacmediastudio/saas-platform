@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { sendBookingConfirmationEmail } from "@/lib/email";
 
 const schema = z.object({
   serviceId: z.string(),
@@ -32,6 +33,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Servicio no encontrado" }, { status: 404 });
   }
 
+  const tenant = await db.tenant.findUnique({
+    where: { id: session.tenantId },
+    select: { name: true, contactPhone: true },
+  });
+
   const start = new Date(datetime);
   const end = new Date(start.getTime() + service.durationMinutes * 60_000);
 
@@ -57,6 +63,17 @@ export async function POST(req: NextRequest) {
       ...customer,
     },
   });
+
+  if (tenant) {
+    await sendBookingConfirmationEmail({
+      to: customer.customerEmail,
+      customerName: customer.customerName,
+      businessName: tenant.name,
+      serviceName: service.name,
+      datetime: start,
+      contactPhone: tenant.contactPhone,
+    }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
+  }
 
   return NextResponse.json({ booking }, { status: 201 });
 }

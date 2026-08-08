@@ -282,6 +282,44 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Módulo de Citas — reestructurado
+
+Antes, el dashboard de Citas nunca tuvo una forma real de crear/editar
+**servicios** (solo existían por el seed de pruebas) — el único botón de
+"crear" que existía era "Nueva cita" (una reserva manual), lo cual
+confundía. Ahora:
+
+- **`/dashboard/bookings`** tiene una sección nueva "Tus servicios"
+  arriba de la agenda: crear/editar/borrar servicios, cada uno con foto
+  opcional (mismo patrón de redimensionado que el menú), descripción,
+  duración y precio. El borrado se bloquea si el servicio ya tiene citas
+  asociadas (protección igual que categorías del menú).
+- **`Service.description` y `Service.imageUrl`** son campos nuevos en
+  el schema.
+
+**Página pública `/book/[slug]` — rediseñada de raíz:**
+- Ya no arranca directo en "elige un servicio" dentro del wizard — ahora
+  es una pantalla de perfil (foto circular como Smartlink, foto de
+  fondo opcional con overlay, nombre, descripción corta) con el título
+  "Agendar cita", y los servicios se muestran como una lista (con o sin
+  foto según si el negocio subió una) — igual que pediste.
+- Al tocar un servicio, entra directo al flujo de fecha/hora + datos del
+  cliente (el mismo wizard que ya existía, ahora con "← Volver a
+  servicios" en vez de un paso 1 de selección redundante).
+- **Pie con los datos de contacto** (teléfono, correo, dirección) —
+  mismo patrón que ya usa `/menu/[slug]`.
+- Foto de perfil y fondo reutilizan los mismos campos que ya existían
+  (`logoUrl`, `heroImageUrl`) — no hubo que agregar campos nuevos para
+  eso, ya estaban en el modelo.
+
+**Correo de confirmación de cita**: se envía (vía `lib/email.ts`,
+mismo proveedor Resend) en el momento en que la cita pasa a estado
+CONFIRMADA — ya sea porque el dueño la confirma desde el dashboard, o
+porque la creó directamente como cita manual (que nace confirmada). No
+se envía en el momento de la solicitud inicial (estado pendiente), para
+que coincida con el mensaje que ya le mostramos al cliente
+("...cuando el negocio confirme tu cita").
+
 ## Wishlist en el menú público
 
 Corazón tocable en cada plato de la lista (izquierda) y en cada card de

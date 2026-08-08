@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { sendBookingConfirmationEmail } from "@/lib/email";
 
 const schema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]),
@@ -10,7 +11,10 @@ const schema = z.object({
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await requireTenant();
 
-  const existing = await db.booking.findFirst({ where: { id: params.id, tenantId: session.tenantId } });
+  const existing = await db.booking.findFirst({
+    where: { id: params.id, tenantId: session.tenantId },
+    include: { service: true, tenant: { select: { name: true, contactPhone: true } } },
+  });
   if (!existing) {
     return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 });
   }
@@ -25,8 +29,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     data: { status: parsed.data.status },
   });
 
-  // TODO: si status pasa a CONFIRMED o CANCELLED, disparar notificación
-  // al cliente (ver lib/notifications.ts, pendiente de implementar).
+  // Solo mandamos correo cuando la cita pasa A confirmada (no si ya lo
+  // estaba, para no reenviar el mismo correo si se toca otro campo).
+  if (parsed.data.status === "CONFIRMED" && existing.status !== "CONFIRMED") {
+    await sendBookingConfirmationEmail({
+      to: existing.customerEmail,
+      customerName: existing.customerName,
+      businessName: existing.tenant.name,
+      serviceName: existing.service.name,
+      datetime: existing.datetime,
+      contactPhone: existing.tenant.contactPhone,
+    }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
+  }
 
   return NextResponse.json({ booking });
 }

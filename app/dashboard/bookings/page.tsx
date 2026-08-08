@@ -23,7 +23,7 @@ export default async function BookingsPage() {
   endOfDay.setHours(23, 59, 59, 999);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [bookings, totalBookings, bookingsLast7Days, reviews, viewsTrend, totalViews, bookingsByService] =
+  const [bookings, totalBookings, bookingsLast7Days, reviews, viewsTrend, totalViews, bookingsByService, allServices, staff] =
     await Promise.all([
       db.booking.findMany({
         where: { tenantId: session.tenantId, datetime: { gte: startOfDay, lte: endOfDay } },
@@ -42,6 +42,8 @@ export default async function BookingsPage() {
         orderBy: { _count: { serviceId: "desc" } },
         take: 5,
       }),
+      db.service.findMany({ where: { tenantId: session.tenantId }, orderBy: { name: "asc" } }),
+      db.staffMember.findMany({ where: { tenantId: session.tenantId } }),
     ]);
 
   const serialized = bookings.map((b) => ({
@@ -56,17 +58,18 @@ export default async function BookingsPage() {
   const avgRating =
     reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
 
-  const serviceIds = bookingsByService.map((b) => b.serviceId);
-  const services = await db.service.findMany({ where: { id: { in: serviceIds } } });
   const topServices = bookingsByService.map((b) => ({
-    name: services.find((s) => s.id === b.serviceId)?.name ?? "Servicio eliminado",
+    name: allServices.find((s) => s.id === b.serviceId)?.name ?? "Servicio eliminado",
     count: b._count,
   }));
+
+  const serializedServices = allServices.map((s) => ({ ...s, price: Number(s.price) }));
 
   return (
     <BookingsView
       initialBookings={serialized}
       slug={tenant.slug}
+      currency={tenant.currency}
       viewsLast7Days={viewsTrend.current}
       viewsChangePercent={viewsTrend.changePercent}
       totalViews={totalViews}
@@ -74,6 +77,8 @@ export default async function BookingsPage() {
       bookingsLast7Days={bookingsLast7Days}
       avgRating={avgRating}
       topServices={topServices}
+      initialServices={serializedServices}
+      initialStaff={staff}
     />
   );
 }

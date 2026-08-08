@@ -20,6 +20,8 @@ export default async function PublicBookingPage({ params }: { params: { slug: st
   const serialized = services.map((s) => ({
     id: s.id,
     name: s.name,
+    description: s.description,
+    imageUrl: s.imageUrl,
     durationMinutes: s.durationMinutes,
     price: Number(s.price),
     staffId: s.staffId,
@@ -30,6 +32,11 @@ export default async function PublicBookingPage({ params }: { params: { slug: st
       tenantName={tenant.name}
       tenantSlug={tenant.slug}
       tenantTagline={tenant.heroTagline}
+      logoUrl={tenant.logoUrl}
+      heroImageUrl={tenant.heroImageUrl}
+      contactEmail={tenant.contactEmail}
+      contactPhone={tenant.contactPhone}
+      address={tenant.address}
       services={serialized}
       currency={tenant.currency}
       themeBgColor={tenant.themeBgColor}

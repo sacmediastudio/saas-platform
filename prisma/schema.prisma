@@ -207,6 +207,8 @@ model Service {
   tenantId        String
   staffId         String?
   name            String
+  description     String?
+  imageUrl        String?
   durationMinutes Int
   price           Decimal @db.Decimal(10, 2)
 
