@@ -5,8 +5,8 @@ export const translations = {
     nav: { products: "Products", hardware: "NFC Hardware", pricing: "Pricing", faq: "FAQ", viewPlans: "View plans", login: "Log in", start: "Start free" },
     hero: {
       badge: "Digital menu, appointments and smartlink in one platform",
-      titlePrefix: "One platform. Every connection with your",
-      titleHighlight: "customers.",
+      titlePrefix: "One platform. Every way your",
+      titleHighlight: "customers find you.",
       subtitle:
         "Digital menu for restaurants, an appointment system for service businesses, or a link-in-bio page to show everything you offer. Pick yours and get started today.",
       ctaPrimary: "Start free",
@@ -110,8 +110,8 @@ export const translations = {
     nav: { products: "Productos", hardware: "Hardware NFC", pricing: "Precios", faq: "Preguntas", viewPlans: "Ver planes", login: "Iniciar sesión", start: "Empieza gratis" },
     hero: {
       badge: "Menú digital, citas y smartlink en una plataforma",
-      titlePrefix: "Una plataforma. Cada conexión con tus",
-      titleHighlight: "clientes.",
+      titlePrefix: "Una plataforma. Infinitas formas de conectar con",
+      titleHighlight: "tus clientes.",
       subtitle:
         "Menú digital para restaurantes, sistema de citas para negocios de servicios, o un perfil de enlaces para mostrar todo lo tuyo en un solo link. Elige el tuyo y empieza hoy.",
       ctaPrimary: "Empieza gratis",
