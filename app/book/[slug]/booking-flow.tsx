@@ -288,10 +288,12 @@ export default function BookingFlow({
                 <span
                   key={h}
                   onClick={() => setTime(h)}
-                  className="text-center rounded-lg py-2 text-sm cursor-pointer border"
+                  className="text-center rounded-lg py-2 text-sm cursor-pointer border font-medium transition-colors"
                   style={{
                     borderColor: time === h ? buttonColor : "#e5e5e5",
                     borderWidth: time === h ? 1.5 : 1,
+                    backgroundColor: time === h ? buttonColor : "transparent",
+                    color: time === h ? buttonTextColor : "inherit",
                   }}
                 >
                   {h}

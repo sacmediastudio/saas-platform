@@ -84,6 +84,12 @@ model Tenant {
   // libres después de cada cita antes de que se pueda reservar la
   // siguiente (limpieza, preparación, etc).
   bufferMinutes Int @default(15)
+  // Zona horaria real del negocio (identificador IANA, ej. "America/Aruba").
+  // Todo el cálculo de horario de atención, choques de citas, y el
+  // calendario del dashboard se hace en base a esta — nunca en base a
+  // la zona horaria del servidor (Railway corre en UTC), que es lo que
+  // causaba que algunas citas no aparecieran bien en el calendario.
+  timezone String @default("America/Aruba")
 
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.

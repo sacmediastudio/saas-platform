@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { TIMEZONES } from "@/lib/timezone";
 
 const CURRENCIES = ["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN", "BRL"] as const;
 
@@ -15,6 +16,7 @@ const updateSchema = z.object({
   contactPhone: z.string().nullable().optional(),
   address: z.string().nullable().optional(),
   currency: z.enum(CURRENCIES).optional(),
+  timezone: z.enum(TIMEZONES).optional(),
   themeBgColor: z
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")

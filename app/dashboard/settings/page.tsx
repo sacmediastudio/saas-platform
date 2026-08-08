@@ -22,6 +22,7 @@ export default async function SettingsPage() {
         contactPhone: tenant.contactPhone,
         address: tenant.address,
         currency: tenant.currency,
+        timezone: tenant.timezone,
         themeBgColor: tenant.themeBgColor,
         themeTextColor: tenant.themeTextColor,
         buttonColor: tenant.buttonColor,

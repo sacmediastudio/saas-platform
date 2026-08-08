@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { getDayOfWeekInTz, getMinutesOfDayInTz, getDayBoundsInTz, getDateLabelInTz } from "./timezone";
 
 export interface DayHours {
   dayOfWeek: number; // 0 = domingo ... 6 = sábado
@@ -53,37 +54,37 @@ function overlaps(aStart: number, aEnd: number, bStart: number, bEnd: number, bu
 const SLOT_STEP_MINUTES = 15;
 
 /**
- * Calcula los horarios de inicio disponibles (strings "HH:MM") para un
- * servicio en una fecha dada, respetando: horario de atención del
- * negocio ese día de la semana, citas ya existentes (+ buffer), bloqueos
- * de disponibilidad, y que no se ofrezcan horarios ya pasados si la
- * fecha es hoy.
+ * Calcula los horarios de inicio disponibles (strings "HH:MM", en la
+ * zona horaria del negocio) para un servicio en una fecha dada,
+ * respetando: horario de atención ese día de la semana, citas ya
+ * existentes (+ buffer), bloqueos, y que no se ofrezcan horarios ya
+ * pasados si la fecha es hoy. Todo el cálculo de día/hora se hace en
+ * la zona horaria real del negocio (`Tenant.timezone`), nunca en la
+ * del servidor.
  */
 export async function getAvailableSlots(params: {
   tenantId: string;
   serviceId: string;
-  date: Date; // solo se usa la parte de fecha (año/mes/día), en hora local
+  dateLabel: string; // "YYYY-MM-DD", el día que el cliente eligió
 }): Promise<string[]> {
-  const { tenantId, serviceId, date } = params;
+  const { tenantId, serviceId, dateLabel } = params;
 
   const [service, tenant, hours] = await Promise.all([
     db.service.findFirst({ where: { id: serviceId, tenantId } }),
-    db.tenant.findUnique({ where: { id: tenantId }, select: { bufferMinutes: true } }),
+    db.tenant.findUnique({ where: { id: tenantId }, select: { bufferMinutes: true, timezone: true } }),
     getBusinessHours(tenantId),
   ]);
   if (!service || !tenant) return [];
 
-  const dayOfWeek = date.getDay();
+  const tz = tenant.timezone;
+  const { start: dayStart, end: dayEnd } = getDayBoundsInTz(dateLabel, tz);
+  const dayOfWeek = getDayOfWeekInTz(dayStart, tz);
+
   const dayHours = hours.find((h) => h.dayOfWeek === dayOfWeek);
   if (!dayHours || !dayHours.isOpen) return [];
 
   const buffer = tenant.bufferMinutes;
   const duration = service.durationMinutes;
-
-  const dayStart = new Date(date);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(date);
-  dayEnd.setHours(23, 59, 59, 999);
 
   const [bookings, blocks] = await Promise.all([
     db.booking.findMany({
@@ -105,15 +106,16 @@ export async function getAvailableSlots(params: {
     }),
   ]);
 
-  // Todo lo "ocupado" ese día, expresado en minutos desde medianoche.
+  // Todo lo "ocupado" ese día, expresado en minutos desde medianoche
+  // EN LA ZONA HORARIA DEL NEGOCIO (no la del servidor).
   const busyRanges: { start: number; end: number }[] = [];
   for (const b of bookings) {
-    const start = b.datetime.getHours() * 60 + b.datetime.getMinutes();
+    const start = getMinutesOfDayInTz(b.datetime, tz);
     busyRanges.push({ start, end: start + b.service.durationMinutes });
   }
   for (const blk of blocks) {
-    const s = blk.startTime < dayStart ? 0 : blk.startTime.getHours() * 60 + blk.startTime.getMinutes();
-    const e = blk.endTime > dayEnd ? 24 * 60 : blk.endTime.getHours() * 60 + blk.endTime.getMinutes();
+    const s = blk.startTime < dayStart ? 0 : getMinutesOfDayInTz(blk.startTime, tz);
+    const e = blk.endTime > dayEnd ? 24 * 60 : getMinutesOfDayInTz(blk.endTime, tz);
     busyRanges.push({ start: s, end: e });
   }
 
@@ -121,8 +123,8 @@ export async function getAvailableSlots(params: {
   const openEnd = timeToMinutes(dayHours.endTime);
 
   const now = new Date();
-  const isToday = now.toDateString() === date.toDateString();
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  const isToday = getDateLabelInTz(now, tz) === dateLabel;
+  const nowMinutes = getMinutesOfDayInTz(now, tz);
 
   const slots: string[] = [];
   for (let start = openStart; start + duration <= openEnd; start += SLOT_STEP_MINUTES) {
@@ -148,17 +150,16 @@ export async function isSlotFree(params: {
 
   const [service, tenant] = await Promise.all([
     db.service.findFirst({ where: { id: serviceId, tenantId } }),
-    db.tenant.findUnique({ where: { id: tenantId }, select: { bufferMinutes: true } }),
+    db.tenant.findUnique({ where: { id: tenantId }, select: { bufferMinutes: true, timezone: true } }),
   ]);
   if (!service || !tenant) return false;
 
+  const tz = tenant.timezone;
   const buffer = tenant.bufferMinutes;
   const duration = service.durationMinutes;
 
-  const dayStart = new Date(datetime);
-  dayStart.setHours(0, 0, 0, 0);
-  const dayEnd = new Date(datetime);
-  dayEnd.setHours(23, 59, 59, 999);
+  const dateLabel = getDateLabelInTz(datetime, tz);
+  const { start: dayStart, end: dayEnd } = getDayBoundsInTz(dateLabel, tz);
 
   const [bookings, blocks] = await Promise.all([
     db.booking.findMany({
@@ -180,17 +181,17 @@ export async function isSlotFree(params: {
     }),
   ]);
 
-  const startMin = datetime.getHours() * 60 + datetime.getMinutes();
+  const startMin = getMinutesOfDayInTz(datetime, tz);
   const endMin = startMin + duration;
 
   for (const b of bookings) {
-    const bs = b.datetime.getHours() * 60 + b.datetime.getMinutes();
+    const bs = getMinutesOfDayInTz(b.datetime, tz);
     const be = bs + b.service.durationMinutes;
     if (overlaps(startMin, endMin, bs, be, buffer)) return false;
   }
   for (const blk of blocks) {
-    const s = blk.startTime < dayStart ? 0 : blk.startTime.getHours() * 60 + blk.startTime.getMinutes();
-    const e = blk.endTime > dayEnd ? 24 * 60 : blk.endTime.getHours() * 60 + blk.endTime.getMinutes();
+    const s = blk.startTime < dayStart ? 0 : getMinutesOfDayInTz(blk.startTime, tz);
+    const e = blk.endTime > dayEnd ? 24 * 60 : getMinutesOfDayInTz(blk.endTime, tz);
     if (overlaps(startMin, endMin, s, e, buffer)) return false;
   }
   return true;

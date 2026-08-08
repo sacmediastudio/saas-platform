@@ -20,14 +20,14 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Negocio no encontrado" }, { status: 404 });
   }
 
-  // Se parsea como fecha local (no UTC), para que "hoy" en el navegador
-  // del cliente coincida con el día que de verdad se está consultando.
-  const [year, month, day] = dateParam.split("-").map(Number);
-  if (!year || !month || !day) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
     return NextResponse.json({ error: "Fecha inválida" }, { status: 400 });
   }
-  const date = new Date(year, month - 1, day);
 
-  const slots = await getAvailableSlots({ tenantId: tenant.id, serviceId, date });
+  // Ya no reconstruimos un Date local acá — eso era justo lo que
+  // causaba que el día se interpretara con la zona horaria del
+  // servidor en vez de la del negocio. getAvailableSlots ahora resuelve
+  // eso internamente usando Tenant.timezone.
+  const slots = await getAvailableSlots({ tenantId: tenant.id, serviceId, dateLabel: dateParam });
   return NextResponse.json({ slots });
 }

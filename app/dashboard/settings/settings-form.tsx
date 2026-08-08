@@ -4,6 +4,24 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, LogOut, Check } from "lucide-react";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
+import { TIMEZONES } from "@/lib/timezone";
+
+const TIMEZONE_LABELS: Record<string, string> = {
+  "America/Aruba": "Aruba (AST, UTC-4)",
+  "America/New_York": "Nueva York (EST/EDT)",
+  "America/Chicago": "Chicago (CST/CDT)",
+  "America/Denver": "Denver (MST/MDT)",
+  "America/Los_Angeles": "Los Ángeles (PST/PDT)",
+  "America/Mexico_City": "Ciudad de México",
+  "America/Bogota": "Bogotá",
+  "America/Lima": "Lima",
+  "America/Santiago": "Santiago de Chile",
+  "America/Argentina/Buenos_Aires": "Buenos Aires",
+  "America/Sao_Paulo": "São Paulo",
+  "Europe/Madrid": "Madrid",
+  "Europe/London": "Londres",
+  UTC: "UTC",
+};
 
 interface TenantData {
   name: string;
@@ -16,6 +34,7 @@ interface TenantData {
   contactPhone: string | null;
   address: string | null;
   currency: string;
+  timezone: string;
   themeBgColor: string;
   themeTextColor: string;
   buttonColor: string;
@@ -216,6 +235,22 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
             {SUPPORTED_CURRENCIES.map((c) => (
               <option key={c} value={c}>
                 {c}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </Section>
+
+      <Section title="Zona horaria">
+        <Field label="Zona horaria de tu negocio (importante para el módulo de Citas)">
+          <select
+            value={form.timezone}
+            onChange={(e) => setForm({ ...form, timezone: e.target.value })}
+            className={inputClass}
+          >
+            {TIMEZONES.map((tz) => (
+              <option key={tz} value={tz}>
+                {TIMEZONE_LABELS[tz] ?? tz}
               </option>
             ))}
           </select>
