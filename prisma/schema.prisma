@@ -80,6 +80,11 @@ model Tenant {
   buttonColor      String @default("#E7FF00")
   buttonTextColor  String @default("#002D09")
 
+  // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
+  // libres después de cada cita antes de que se pueda reservar la
+  // siguiente (limpieza, preparación, etc).
+  bufferMinutes Int @default(15)
+
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
   suspended Boolean @default(false)
@@ -94,6 +99,7 @@ model Tenant {
   reviews        Review[]
   smartLinkItems SmartLinkItem[]
   pageViews      PageView[]
+  businessHours  BusinessHours[]
   subscription   Subscription?
 
   @@map("tenants")
@@ -294,6 +300,23 @@ model SmartLinkItem {
 
   @@index([tenantId])
   @@map("smartlink_items")
+}
+
+// Horario de atención semanal recurrente — hasta 7 filas por negocio
+// (una por día de semana, 0=domingo...6=sábado). Si un día no tiene
+// fila, se asume cerrado ese día. Solo aplica al módulo de Citas.
+model BusinessHours {
+  id        String  @id @default(cuid())
+  tenantId  String
+  dayOfWeek Int
+  isOpen    Boolean @default(true)
+  startTime String  @default("09:00")
+  endTime   String  @default("18:00")
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, dayOfWeek])
+  @@map("business_hours")
 }
 
 enum PageViewKind {

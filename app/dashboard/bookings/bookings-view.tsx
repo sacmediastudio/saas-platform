@@ -1,18 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Lock, X, Copy, Check, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
+import { Plus, X, Copy, Check, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
 import TrendStatCard from "@/components/trend-stat-card";
+import BusinessHoursEditor from "@/components/business-hours-editor";
+import BookingDayCalendar from "@/components/booking-day-calendar";
 import { formatCurrency } from "@/lib/currency";
 
-interface BookingRow {
-  id: string;
-  datetime: string;
-  status: "PENDING" | "CONFIRMED" | "CANCELLED" | "COMPLETED";
-  customerName: string;
-  serviceName: string;
-  staffName: string | null;
-}
 interface ServiceOption {
   id: string;
   name: string;
@@ -30,13 +24,6 @@ interface TopService {
   name: string;
   count: number;
 }
-
-const statusStyles: Record<BookingRow["status"], { label: string; className: string }> = {
-  PENDING: { label: "Pendiente", className: "bg-amber-50 text-amber-700" },
-  CONFIRMED: { label: "Confirmada", className: "bg-green-50 text-green-700" },
-  CANCELLED: { label: "Cancelada", className: "bg-red-50 text-red-700" },
-  COMPLETED: { label: "Completada", className: "bg-[#F7F8F4] text-[#343233]/70" },
-};
 
 // Igual que en el módulo de menú: reduce la foto a un JPEG chico en
 // base64 antes de guardarla, sin depender de un storage externo.
@@ -64,7 +51,6 @@ function resizeImageToDataUrl(file: File, maxWidth = 480): Promise<string> {
 }
 
 export default function BookingsView({
-  initialBookings,
   slug,
   currency,
   viewsLast7Days,
@@ -77,7 +63,6 @@ export default function BookingsView({
   initialServices,
   initialStaff,
 }: {
-  initialBookings: BookingRow[];
   slug: string;
   currency: string;
   viewsLast7Days: number;
@@ -90,14 +75,14 @@ export default function BookingsView({
   initialServices: ServiceOption[];
   initialStaff: StaffOption[];
 }) {
-  const [bookings, setBookings] = useState(initialBookings);
   const [services, setServices] = useState(initialServices);
   const [staff] = useState(initialStaff);
-  const [updating, setUpdating] = useState<string | null>(null);
   const [modal, setModal] = useState<"none" | "booking" | "block">("none");
   const [serviceModal, setServiceModal] = useState<{ mode: "create" | "edit"; service?: ServiceOption } | null>(
     null
   );
+  const [prefill, setPrefill] = useState<{ date: string; time: string } | null>(null);
+  const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
   const [copied, setCopied] = useState(false);
 
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/book/${slug}` : `/book/${slug}`;
@@ -112,18 +97,17 @@ export default function BookingsView({
     }
   }
 
-  async function updateStatus(id: string, status: BookingRow["status"]) {
-    setUpdating(id);
-    const prev = bookings;
-    setBookings((b) => b.map((x) => (x.id === id ? { ...x, status } : x)));
-
-    const res = await fetch(`/api/bookings/${id}`, {
+  async function updateBookingStatus(id: string, status: "CONFIRMED" | "CANCELLED") {
+    await fetch(`/api/bookings/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status }),
     });
-    if (!res.ok) setBookings(prev);
-    setUpdating(null);
+  }
+
+  function openNewBookingAt(dateParam: string, time: string) {
+    setPrefill({ date: dateParam, time });
+    setModal("booking");
   }
 
   async function deleteService(service: ServiceOption) {
@@ -136,8 +120,6 @@ export default function BookingsView({
       alert(body?.error ?? "No se pudo borrar el servicio");
     }
   }
-
-  const confirmedCount = bookings.filter((b) => b.status === "CONFIRMED").length;
 
   return (
     <div>
@@ -207,32 +189,8 @@ export default function BookingsView({
         </div>
       )}
 
-      {/* --- Agenda --- */}
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-        <h2 className="text-xl font-semibold">Agenda de hoy</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setModal("block")}
-            className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
-          >
-            <Lock size={15} aria-hidden />
-            Bloquear horario
-          </button>
-          <button
-            onClick={() => setModal("booking")}
-            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
-          >
-            <Plus size={16} aria-hidden />
-            Nueva cita
-          </button>
-        </div>
-      </div>
-      <p className="text-sm text-[#343233]/70 mb-6">
-        {bookings.length} citas · {confirmedCount} confirmadas
-      </p>
-
       {topServices.length > 0 && (
-        <div className="mb-6">
+        <div className="mb-8">
           <h2 className="text-sm font-semibold mb-2">Servicios más reservados</h2>
           <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
             {topServices.map((s) => (
@@ -245,62 +203,60 @@ export default function BookingsView({
         </div>
       )}
 
-      {bookings.length === 0 && (
-        <p className="text-sm text-[#343233]/60">No hay citas agendadas para hoy.</p>
-      )}
-
-      <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
-        {bookings.map((b) => {
-          const s = statusStyles[b.status];
-          return (
-            <div key={b.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5">
-              <div className="flex items-center gap-3 flex-1 min-w-[160px]">
-                <span className="text-sm text-[#343233]/70 w-14 shrink-0">
-                  {new Date(b.datetime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm">{b.serviceName}</p>
-                  <p className="text-xs text-[#343233]/70 mt-0.5">
-                    {b.customerName}
-                    {b.staffName ? ` · con ${b.staffName}` : ""}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 ml-auto">
-                <span className={`text-xs px-2.5 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
-                {b.status === "PENDING" && (
-                  <button
-                    onClick={() => updateStatus(b.id, "CONFIRMED")}
-                    disabled={updating === b.id}
-                    className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
-                  >
-                    Confirmar
-                  </button>
-                )}
-                {b.status !== "CANCELLED" && b.status !== "COMPLETED" && (
-                  <button
-                    onClick={() => updateStatus(b.id, "CANCELLED")}
-                    disabled={updating === b.id}
-                    className="text-xs px-2.5 py-1 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4]"
-                  >
-                    Cancelar
-                  </button>
-                )}
-              </div>
-            </div>
-          );
-        })}
+      {/* --- Horario de atención --- */}
+      <h2 className="text-xl font-semibold mb-1">Horario de atención</h2>
+      <p className="text-sm text-[#343233]/70 mb-4">
+        Define cuándo puedes recibir citas y cuánto espacio dejar entre una y otra.
+      </p>
+      <div className="mb-8">
+        <BusinessHoursEditor />
       </div>
+
+      {/* --- Calendario --- */}
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
+        <h2 className="text-xl font-semibold">Agenda</h2>
+        <button
+          onClick={() => {
+            setPrefill(null);
+            setModal("booking");
+          }}
+          className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
+        >
+          <Plus size={16} aria-hidden />
+          Nueva cita
+        </button>
+      </div>
+      <p className="text-sm text-[#343233]/70 mb-4">
+        Toca cualquier espacio libre para agendar una cita ahí directamente.
+      </p>
+
+      <BookingDayCalendar
+        onCreateBooking={openNewBookingAt}
+        onUpdateStatus={updateBookingStatus}
+        refreshKey={calendarRefreshKey}
+      />
 
       {modal === "booking" && (
         <NewBookingModal
           services={services}
           staff={staff}
-          onClose={() => setModal("none")}
-          onCreated={(row) => setBookings((prev) => [...prev, row].sort((a, b) => a.datetime.localeCompare(b.datetime)))}
+          prefill={prefill}
+          onClose={() => {
+            setModal("none");
+            setPrefill(null);
+          }}
+          onCreated={() => {
+            setCalendarRefreshKey((k) => k + 1);
+          }}
         />
       )}
-      {modal === "block" && <BlockScheduleModal staff={staff} onClose={() => setModal("none")} />}
+      {modal === "block" && (
+        <BlockScheduleModal
+          staff={staff}
+          onClose={() => setModal("none")}
+          onCreated={() => setCalendarRefreshKey((k) => k + 1)}
+        />
+      )}
 
       {serviceModal && (
         <ServiceModal
@@ -518,26 +474,26 @@ function ServiceModal({
 function NewBookingModal({
   services,
   staff,
+  prefill,
   onClose,
   onCreated,
 }: {
   services: ServiceOption[];
   staff: StaffOption[];
+  prefill: { date: string; time: string } | null;
   onClose: () => void;
-  onCreated: (row: BookingRow) => void;
+  onCreated: () => void;
 }) {
   const [form, setForm] = useState({
     serviceId: "",
     staffId: "",
     customerName: "",
     customerEmail: "",
-    date: new Date().toISOString().slice(0, 10),
-    time: "09:00",
+    date: prefill?.date ?? new Date().toISOString().slice(0, 10),
+    time: prefill?.time ?? "09:00",
   });
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-
-  const selectedService = services.find((s) => s.id === form.serviceId);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -574,15 +530,7 @@ function NewBookingModal({
         return;
       }
 
-      const { booking } = await res.json();
-      onCreated({
-        id: booking.id,
-        datetime: booking.datetime,
-        status: booking.status,
-        customerName: booking.customerName,
-        serviceName: selectedService?.name ?? "",
-        staffName: staff.find((s) => s.id === form.staffId)?.name ?? null,
-      });
+      onCreated();
       onClose();
     } catch {
       setError("No se pudo conectar con el servidor. Intenta de nuevo.");
@@ -676,7 +624,15 @@ function NewBookingModal({
   );
 }
 
-function BlockScheduleModal({ staff, onClose }: { staff: StaffOption[]; onClose: () => void }) {
+function BlockScheduleModal({
+  staff,
+  onClose,
+  onCreated,
+}: {
+  staff: StaffOption[];
+  onClose: () => void;
+  onCreated: () => void;
+}) {
   const [form, setForm] = useState({
     staffId: "",
     date: new Date().toISOString().slice(0, 10),
@@ -722,6 +678,7 @@ function BlockScheduleModal({ staff, onClose }: { staff: StaffOption[]; onClose:
         setSaving(false);
         return;
       }
+      onCreated();
       setDone(true);
     } catch {
       setError("No se pudo conectar con el servidor. Intenta de nuevo.");

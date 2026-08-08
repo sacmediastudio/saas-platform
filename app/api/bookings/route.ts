@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { isSlotFree } from "@/lib/availability";
 
 const createSchema = z.object({
   serviceId: z.string(),
@@ -50,42 +51,14 @@ export async function POST(req: NextRequest) {
   }
 
   const start = new Date(datetime);
-  const end = new Date(start.getTime() + service.durationMinutes * 60_000);
 
-  // Chequeo simple de solapamiento: cualquier reserva confirmada del mismo
-  // staff que empiece antes de que termine la nueva Y termine después de
-  // que empiece la nueva, es un choque de horario.
-  const conflict = await db.booking.findFirst({
-    where: {
-      tenantId: service.tenantId,
-      staffId: staffId ?? undefined,
-      status: { in: ["PENDING", "CONFIRMED"] },
-      datetime: { lt: end },
-      AND: [{ datetime: { gte: new Date(start.getTime() - 4 * 60 * 60_000) } }],
-    },
-  });
-  if (conflict) {
-    const conflictService = await db.service.findUnique({ where: { id: conflict.serviceId } });
-    const realConflictEnd = new Date(
-      conflict.datetime.getTime() + (conflictService?.durationMinutes ?? 0) * 60_000
-    );
-    if (realConflictEnd > start) {
-      return NextResponse.json({ error: "Ese horario ya no está disponible" }, { status: 409 });
-    }
-  }
-
-  // Un bloqueo (vacaciones, cierre, almuerzo) que se solape con la ventana
-  // [start, end) también invalida el horario, tenga o no staff asignado.
-  const blockConflict = await db.availabilityBlock.findFirst({
-    where: {
-      tenantId: service.tenantId,
-      OR: [{ staffId: staffId ?? undefined }, { staffId: null }],
-      startTime: { lt: end },
-      endTime: { gt: start },
-    },
-  });
-  if (blockConflict) {
-    return NextResponse.json({ error: "Ese horario está bloqueado" }, { status: 409 });
+  // Mismo motor de disponibilidad que usa la vista pública para ofrecer
+  // horarios — respeta horario de atención, citas existentes + buffer,
+  // y bloqueos. Evita que alguien reserve un horario que dejó de estar
+  // disponible entre que cargó la página y que confirmó.
+  const free = await isSlotFree({ tenantId: service.tenantId, serviceId, datetime: start });
+  if (!free) {
+    return NextResponse.json({ error: "Ese horario ya no está disponible" }, { status: 409 });
   }
 
   const booking = await db.booking.create({
@@ -98,8 +71,6 @@ export async function POST(req: NextRequest) {
       ...customer,
     },
   });
-
-  // TODO: disparar email/SMS de confirmación (ver lib/notifications.ts)
 
   return NextResponse.json({ booking }, { status: 201 });
 }

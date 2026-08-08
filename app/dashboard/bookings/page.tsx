@@ -23,13 +23,8 @@ export default async function BookingsPage() {
   endOfDay.setHours(23, 59, 59, 999);
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  const [bookings, totalBookings, bookingsLast7Days, reviews, viewsTrend, totalViews, bookingsByService, allServices, staff] =
+  const [totalBookings, bookingsLast7Days, reviews, viewsTrend, totalViews, bookingsByService, allServices, staff] =
     await Promise.all([
-      db.booking.findMany({
-        where: { tenantId: session.tenantId, datetime: { gte: startOfDay, lte: endOfDay } },
-        include: { service: true, staff: true },
-        orderBy: { datetime: "asc" },
-      }),
       db.booking.count({ where: { tenantId: session.tenantId } }),
       db.booking.count({ where: { tenantId: session.tenantId, createdAt: { gte: sevenDaysAgo } } }),
       db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),
@@ -46,15 +41,6 @@ export default async function BookingsPage() {
       db.staffMember.findMany({ where: { tenantId: session.tenantId } }),
     ]);
 
-  const serialized = bookings.map((b) => ({
-    id: b.id,
-    datetime: b.datetime.toISOString(),
-    status: b.status,
-    customerName: b.customerName,
-    serviceName: b.service.name,
-    staffName: b.staff?.name ?? null,
-  }));
-
   const avgRating =
     reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
 
@@ -67,7 +53,6 @@ export default async function BookingsPage() {
 
   return (
     <BookingsView
-      initialBookings={serialized}
       slug={tenant.slug}
       currency={tenant.currency}
       viewsLast7Days={viewsTrend.current}

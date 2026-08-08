@@ -282,6 +282,43 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Sistema de disponibilidad y calendario de Citas
+
+Antes, los horarios que veía el cliente en `/book/[slug]` eran fijos
+(4 días, 6 horas por día, sin importar si el negocio estaba abierto o
+si ya había otra cita ahí). Ahora hay un motor de disponibilidad real:
+
+- **`lib/availability.ts`** — el núcleo: `getBusinessHours()` (con
+  default L-S 9-18, domingo cerrado, para negocios que no lo
+  configuraron), `getAvailableSlots()` (calcula horarios libres para un
+  servicio + fecha, respetando horario de atención, citas existentes,
+  bloqueos, y el buffer entre citas), `isSlotFree()` (verifica un
+  horario puntual — lo usan los dos endpoints que crean citas, público
+  y manual, reemplazando la lógica de conflicto ad-hoc que tenían
+  antes).
+- **`Tenant.bufferMinutes`** (default 15) — minutos de colchón después
+  de cada cita antes de que se pueda reservar la siguiente. Configurable
+  desde el dashboard.
+- **`BusinessHours`** — modelo nuevo, hasta 7 filas por negocio (una
+  por día de semana), con apertura/cierre y abierto/cerrado.
+
+**Dashboard (`/dashboard/bookings`):**
+- **"Horario de atención"** — nueva sección: cada día de la semana con
+  su toggle abierto/cerrado y horas, más el campo de minutos de buffer.
+- **"Agenda"** — reemplaza la lista plana de "solo hoy" que había
+  antes. Ahora es una vista de calendario por día, con navegación
+  ← día → , que muestra cada franja de tiempo (cada 30 min dentro del
+  horario de atención) como: una cita existente (con botones
+  Confirmar/Cancelar ahí mismo), un bloqueo, o libre — y **tocar un
+  espacio libre abre "Nueva cita" con esa fecha/hora ya precargada**.
+
+**Cliente (`/book/[slug]`):** el paso de fecha/hora ahora es un
+`<input type="date">` real (selector de fecha nativo) en vez de 4
+pastillas fijas; al elegir la fecha, se piden en vivo los horarios
+libres de verdad para ese servicio ese día (`GET
+/api/public/availability`), con estado de carga y mensaje de "no hay
+horarios disponibles" si no hay ninguno.
+
 ## Módulo de Citas — reestructurado
 
 Antes, el dashboard de Citas nunca tuvo una forma real de crear/editar

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { sendBookingConfirmationEmail } from "@/lib/email";
+import { isSlotFree } from "@/lib/availability";
 
 const schema = z.object({
   serviceId: z.string(),
@@ -39,18 +40,13 @@ export async function POST(req: NextRequest) {
   });
 
   const start = new Date(datetime);
-  const end = new Date(start.getTime() + service.durationMinutes * 60_000);
 
-  const blockConflict = await db.availabilityBlock.findFirst({
-    where: {
-      tenantId: session.tenantId,
-      OR: [{ staffId: staffId ?? undefined }, { staffId: null }],
-      startTime: { lt: end },
-      endTime: { gt: start },
-    },
-  });
-  if (blockConflict) {
-    return NextResponse.json({ error: "Ese horario está bloqueado" }, { status: 409 });
+  const free = await isSlotFree({ tenantId: session.tenantId, serviceId, datetime: start });
+  if (!free) {
+    return NextResponse.json(
+      { error: "Ese horario ya está ocupado o bloqueado." },
+      { status: 409 }
+    );
   }
 
   const booking = await db.booking.create({

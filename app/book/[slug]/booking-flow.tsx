@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 
@@ -14,12 +14,12 @@ interface ServiceOption {
   staffId: string | null;
 }
 
-const DAYS = Array.from({ length: 4 }).map((_, i) => {
-  const d = new Date();
-  d.setDate(d.getDate() + i);
-  return d;
-});
-const HOURS = ["09:00", "10:30", "12:00", "14:00", "15:30", "17:00"];
+function toDateParam(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+function todayParam() {
+  return toDateParam(new Date());
+}
 
 export default function BookingFlow({
   tenantName,
@@ -55,16 +55,30 @@ export default function BookingFlow({
   const [view, setView] = useState<"list" | "book">("list");
   const [step, setStep] = useState<2 | 3>(2);
   const [service, setService] = useState<ServiceOption | null>(null);
-  const [day, setDay] = useState(DAYS[0]);
+  const [dateParam, setDateParam] = useState(todayParam());
+  const [availableSlots, setAvailableSlots] = useState<string[] | null>(null);
+  const [loadingSlots, setLoadingSlots] = useState(false);
   const [time, setTime] = useState<string | null>(null);
   const [customer, setCustomer] = useState({ name: "", email: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
+  useEffect(() => {
+    if (!service || view !== "book") return;
+    setLoadingSlots(true);
+    setTime(null);
+    fetch(`/api/public/availability?slug=${tenantSlug}&serviceId=${service.id}&date=${dateParam}`)
+      .then((r) => r.json())
+      .then((data) => setAvailableSlots(data.slots ?? []))
+      .catch(() => setAvailableSlots([]))
+      .finally(() => setLoadingSlots(false));
+  }, [service, dateParam, view, tenantSlug]);
+
   function selectService(s: ServiceOption) {
     setService(s);
     setStep(2);
     setTime(null);
+    setDateParam(todayParam());
     setView("book");
   }
 
@@ -78,9 +92,9 @@ export default function BookingFlow({
     if (!service || !time) return;
     setStatus("sending");
 
+    const [year, month, dayNum] = dateParam.split("-").map(Number);
     const [h, m] = time.split(":").map(Number);
-    const datetime = new Date(day);
-    datetime.setHours(h, m, 0, 0);
+    const datetime = new Date(year, month - 1, dayNum, h, m, 0, 0);
 
     try {
       const res = await fetch("/api/bookings", {
@@ -257,36 +271,38 @@ export default function BookingFlow({
       {step === 2 && (
         <div>
           <p className="text-sm opacity-60 mb-2.5">Elige fecha y hora</p>
-          <div className="flex gap-1.5 mb-3">
-            {DAYS.map((d) => (
-              <span
-                key={d.toISOString()}
-                onClick={() => setDay(d)}
-                className="flex-1 text-center rounded-lg py-2 text-xs cursor-pointer border"
-                style={{
-                  borderColor: d.toDateString() === day.toDateString() ? buttonColor : "#e5e5e5",
-                  borderWidth: d.toDateString() === day.toDateString() ? 1.5 : 1,
-                }}
-              >
-                {d.toLocaleDateString("es", { weekday: "short", day: "numeric" })}
-              </span>
-            ))}
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {HOURS.map((h) => (
-              <span
-                key={h}
-                onClick={() => setTime(h)}
-                className="text-center rounded-lg py-2 text-sm cursor-pointer border"
-                style={{
-                  borderColor: time === h ? buttonColor : "#e5e5e5",
-                  borderWidth: time === h ? 1.5 : 1,
-                }}
-              >
-                {h}
-              </span>
-            ))}
-          </div>
+          <input
+            type="date"
+            value={dateParam}
+            min={todayParam()}
+            onChange={(e) => setDateParam(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm mb-3"
+          />
+
+          {loadingSlots ? (
+            <p className="text-sm opacity-60 py-4 text-center">Buscando horarios...</p>
+          ) : availableSlots && availableSlots.length > 0 ? (
+            <div className="grid grid-cols-3 gap-2">
+              {availableSlots.map((h) => (
+                <span
+                  key={h}
+                  onClick={() => setTime(h)}
+                  className="text-center rounded-lg py-2 text-sm cursor-pointer border"
+                  style={{
+                    borderColor: time === h ? buttonColor : "#e5e5e5",
+                    borderWidth: time === h ? 1.5 : 1,
+                  }}
+                >
+                  {h}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm opacity-60 py-4 text-center">
+              No hay horarios disponibles ese día. Prueba con otra fecha.
+            </p>
+          )}
+
           <div className="flex gap-2 mt-4">
             <button onClick={backToList} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">
               Atrás
@@ -308,7 +324,14 @@ export default function BookingFlow({
           <p className="text-sm opacity-60 mb-2.5">Confirma tu reserva</p>
           <div className="border border-neutral-200 rounded-lg p-3 mb-3 text-sm">
             <Row label="Servicio" value={service.name} />
-            <Row label="Fecha" value={day.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "short" })} />
+            <Row
+              label="Fecha"
+              value={new Date(
+                Number(dateParam.split("-")[0]),
+                Number(dateParam.split("-")[1]) - 1,
+                Number(dateParam.split("-")[2])
+              ).toLocaleDateString("es", { weekday: "long", day: "numeric", month: "short" })}
+            />
             <Row label="Hora" value={time ?? ""} />
             <Row label="Precio" value={formatCurrency(service.price, currency)} bold />
           </div>
