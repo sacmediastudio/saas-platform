@@ -17,6 +17,7 @@ export default async function SettingsPage() {
         logoUrl: tenant.logoUrl,
         heroImageUrl: tenant.heroImageUrl,
         heroTagline: tenant.heroTagline,
+        menuShowPhotos: tenant.menuShowPhotos,
         contactEmail: tenant.contactEmail,
         contactPhone: tenant.contactPhone,
         address: tenant.address,

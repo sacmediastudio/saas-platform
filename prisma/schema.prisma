@@ -67,6 +67,10 @@ model Tenant {
   logoUrl       String?
   heroImageUrl  String?
   heroTagline   String?
+  // Solo aplica al módulo de Menú: si se muestra la foto de cada plato
+  // en la lista completa (no solo en Destacados). Default false para no
+  // cambiar el comportamiento de negocios que ya estaban usando esto.
+  menuShowPhotos Boolean @default(false)
   contactEmail  String?
   contactPhone  String?
   address       String?

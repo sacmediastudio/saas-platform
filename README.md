@@ -282,6 +282,18 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Fotos en la lista del menú (opcional, por negocio)
+
+Por diseño, la lista completa del menú público muestra solo texto (sin
+fotos) — solo la sección "Destacados" arriba tiene foto grande. Esto fue
+una decisión deliberada basada en una referencia real de restaurante.
+
+Si un negocio prefiere ver la foto de cada plato en toda la lista, puede
+activarlo desde **Ajustes → "Mostrar la foto de cada plato en la lista
+del menú"** (`Tenant.menuShowPhotos`, default `false`). Si el plato no
+tiene foto subida, se muestra un placeholder gris del mismo tamaño en
+vez de dejar el espacio vacío.
+
 ## Página pública de reseñas (`/review/[slug]`)
 
 Funciona para cualquier tipo de negocio (no está atada a un módulo

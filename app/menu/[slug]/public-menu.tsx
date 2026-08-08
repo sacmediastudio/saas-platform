@@ -32,6 +32,7 @@ interface TenantData {
   themeTextColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  menuShowPhotos: boolean;
 }
 
 export default function PublicMenu({
@@ -203,7 +204,8 @@ export default function PublicMenu({
         </div>
       </div>
 
-      {/* Lista de platos por categoría, sin fotos */}
+      {/* Lista de platos por categoría — con o sin foto, según lo que
+          el negocio haya elegido en Ajustes (menuShowPhotos). */}
       <div className="max-w-xl mx-auto px-5">
         {categoriesWithItems.map((cat) => {
           const catItems = items.filter((i) => i.categoryId === cat.id);
@@ -220,22 +222,39 @@ export default function PublicMenu({
               <h2 className="text-xl font-bold mb-5">{cat.name}</h2>
               <div className="flex flex-col divide-y" style={{ borderColor: "currentColor" }}>
                 {catItems.map((item) => (
-                  <div key={item.id} className={`py-4 first:pt-0 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}>
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-base font-semibold">{item.name}</p>
-                      {item.status === "SOLD_OUT" ? (
-                        <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
-                          Agotado
-                        </span>
+                  <div
+                    key={item.id}
+                    className={`py-4 first:pt-0 flex gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
+                  >
+                    {tenant.menuShowPhotos && (
+                      item.imageUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-14 h-14 rounded-lg object-cover shrink-0"
+                        />
                       ) : (
-                        <span className="text-base font-semibold shrink-0">
-                          {formatCurrency(item.price, tenant.currency)}
-                        </span>
+                        <div className="w-14 h-14 rounded-lg shrink-0 opacity-10" style={{ backgroundColor: "currentColor" }} />
+                      )
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-baseline justify-between gap-3">
+                        <p className="text-base font-semibold">{item.name}</p>
+                        {item.status === "SOLD_OUT" ? (
+                          <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
+                            Agotado
+                          </span>
+                        ) : (
+                          <span className="text-base font-semibold shrink-0">
+                            {formatCurrency(item.price, tenant.currency)}
+                          </span>
+                        )}
+                      </div>
+                      {item.description && (
+                        <p className="text-sm opacity-60 mt-1">{item.description}</p>
                       )}
                     </div>
-                    {item.description && (
-                      <p className="text-sm opacity-60 mt-1">{item.description}</p>
-                    )}
                   </div>
                 ))}
               </div>

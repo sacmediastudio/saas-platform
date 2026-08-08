@@ -20,6 +20,7 @@ interface TenantData {
   themeTextColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  menuShowPhotos: boolean;
 }
 
 function resizeImageToDataUrl(file: File, maxWidth: number): Promise<string> {
@@ -160,6 +161,21 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
             className={`${inputClass} resize-none`}
           />
         </Field>
+
+        {form.businessType === "RESTAURANT" && (
+          <label className="flex items-center gap-2.5 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={form.menuShowPhotos}
+              onChange={(e) => setForm({ ...form, menuShowPhotos: e.target.checked })}
+              className="w-4 h-4 accent-[#E7FF00]"
+            />
+            <span>
+              Mostrar la foto de cada plato en la lista del menú{" "}
+              <span className="text-[#343233]/60">(no solo en Destacados)</span>
+            </span>
+          </label>
+        )}
       </Section>
 
       <Section title="Contacto">
