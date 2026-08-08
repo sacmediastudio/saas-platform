@@ -14,7 +14,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const existing = await db.booking.findFirst({
     where: { id: params.id, tenantId: session.tenantId },
-    include: { service: true, tenant: { select: { name: true, contactPhone: true } } },
+    include: { service: true, tenant: { select: { name: true, contactPhone: true, timezone: true } } },
   });
   if (!existing) {
     return NextResponse.json({ error: "Reserva no encontrada" }, { status: 404 });
@@ -40,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       serviceName: existing.service.name,
       datetime: existing.datetime,
       contactPhone: existing.tenant.contactPhone,
+      timezone: existing.tenant.timezone,
     }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
 
     await syncBookingToGoogleCalendar({

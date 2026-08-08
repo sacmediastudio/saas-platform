@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   const tenant = await db.tenant.findUnique({
     where: { id: session.tenantId },
-    select: { name: true, contactPhone: true },
+    select: { name: true, contactPhone: true, timezone: true },
   });
 
   const start = new Date(datetime);
@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
       serviceName: service.name,
       datetime: start,
       contactPhone: tenant.contactPhone,
+      timezone: tenant.timezone,
     }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
   }
 

@@ -69,14 +69,23 @@ export async function sendBookingConfirmationEmail(params: {
   serviceName: string;
   datetime: Date;
   contactPhone?: string | null;
+  timezone: string;
 }) {
-  const { to, customerName, businessName, serviceName, datetime, contactPhone } = params;
+  const { to, customerName, businessName, serviceName, datetime, contactPhone, timezone } = params;
+  // Sin especificar timeZone acá, esto formatea en la zona horaria del
+  // SERVIDOR (Railway, UTC) — el mismo bug que ya corregimos en el
+  // calendario del dashboard, pero se nos había quedado este lugar.
   const formattedDate = datetime.toLocaleDateString("es", {
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: timezone,
   });
-  const formattedTime = datetime.toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" });
+  const formattedTime = datetime.toLocaleTimeString("es", {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: timezone,
+  });
 
   await sendEmail(
     to,
