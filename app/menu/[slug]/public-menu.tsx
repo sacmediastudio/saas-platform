@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Star, Mail, Phone, MapPin, ChevronDown } from "lucide-react";
+import { Star, Mail, Phone, MapPin, ChevronDown, X } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 
 interface MenuItemData {
@@ -51,6 +51,7 @@ export default function PublicMenu({
   const categoriesWithItems = categories.filter((cat) => items.some((i) => i.categoryId === cat.id));
   const featuredItems = items.filter((i) => i.featured && i.status !== "SOLD_OUT").slice(0, 2);
   const [activeCategory, setActiveCategory] = useState<string | null>(categoriesWithItems[0]?.id ?? null);
+  const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
 
@@ -137,7 +138,10 @@ export default function PublicMenu({
                 className="rounded-2xl overflow-hidden border shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
                 style={{ borderColor: "color-mix(in srgb, currentColor 12%, transparent)" }}
               >
-                <div className="relative w-full aspect-[4/3] bg-black/10">
+                <div
+                  className={`relative w-full aspect-[4/3] bg-black/10 ${item.imageUrl ? "cursor-pointer active:opacity-80 transition-opacity" : ""}`}
+                  onClick={item.imageUrl ? () => setZoomedItem(item) : undefined}
+                >
                   {item.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
@@ -224,38 +228,44 @@ export default function PublicMenu({
                 className="flex flex-col divide-y"
                 style={{ borderColor: "color-mix(in srgb, currentColor 8%, transparent)" }}
               >
-                {catItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className={`py-4 first:pt-0 flex gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
-                  >
-                    {tenant.menuShowPhotos && item.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-14 h-14 rounded-lg object-cover shrink-0"
-                      />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-baseline justify-between gap-3">
-                        <p className="text-base font-semibold">{item.name}</p>
-                        {item.status === "SOLD_OUT" ? (
-                          <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
-                            Agotado
-                          </span>
-                        ) : (
-                          <span className="text-base font-semibold shrink-0">
-                            {formatCurrency(item.price, tenant.currency)}
-                          </span>
+                {catItems.map((item) => {
+                  const hasPhoto = tenant.menuShowPhotos && Boolean(item.imageUrl);
+                  return (
+                    <div
+                      key={item.id}
+                      onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
+                      className={`py-4 first:pt-0 flex gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""} ${
+                        hasPhoto ? "cursor-pointer active:opacity-70 transition-opacity" : ""
+                      }`}
+                    >
+                      {hasPhoto && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={item.imageUrl!}
+                          alt={item.name}
+                          className="w-14 h-14 rounded-lg object-cover shrink-0"
+                        />
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="text-base font-semibold">{item.name}</p>
+                          {item.status === "SOLD_OUT" ? (
+                            <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
+                              Agotado
+                            </span>
+                          ) : (
+                            <span className="text-base font-semibold shrink-0">
+                              {formatCurrency(item.price, tenant.currency)}
+                            </span>
+                          )}
+                        </div>
+                        {item.description && (
+                          <p className="text-sm opacity-60 mt-1">{item.description}</p>
                         )}
                       </div>
-                      {item.description && (
-                        <p className="text-sm opacity-60 mt-1">{item.description}</p>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           );
@@ -320,6 +330,50 @@ export default function PublicMenu({
           <Phone size={15} aria-hidden />
           Llamar
         </a>
+      )}
+
+      {zoomedItem && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setZoomedItem(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl overflow-hidden"
+            style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="relative">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={zoomedItem.imageUrl!}
+                alt={zoomedItem.name}
+                className="w-full max-h-[70vh] object-contain bg-black/5"
+              />
+              <button
+                onClick={() => setZoomedItem(null)}
+                aria-label="Cerrar"
+                className="absolute top-3 right-3 bg-black/60 text-white rounded-full p-2 hover:bg-black/75"
+              >
+                <X size={18} aria-hidden />
+              </button>
+            </div>
+            <div className="px-5 py-4">
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="text-lg font-bold">{zoomedItem.name}</p>
+                {zoomedItem.status === "SOLD_OUT" ? (
+                  <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">Agotado</span>
+                ) : (
+                  <span className="text-lg font-bold shrink-0">
+                    {formatCurrency(zoomedItem.price, tenant.currency)}
+                  </span>
+                )}
+              </div>
+              {zoomedItem.description && (
+                <p className="text-sm opacity-70 mt-1.5">{zoomedItem.description}</p>
+              )}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
