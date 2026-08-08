@@ -226,17 +226,13 @@ export default function PublicMenu({
                     key={item.id}
                     className={`py-4 first:pt-0 flex gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
                   >
-                    {tenant.menuShowPhotos && (
-                      item.imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.imageUrl}
-                          alt={item.name}
-                          className="w-14 h-14 rounded-lg object-cover shrink-0"
-                        />
-                      ) : (
-                        <div className="w-14 h-14 rounded-lg shrink-0 opacity-10" style={{ backgroundColor: "currentColor" }} />
-                      )
+                    {tenant.menuShowPhotos && item.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-14 h-14 rounded-lg object-cover shrink-0"
+                      />
                     )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-baseline justify-between gap-3">
