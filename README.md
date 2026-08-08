@@ -282,6 +282,25 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Wishlist en el menú público
+
+Corazón tocable en cada plato de la lista (izquierda) y en cada card de
+Destacados (arriba a la derecha, junto al badge naranja). Vive
+enteramente en el navegador del cliente vía `localStorage`
+(`zertoo_wishlist_{slug}`, separado por negocio) — no requiere cuenta ni
+login, y no toca la base de datos. El contador aparece junto al switch
+ES/EN en la nav de categorías solo cuando hay al menos un favorito; al
+tocarlo, filtra el menú para mostrar solo los platos marcados (se puede
+volver a tocar para quitar el filtro).
+
+**Fix relacionado**: el switch ES/EN estaba dentro del mismo contenedor
+con scroll horizontal que las categorías — con varias categorías podía
+quedar empujado fuera de la vista. Ahora vive en un contenedor aparte,
+siempre visible. También cambié el idioma con el que arranca esta
+página específicamente: en vez de heredar el default "en" pensado para
+la landing, el menú arranca en español salvo que la persona ya haya
+elegido inglés explícitamente antes en el sitio.
+
 ## Menú público bilingüe (EN/ES)
 
 Toggle ES/EN en la barra de categorías de `/menu/[slug]`. **Solo se

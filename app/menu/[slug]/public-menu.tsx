@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Star, Mail, Phone, MapPin, ChevronDown, X } from "lucide-react";
+import { Star, Mail, Phone, MapPin, ChevronDown, X, Heart } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
-import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
+import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 
 interface MenuItemData {
   id: string;
@@ -51,20 +51,21 @@ export default function PublicMenu({
   avgRating: number | null;
   reviewCount: number;
 }) {
-  const categoriesWithItems = categories.filter((cat) => items.some((i) => i.categoryId === cat.id));
-  const featuredItems = items.filter((i) => i.featured && i.status !== "SOLD_OUT").slice(0, 2);
-  const [activeCategory, setActiveCategory] = useState<string | null>(categoriesWithItems[0]?.id ?? null);
-  const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
-  const navRef = useRef<HTMLDivElement | null>(null);
-
   // El nombre de cada plato NUNCA se traduce (puede ser cualquier cosa —
   // una marca, un plato regional, etc.). Solo las categorías y las
   // descripciones tienen una versión en inglés opcional, escrita a mano
   // por el negocio en su dashboard — no hay traducción automática.
+  //
+  // Nota: acá NO usamos getStoredLang() (que por defecto cae a "en",
+  // pensado para la landing). En el menú es más intuitivo arrancar en
+  // español salvo que la persona ya haya elegido inglés explícitamente
+  // en algún momento — si no, alguien que entra directo al menú sin
+  // pasar por la landing vería "EN" activo sin haberlo pedido.
   const [lang, setLang] = useState<Lang>("es");
   useEffect(() => {
-    setLang(getStoredLang());
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("zertoo_lang");
+    setLang(stored === "en" ? "en" : "es");
   }, []);
 
   function categoryLabel(cat: CategoryData) {
@@ -73,6 +74,44 @@ export default function PublicMenu({
   function itemDescription(item: MenuItemData) {
     return lang === "en" && item.descriptionEn ? item.descriptionEn : item.description;
   }
+
+  // Wishlist del cliente: solo vive en su navegador (no requiere cuenta
+  // ni login), separada por negocio, para que marcar favoritos en un
+  // restaurante no se mezcle con los de otro.
+  const wishlistKey = `zertoo_wishlist_${tenant.slug}`;
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [showWishlistOnly, setShowWishlistOnly] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(wishlistKey);
+      if (stored) setWishlist(JSON.parse(stored));
+    } catch {
+      // localStorage corrupto o bloqueado — no es crítico, sigue en 0
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function toggleWishlist(itemId: string) {
+    setWishlist((prev) => {
+      const next = prev.includes(itemId) ? prev.filter((id) => id !== itemId) : [...prev, itemId];
+      try {
+        window.localStorage.setItem(wishlistKey, JSON.stringify(next));
+      } catch {
+        // no crítico
+      }
+      return next;
+    });
+  }
+
+  const visibleItems = showWishlistOnly ? items.filter((i) => wishlist.includes(i.id)) : items;
+  const categoriesWithItems = categories.filter((cat) => visibleItems.some((i) => i.categoryId === cat.id));
+  const featuredItems = visibleItems.filter((i) => i.featured && i.status !== "SOLD_OUT").slice(0, 2);
+  const [activeCategory, setActiveCategory] = useState<string | null>(categoriesWithItems[0]?.id ?? null);
+  const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
+  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const navRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -176,6 +215,20 @@ export default function PublicMenu({
                     <Star size={12} className="fill-white" aria-hidden />
                     Destacado
                   </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleWishlist(item.id);
+                    }}
+                    aria-label={wishlist.includes(item.id) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/65 rounded-full p-2 transition-colors"
+                  >
+                    <Heart
+                      size={16}
+                      className={wishlist.includes(item.id) ? "fill-red-500 text-red-500" : "text-white"}
+                      aria-hidden
+                    />
+                  </button>
                 </div>
                 <div className="px-5 py-4" style={{ backgroundColor: tenant.themeBgColor }}>
                   <div className="flex items-start justify-between gap-3">
@@ -200,56 +253,76 @@ export default function PublicMenu({
         className="sticky top-0 z-20 backdrop-blur border-b"
         style={{ backgroundColor: tenant.themeBgColor + "e6", borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
       >
-        <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
-          {tenant.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={tenant.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover shrink-0 mr-1" />
-          )}
-          {categoriesWithItems.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => scrollToCategory(cat.id)}
-              className="text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-opacity"
-              style={{
-                backgroundColor: activeCategory === cat.id ? tenant.buttonColor : "transparent",
-                opacity: activeCategory === cat.id ? 1 : 0.6,
-              }}
-            >
-              <span
+        <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 min-w-0">
+            {tenant.logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={tenant.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover shrink-0 mr-1" />
+            )}
+            {categoriesWithItems.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => scrollToCategory(cat.id)}
+                className="text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-opacity"
                 style={{
-                  color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
+                  backgroundColor: activeCategory === cat.id ? tenant.buttonColor : "transparent",
+                  opacity: activeCategory === cat.id ? 1 : 0.6,
                 }}
               >
-                {categoryLabel(cat)}
-              </span>
-            </button>
-          ))}
-          <div
-            className="flex items-center rounded-full p-0.5 text-xs font-bold shrink-0 ml-auto"
-            style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
-          >
-            {(["ES", "EN"] as const).map((l) => {
-              const value = l.toLowerCase() as Lang;
-              const active = lang === value;
-              return (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => {
-                    setLang(value);
-                    setStoredLang(value);
-                  }}
-                  className="px-2 py-1 rounded-full transition-colors"
+                <span
                   style={{
-                    backgroundColor: active ? tenant.buttonColor : "transparent",
-                    color: active ? tenant.buttonTextColor : tenant.themeTextColor,
-                    opacity: active ? 1 : 0.6,
+                    color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
                   }}
                 >
-                  {l}
-                </button>
-              );
-            })}
+                  {categoryLabel(cat)}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {wishlist.length > 0 && (
+              <button
+                onClick={() => setShowWishlistOnly((v) => !v)}
+                aria-label="Ver favoritos"
+                className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
+                style={{
+                  backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
+                  color: showWishlistOnly ? tenant.buttonTextColor : tenant.themeTextColor,
+                  border: showWishlistOnly ? "none" : "1px solid color-mix(in srgb, currentColor 20%, transparent)",
+                }}
+              >
+                <Heart size={13} className="fill-current" aria-hidden />
+                {wishlist.length}
+              </button>
+            )}
+            <div
+              className="flex items-center rounded-full p-0.5 text-xs font-bold"
+              style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
+            >
+              {(["ES", "EN"] as const).map((l) => {
+                const value = l.toLowerCase() as Lang;
+                const active = lang === value;
+                return (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => {
+                      setLang(value);
+                      setStoredLang(value);
+                    }}
+                    className="px-2 py-1 rounded-full transition-colors"
+                    style={{
+                      backgroundColor: active ? tenant.buttonColor : "transparent",
+                      color: active ? tenant.buttonTextColor : tenant.themeTextColor,
+                      opacity: active ? 1 : 0.6,
+                    }}
+                  >
+                    {l}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -258,7 +331,7 @@ export default function PublicMenu({
           el negocio haya elegido en Ajustes (menuShowPhotos). */}
       <div className="max-w-xl mx-auto px-5">
         {categoriesWithItems.map((cat) => {
-          const catItems = items.filter((i) => i.categoryId === cat.id);
+          const catItems = visibleItems.filter((i) => i.categoryId === cat.id);
           return (
             <div
               key={cat.id}
@@ -276,38 +349,55 @@ export default function PublicMenu({
               >
                 {catItems.map((item) => {
                   const hasPhoto = tenant.menuShowPhotos && Boolean(item.imageUrl);
+                  const liked = wishlist.includes(item.id);
                   return (
                     <div
                       key={item.id}
-                      onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
-                      className={`py-4 first:pt-0 flex gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""} ${
-                        hasPhoto ? "cursor-pointer active:opacity-70 transition-opacity" : ""
-                      }`}
+                      className={`py-4 first:pt-0 flex items-center gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
                     >
-                      {hasPhoto && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={item.imageUrl!}
-                          alt={item.name}
-                          className="w-14 h-14 rounded-lg object-cover shrink-0"
+                      <button
+                        onClick={() => toggleWishlist(item.id)}
+                        aria-label={liked ? "Quitar de favoritos" : "Agregar a favoritos"}
+                        className="shrink-0 p-1 -ml-1"
+                      >
+                        <Heart
+                          size={18}
+                          className={liked ? "fill-red-500 text-red-500" : ""}
+                          style={liked ? undefined : { opacity: 0.35 }}
+                          aria-hidden
                         />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-baseline justify-between gap-3">
-                          <p className="text-base font-semibold">{item.name}</p>
-                          {item.status === "SOLD_OUT" ? (
-                            <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
-                              Agotado
-                            </span>
-                          ) : (
-                            <span className="text-base font-semibold shrink-0">
-                              {formatCurrency(item.price, tenant.currency)}
-                            </span>
+                      </button>
+                      <div
+                        onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
+                        className={`flex-1 min-w-0 flex gap-3 ${
+                          hasPhoto ? "cursor-pointer active:opacity-70 transition-opacity" : ""
+                        }`}
+                      >
+                        {hasPhoto && (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={item.imageUrl!}
+                            alt={item.name}
+                            className="w-14 h-14 rounded-lg object-cover shrink-0"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-baseline justify-between gap-3">
+                            <p className="text-base font-semibold">{item.name}</p>
+                            {item.status === "SOLD_OUT" ? (
+                              <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
+                                Agotado
+                              </span>
+                            ) : (
+                              <span className="text-base font-semibold shrink-0">
+                                {formatCurrency(item.price, tenant.currency)}
+                              </span>
+                            )}
+                          </div>
+                          {itemDescription(item) && (
+                            <p className="text-sm opacity-60 mt-1">{itemDescription(item)}</p>
                           )}
                         </div>
-                        {itemDescription(item) && (
-                          <p className="text-sm opacity-60 mt-1">{itemDescription(item)}</p>
-                        )}
                       </div>
                     </div>
                   );
@@ -317,7 +407,10 @@ export default function PublicMenu({
           );
         })}
 
-        {categoriesWithItems.length === 0 && (
+        {categoriesWithItems.length === 0 && showWishlistOnly && (
+          <p className="py-10 text-sm opacity-60 text-center">Todavía no marcaste ningún plato como favorito.</p>
+        )}
+        {categoriesWithItems.length === 0 && !showWishlistOnly && (
           <p className="py-10 text-sm opacity-60">Este menú todavía no tiene platos.</p>
         )}
 
