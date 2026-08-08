@@ -134,8 +134,8 @@ export default function PublicMenu({
             {featuredItems.map((item) => (
               <div
                 key={item.id}
-                className="rounded-2xl overflow-hidden border"
-                style={{ borderColor: "currentColor", opacity: 1 }}
+                className="rounded-2xl overflow-hidden border shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
+                style={{ borderColor: "color-mix(in srgb, currentColor 12%, transparent)" }}
               >
                 <div className="relative w-full aspect-[4/3] bg-black/10">
                   {item.imageUrl ? (
@@ -175,7 +175,7 @@ export default function PublicMenu({
       <div
         ref={navRef}
         className="sticky top-0 z-20 backdrop-blur border-b"
-        style={{ backgroundColor: tenant.themeBgColor + "e6", borderColor: "currentColor" }}
+        style={{ backgroundColor: tenant.themeBgColor + "e6", borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
       >
         <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
           {tenant.logoUrl && (
@@ -217,10 +217,13 @@ export default function PublicMenu({
               }}
               data-category-id={cat.id}
               className="py-8 border-b"
-              style={{ borderColor: "currentColor", opacity: 1 }}
+              style={{ borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
             >
               <h2 className="text-xl font-bold mb-5">{cat.name}</h2>
-              <div className="flex flex-col divide-y" style={{ borderColor: "currentColor" }}>
+              <div
+                className="flex flex-col divide-y"
+                style={{ borderColor: "color-mix(in srgb, currentColor 8%, transparent)" }}
+              >
                 {catItems.map((item) => (
                   <div
                     key={item.id}
@@ -280,7 +283,10 @@ export default function PublicMenu({
         </div>
 
         {hasContact && (
-          <div className="pb-10 pt-4 border-t text-xs opacity-60 flex flex-col gap-1.5" style={{ borderColor: "currentColor" }}>
+          <div
+            className="pb-10 pt-4 border-t text-xs opacity-60 flex flex-col gap-1.5"
+            style={{ borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
+          >
             {tenant.address && (
               <span className="flex items-center gap-1.5">
                 <MapPin size={13} aria-hidden /> {tenant.address}
