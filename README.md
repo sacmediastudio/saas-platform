@@ -282,6 +282,43 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Integración con Google Calendar (Citas)
+
+Cada negocio puede conectar su propio Google Calendar desde
+`/dashboard/bookings` → sección "Integraciones". Una vez conectado,
+**cada cita que se confirma se agrega automáticamente** a su calendario
+— ya sea porque el dueño la confirma desde el dashboard, o porque la
+crea directamente como manual (nace confirmada). Si una cita
+sincronizada se cancela, el evento también se borra de Google.
+
+Es **solo de salida** (Zertoo → Google) — no lee ni bloquea horarios en
+base a lo que el dueño tenga en su Google Calendar personal. Si más
+adelante hace falta la sincronización en ambos sentidos, es una
+extensión bastante más grande (necesitaría webhooks de Google o
+revisiones periódicas, y que `lib/availability.ts` también considere
+esos eventos externos como ocupado).
+
+**Piezas nuevas:**
+- `lib/google-calendar.ts` — todo el flujo OAuth (armar el link de
+  autorización, intercambiar el código por tokens, refrescar el access
+  token cuando expira) y las dos funciones que importan:
+  `syncBookingToGoogleCalendar()` y `deleteGoogleCalendarEvent()`.
+- `GoogleCalendarConnection` — modelo nuevo, uno por negocio, guarda
+  los tokens.
+- `Booking.googleEventId` — para poder borrar el evento correcto si la
+  cita se cancela.
+- 4 endpoints bajo `/api/integrations/google-calendar/`: `connect`
+  (inicia el OAuth), `callback` (Google vuelve acá), `status` (para que
+  el dashboard sepa si ya está conectado), `disconnect`.
+
+**Importante — esto no funciona solo, hay que configurarlo**: como con
+Resend, hasta que no crees credenciales reales en Google Cloud Console
+y las pongas en las variables de entorno (`GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` — instrucciones paso a
+paso en `.env.example`), el botón "Conectar" va a mostrar un aviso de
+que la integración no está disponible todavía. El resto de la
+plataforma sigue funcionando normal mientras tanto.
+
 ## Links a plataformas externas de reseñas
 
 Desde `/dashboard/reviews` (que de paso pasé a tema claro — se había

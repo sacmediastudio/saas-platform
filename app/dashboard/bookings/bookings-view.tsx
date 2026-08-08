@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { Plus, X, Copy, Check, Pencil, Trash2, Image as ImageIcon } from "lucide-react";
 import TrendStatCard from "@/components/trend-stat-card";
 import BusinessHoursEditor from "@/components/business-hours-editor";
 import BookingDayCalendar from "@/components/booking-day-calendar";
 import PendingBookings from "@/components/pending-bookings";
+import GoogleCalendarConnect from "@/components/google-calendar-connect";
 import { formatCurrency } from "@/lib/currency";
 
 interface ServiceOption {
@@ -211,6 +212,15 @@ export default function BookingsView({
       </p>
       <div className="mb-8">
         <BusinessHoursEditor />
+      </div>
+
+      {/* --- Integraciones --- */}
+      <h2 className="text-xl font-semibold mb-1">Integraciones</h2>
+      <p className="text-sm text-[#343233]/70 mb-4">Conecta tu agenda con otras herramientas que ya uses.</p>
+      <div className="mb-8">
+        <Suspense fallback={null}>
+          <GoogleCalendarConnect />
+        </Suspense>
       </div>
 
       {/* --- Pendientes de confirmar (sin importar el día) --- */}

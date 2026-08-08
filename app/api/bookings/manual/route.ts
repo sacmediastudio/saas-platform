@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { sendBookingConfirmationEmail } from "@/lib/email";
 import { isSlotFree } from "@/lib/availability";
+import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
 
 const schema = z.object({
   serviceId: z.string(),
@@ -70,6 +71,16 @@ export async function POST(req: NextRequest) {
       contactPhone: tenant.contactPhone,
     }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
   }
+
+  await syncBookingToGoogleCalendar({
+    tenantId: session.tenantId,
+    bookingId: booking.id,
+    serviceName: service.name,
+    customerName: customer.customerName,
+    customerEmail: customer.customerEmail,
+    datetime: start,
+    durationMinutes: service.durationMinutes,
+  });
 
   return NextResponse.json({ booking }, { status: 201 });
 }

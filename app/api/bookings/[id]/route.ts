@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { sendBookingConfirmationEmail } from "@/lib/email";
+import { syncBookingToGoogleCalendar, deleteGoogleCalendarEvent } from "@/lib/google-calendar";
 
 const schema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]),
@@ -40,6 +41,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       datetime: existing.datetime,
       contactPhone: existing.tenant.contactPhone,
     }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
+
+    await syncBookingToGoogleCalendar({
+      tenantId: session.tenantId,
+      bookingId: existing.id,
+      serviceName: existing.service.name,
+      customerName: existing.customerName,
+      customerEmail: existing.customerEmail,
+      datetime: existing.datetime,
+      durationMinutes: existing.service.durationMinutes,
+    });
+  }
+
+  // Si se cancela una cita que ya estaba sincronizada, borramos el
+  // evento de Google también — para que el calendario no mienta.
+  if (parsed.data.status === "CANCELLED" && existing.googleEventId) {
+    await deleteGoogleCalendarEvent(session.tenantId, existing.googleEventId);
   }
 
   return NextResponse.json({ booking });
