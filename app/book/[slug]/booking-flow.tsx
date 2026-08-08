@@ -59,7 +59,7 @@ export default function BookingFlow({
   const [availableSlots, setAvailableSlots] = useState<string[] | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [time, setTime] = useState<string | null>(null);
-  const [customer, setCustomer] = useState({ name: "", email: "" });
+  const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -105,6 +105,7 @@ export default function BookingFlow({
           staffId: service.staffId ?? undefined,
           customerName: customer.name,
           customerEmail: customer.email,
+          customerPhone: customer.phone || undefined,
           datetime: datetime.toISOString(),
         }),
       });
@@ -346,6 +347,13 @@ export default function BookingFlow({
             placeholder="name@correo.com"
             value={customer.email}
             onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
+            className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm mb-2"
+          />
+          <input
+            type="tel"
+            placeholder="Teléfono / WhatsApp (opcional)"
+            value={customer.phone}
+            onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
             className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm mb-3"
           />
           {status === "error" && <p className="text-red-600 text-sm mb-2">{errorMsg}</p>}
