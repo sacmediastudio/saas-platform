@@ -151,6 +151,7 @@ export const dashboardTranslations = {
     smartlinkModal: {
       titleCreate: "Add link",
       titleEdit: "Edit link",
+      type: "Type",
       label: "Label",
     },
     externalReviewModal: {
@@ -326,6 +327,7 @@ export const dashboardTranslations = {
     smartlinkModal: {
       titleCreate: "Agregar link",
       titleEdit: "Editar link",
+      type: "Tipo",
       label: "Etiqueta",
     },
     externalReviewModal: {
