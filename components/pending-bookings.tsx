@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Phone, Mail } from "lucide-react";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface PendingBooking {
   id: string;
@@ -14,6 +15,7 @@ interface PendingBooking {
 }
 
 export default function PendingBookings({ refreshKey, onUpdated }: { refreshKey: number; onUpdated: () => void }) {
+  const { t, lang } = useDashboardLang();
   const [bookings, setBookings] = useState<PendingBooking[] | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
 
@@ -44,7 +46,7 @@ export default function PendingBookings({ refreshKey, onUpdated }: { refreshKey:
   return (
     <div className="mb-8">
       <h2 className="text-sm font-semibold mb-2 flex items-center gap-2">
-        Citas pendientes de confirmar
+        {t.bookings.pendingTitle}
         <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700 font-semibold">
           {bookings.length}
         </span>
@@ -56,13 +58,13 @@ export default function PendingBookings({ refreshKey, onUpdated }: { refreshKey:
               <p className="text-sm font-medium">
                 {b.serviceName} ·{" "}
                 <span className="font-normal text-[#343233]/70">
-                  {new Date(b.datetime).toLocaleDateString("es", { day: "numeric", month: "short" })}{" "}
-                  {new Date(b.datetime).toLocaleTimeString("es", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(b.datetime).toLocaleDateString(lang, { day: "numeric", month: "short" })}{" "}
+                  {new Date(b.datetime).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </p>
               <p className="text-xs text-[#343233]/70 mt-0.5">
                 {b.customerName}
-                {b.staffName ? ` · con ${b.staffName}` : ""}
+                {b.staffName ? ` · ${lang === "en" ? "with" : "con"} ${b.staffName}` : ""}
               </p>
               <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
                 {b.customerPhone && (
@@ -89,14 +91,14 @@ export default function PendingBookings({ refreshKey, onUpdated }: { refreshKey:
                 disabled={updating === b.id}
                 className="text-xs px-2.5 py-1.5 rounded-md bg-[#E7FF00] text-[#002D09] font-medium hover:brightness-105"
               >
-                Confirmar
+                {t.calendar.confirm}
               </button>
               <button
                 onClick={() => updateStatus(b.id, "CANCELLED")}
                 disabled={updating === b.id}
                 className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-white"
               >
-                Cancelar
+                {t.calendar.cancel}
               </button>
             </div>
           </div>

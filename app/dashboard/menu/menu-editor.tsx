@@ -23,10 +23,10 @@ interface Category {
   nameEn: string | null;
 }
 
-const statusStyles: Record<MenuItem["status"], { label: string; className: string }> = {
-  AVAILABLE: { label: "Disponible", className: "bg-green-50 text-green-700" },
-  SOLD_OUT: { label: "Agotado", className: "bg-red-50 text-red-700" },
-  SEASONAL: { label: "Temporada", className: "bg-amber-50 text-amber-700" },
+const statusStyles: Record<MenuItem["status"], { className: string }> = {
+  AVAILABLE: { className: "bg-green-50 text-green-700" },
+  SOLD_OUT: { className: "bg-red-50 text-red-700" },
+  SEASONAL: { className: "bg-amber-50 text-amber-700" },
 };
 
 // Reduce cualquier foto a un JPEG pequeño en base64 antes de subirla.
@@ -239,7 +239,7 @@ export default function MenuEditor({
                             {item.name}
                             {item.featured && (
                               <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 font-normal">
-                                ★ Destacado
+                                ★ {t.dishModal.featuredBadge}
                               </span>
                             )}
                           </p>
@@ -255,7 +255,7 @@ export default function MenuEditor({
                         disabled={saving === item.id}
                         className={`text-xs px-2.5 py-1 rounded-md font-medium ${s.className}`}
                       >
-                        {s.label}
+                        {t.dishModal.status[item.status]}
                       </button>
                       <button
                         onClick={() => setDishModal({ mode: "edit", item })}
@@ -321,6 +321,7 @@ function DishModal({
   onCreated: (item: MenuItem) => void;
   onUpdated: (item: MenuItem) => void;
 }) {
+  const { t } = useDashboardLang();
   const [form, setForm] = useState({
     name: item?.name ?? "",
     description: item?.description ?? "",
@@ -404,9 +405,9 @@ function DishModal({
   }
 
   return (
-    <ModalShell title={mode === "create" ? "Agregar plato" : "Editar plato"} onClose={onClose}>
+    <ModalShell title={mode === "create" ? t.dishModal.titleCreate : t.dishModal.titleEdit} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <Field label="Foto (opcional)">
+        <Field label={t.dishModal.photo}>
           <div className="flex items-center gap-3">
             {form.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -418,7 +419,7 @@ function DishModal({
             )}
             <div className="flex flex-col gap-1">
               <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer w-fit">
-                {processingImage ? "Procesando..." : "Subir foto"}
+                {processingImage ? t.common.uploading : t.common.uploadPhoto}
                 <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
               {form.imageUrl && (
@@ -427,14 +428,14 @@ function DishModal({
                   onClick={() => setForm((f) => ({ ...f, imageUrl: null }))}
                   className="text-xs text-[#343233]/60 hover:text-red-600 text-left"
                 >
-                  Quitar foto
+                  {t.common.removePhoto}
                 </button>
               )}
             </div>
           </div>
         </Field>
 
-        <Field label="Nombre">
+        <Field label={t.dishModal.name}>
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -444,7 +445,7 @@ function DishModal({
           />
         </Field>
 
-        <Field label="Categoría">
+        <Field label={t.dishModal.category}>
           <select
             value={form.categoryId}
             onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
@@ -459,7 +460,7 @@ function DishModal({
           </select>
         </Field>
 
-        <Field label="Precio">
+        <Field label={t.dishModal.price}>
           <input
             type="number"
             step="0.01"
@@ -479,10 +480,10 @@ function DishModal({
             onChange={(e) => setForm({ ...form, featured: e.target.checked })}
             className="w-4 h-4 accent-white"
           />
-          Destacar este plato en el menú público
+          {t.dishModal.featured}
         </label>
 
-        <Field label="Descripción (opcional)">
+        <Field label={t.dishModal.description}>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -492,7 +493,7 @@ function DishModal({
           />
         </Field>
 
-        <Field label="Descripción en inglés (opcional, para la versión EN del menú)">
+        <Field label={t.dishModal.descriptionEn}>
           <textarea
             value={form.descriptionEn}
             onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
@@ -507,7 +508,7 @@ function DishModal({
         <ModalActions
           saving={saving || processingImage}
           onClose={onClose}
-          submitLabel={mode === "create" ? "Agregar" : "Guardar cambios"}
+          submitLabel={mode === "create" ? t.common.add : t.common.save}
         />
       </form>
     </ModalShell>
@@ -527,6 +528,7 @@ function CategoryModal({
   onCreated: (cat: Category) => void;
   onUpdated: (cat: Category) => void;
 }) {
+  const { t } = useDashboardLang();
   const [name, setName] = useState(category?.name ?? "");
   const [nameEn, setNameEn] = useState(category?.nameEn ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -568,9 +570,9 @@ function CategoryModal({
   }
 
   return (
-    <ModalShell title={mode === "create" ? "Nueva categoría" : "Renombrar categoría"} onClose={onClose}>
+    <ModalShell title={mode === "create" ? t.categoryModal.titleCreate : t.categoryModal.titleEdit} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <Field label="Nombre">
+        <Field label={t.categoryModal.name}>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -580,7 +582,7 @@ function CategoryModal({
             autoFocus
           />
         </Field>
-        <Field label="Nombre en inglés (opcional, para la versión EN del menú)">
+        <Field label={t.categoryModal.nameEn}>
           <input
             value={nameEn}
             onChange={(e) => setNameEn(e.target.value)}
@@ -589,7 +591,7 @@ function CategoryModal({
           />
         </Field>
         {error && <p className="text-red-600 text-sm">{error}</p>}
-        <ModalActions saving={saving} onClose={onClose} submitLabel={mode === "create" ? "Crear" : "Guardar"} />
+        <ModalActions saving={saving} onClose={onClose} submitLabel={mode === "create" ? t.common.create : t.common.save} />
       </form>
     </ModalShell>
   );
@@ -616,6 +618,7 @@ function ModalActions({
   onClose: () => void;
   submitLabel: string;
 }) {
+  const { t } = useDashboardLang();
   return (
     <div className="flex gap-2 mt-1">
       <button
@@ -623,14 +626,14 @@ function ModalActions({
         onClick={onClose}
         className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
       >
-        Cancelar
+        {t.common.cancel}
       </button>
       <button
         type="submit"
         disabled={saving}
         className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
       >
-        {saving ? "Guardando..." : submitLabel}
+        {saving ? t.common.saving : submitLabel}
       </button>
     </div>
   );

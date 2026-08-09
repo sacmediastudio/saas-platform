@@ -134,7 +134,7 @@ export default function BookingFlow({
   if (status === "done") {
     return (
       <div
-        className="max-w-sm mx-auto mt-24 text-center px-4 min-h-screen"
+        className="max-w-md mx-auto mt-24 text-center px-6 min-h-screen"
         style={{ backgroundColor: themeBgColor, color: themeTextColor }}
       >
         <p className="text-lg font-semibold mb-2">Reserva enviada</p>
@@ -261,7 +261,7 @@ export default function BookingFlow({
   // ---------- Flujo de reserva (fecha/hora + confirmación) ----------
   return (
     <div
-      className="max-w-sm mx-auto min-h-screen px-4 pt-10"
+      className="max-w-md mx-auto min-h-screen px-5 sm:px-6 pt-10"
       style={{ backgroundColor: themeBgColor, color: themeTextColor }}
     >
       <button onClick={backToList} className="text-xs font-medium underline mb-4 opacity-70">

@@ -49,19 +49,19 @@ interface SmartLinkItem {
   clickCount: number;
 }
 
-const TYPE_META: Record<LinkType, { label: string; icon: any; placeholder: string; helper: string }> = {
-  WEBSITE: { label: "Sitio web", icon: Globe, placeholder: "https://tunegocio.com", helper: "URL completa" },
-  WHATSAPP: { label: "WhatsApp", icon: MessageCircle, placeholder: "521234567890", helper: "Solo números, con código de país, sin +" },
-  PHONE: { label: "Teléfono", icon: Phone, placeholder: "+1 555 123 4567", helper: "Como quieres que se marque" },
-  INSTAGRAM: { label: "Instagram", icon: Instagram, placeholder: "https://instagram.com/tu_usuario", helper: "URL completa del perfil" },
-  FACEBOOK: { label: "Facebook", icon: Facebook, placeholder: "https://facebook.com/tupagina", helper: "URL completa de la página" },
-  TIKTOK: { label: "TikTok", icon: Link2, placeholder: "https://tiktok.com/@tu_usuario", helper: "URL completa del perfil" },
-  TWITTER: { label: "X / Twitter", icon: Link2, placeholder: "https://x.com/tu_usuario", helper: "URL completa del perfil" },
-  YOUTUBE: { label: "YouTube", icon: Youtube, placeholder: "https://youtube.com/@tucanal", helper: "URL completa del canal" },
-  LINKEDIN: { label: "LinkedIn", icon: Linkedin, placeholder: "https://linkedin.com/company/tunegocio", helper: "URL completa del perfil" },
-  MAPS: { label: "Ubicación (Maps)", icon: MapPin, placeholder: "https://maps.app.goo.gl/...", helper: "Copia el link de 'Compartir' desde Google Maps" },
-  VCARD: { label: "Guardar contacto (vCard)", icon: Contact, placeholder: "", helper: "Usa el correo, teléfono y dirección de Ajustes — no necesitas escribir nada aquí" },
-  CUSTOM: { label: "Link personalizado", icon: Link2, placeholder: "https://...", helper: "Cualquier URL" },
+const TYPE_META: Record<LinkType, { icon: any; placeholder: string }> = {
+  WEBSITE: { icon: Globe, placeholder: "https://tunegocio.com" },
+  WHATSAPP: { icon: MessageCircle, placeholder: "521234567890" },
+  PHONE: { icon: Phone, placeholder: "+1 555 123 4567" },
+  INSTAGRAM: { icon: Instagram, placeholder: "https://instagram.com/tu_usuario" },
+  FACEBOOK: { icon: Facebook, placeholder: "https://facebook.com/tupagina" },
+  TIKTOK: { icon: Link2, placeholder: "https://tiktok.com/@tu_usuario" },
+  TWITTER: { icon: Link2, placeholder: "https://x.com/tu_usuario" },
+  YOUTUBE: { icon: Youtube, placeholder: "https://youtube.com/@tucanal" },
+  LINKEDIN: { icon: Linkedin, placeholder: "https://linkedin.com/company/tunegocio" },
+  MAPS: { icon: MapPin, placeholder: "https://maps.app.goo.gl/..." },
+  VCARD: { icon: Contact, placeholder: "" },
+  CUSTOM: { icon: Link2, placeholder: "https://..." },
 };
 
 export default function SmartLinkEditor({
@@ -173,9 +173,9 @@ export default function SmartLinkEditor({
                 return (
                   <div key={type} className="flex items-center gap-3 px-4 py-2.5">
                     <Icon size={15} className="text-[#343233]/70 shrink-0" aria-hidden />
-                    <span className="text-sm flex-1">{meta.label}</span>
+                    <span className="text-sm flex-1">{t.smartlinkTypes[type].label}</span>
                     <span className="text-sm font-semibold">
-                      {count} {type === "VCARD" ? "descargas" : "clics"}
+                      {count} {type === "VCARD" ? t.smartlink.downloads : t.smartlink.clicks}
                     </span>
                   </div>
                 );
@@ -185,7 +185,7 @@ export default function SmartLinkEditor({
       )}
 
       {sortedItems.length === 0 && (
-        <p className="text-sm text-[#343233]/60">Todavía no tienes links. Agrega el primero.</p>
+        <p className="text-sm text-[#343233]/60">{t.smartlink.empty}</p>
       )}
 
       <div className="flex flex-col gap-2">
@@ -201,7 +201,7 @@ export default function SmartLinkEditor({
                 <Icon size={16} className="text-[#343233]/70 shrink-0" aria-hidden />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{item.label}</p>
-                  <p className="text-xs text-[#343233]/60 truncate">{meta.label}</p>
+                  <p className="text-xs text-[#343233]/60 truncate">{t.smartlinkTypes[item.type].label}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 ml-auto">
@@ -274,8 +274,9 @@ function LinkModal({
   onCreated: (item: SmartLinkItem) => void;
   onUpdated: (item: SmartLinkItem) => void;
 }) {
+  const { t } = useDashboardLang();
   const [type, setType] = useState<LinkType>(item?.type ?? "WEBSITE");
-  const [label, setLabel] = useState(item?.label ?? TYPE_META[item?.type ?? "WEBSITE"].label);
+  const [label, setLabel] = useState(item?.label ?? t.smartlinkTypes[item?.type ?? "WEBSITE"].label);
   const [value, setValue] = useState(item?.value ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -321,7 +322,7 @@ function LinkModal({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
       <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold">{mode === "create" ? "Agregar link" : "Editar link"}</h2>
+          <h2 className="text-base font-semibold">{mode === "create" ? t.smartlinkModal.titleCreate : t.smartlinkModal.titleEdit}</h2>
           <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
@@ -330,19 +331,19 @@ function LinkModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {mode === "create" && (
             <label className="flex flex-col gap-1">
-              <span className="text-xs text-[#343233]/70">Tipo</span>
+              <span className="text-xs text-[#343233]/70">{t.smartlinkModal.type}</span>
               <select
                 value={type}
                 onChange={(e) => {
-                  const t = e.target.value as LinkType;
-                  setType(t);
-                  setLabel(TYPE_META[t].label);
+                  const newType = e.target.value as LinkType;
+                  setType(newType);
+                  setLabel(t.smartlinkTypes[newType].label);
                 }}
                 className={inputClass}
               >
-                {(Object.keys(TYPE_META) as LinkType[]).map((t) => (
-                  <option key={t} value={t}>
-                    {TYPE_META[t].label}
+                {(Object.keys(TYPE_META) as LinkType[]).map((tk) => (
+                  <option key={tk} value={tk}>
+                    {t.smartlinkTypes[tk].label}
                   </option>
                 ))}
               </select>
@@ -350,12 +351,12 @@ function LinkModal({
           )}
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">Nombre a mostrar</span>
+            <span className="text-xs text-[#343233]/70">{t.smartlinkModal.label}</span>
             <input value={label} onChange={(e) => setLabel(e.target.value)} required className={inputClass} />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">{meta.helper}</span>
+            <span className="text-xs text-[#343233]/70">{t.smartlinkTypes[type].helper}</span>
             {type !== "VCARD" && (
               <input
                 value={value}
@@ -375,14 +376,14 @@ function LinkModal({
               onClick={onClose}
               className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
             >
-              Cancelar
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
             >
-              {saving ? "Guardando..." : mode === "create" ? "Agregar" : "Guardar"}
+              {saving ? t.common.saving : mode === "create" ? t.common.add : t.common.save}
             </button>
           </div>
         </form>

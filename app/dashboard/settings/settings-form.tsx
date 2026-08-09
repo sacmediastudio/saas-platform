@@ -338,7 +338,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1 flex-1">
+    <label className="flex flex-col gap-1 flex-1 min-w-0">
       <span className="text-xs text-[#343233]/70">{label}</span>
       {children}
     </label>

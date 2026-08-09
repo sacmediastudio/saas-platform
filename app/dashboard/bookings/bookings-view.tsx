@@ -297,6 +297,7 @@ function ServiceModal({
   onCreated: (s: ServiceOption) => void;
   onUpdated: (s: ServiceOption) => void;
 }) {
+  const { t } = useDashboardLang();
   const [form, setForm] = useState({
     name: service?.name ?? "",
     description: service?.description ?? "",
@@ -377,9 +378,9 @@ function ServiceModal({
   }
 
   return (
-    <ModalShell title={mode === "create" ? "Agregar servicio" : "Editar servicio"} onClose={onClose}>
+    <ModalShell title={mode === "create" ? t.serviceModal.titleCreate : t.serviceModal.titleEdit} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <Field label="Foto (opcional)">
+        <Field label={t.serviceModal.photo}>
           <div className="flex items-center gap-3">
             {form.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
@@ -391,7 +392,7 @@ function ServiceModal({
             )}
             <div className="flex flex-col gap-1">
               <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer w-fit">
-                {processingImage ? "Procesando..." : "Subir foto"}
+                {processingImage ? t.common.uploading : t.common.uploadPhoto}
                 <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
               </label>
               {form.imageUrl && (
@@ -400,14 +401,14 @@ function ServiceModal({
                   onClick={() => setForm((f) => ({ ...f, imageUrl: null }))}
                   className="text-xs text-[#343233]/60 hover:text-red-600 text-left"
                 >
-                  Quitar foto
+                  {t.common.removePhoto}
                 </button>
               )}
             </div>
           </div>
         </Field>
 
-        <Field label="Nombre">
+        <Field label={t.serviceModal.name}>
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -417,7 +418,7 @@ function ServiceModal({
           />
         </Field>
 
-        <Field label="Descripción (opcional)">
+        <Field label={t.serviceModal.description}>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
@@ -428,7 +429,7 @@ function ServiceModal({
         </Field>
 
         <div className="flex gap-2">
-          <Field label="Duración (min)">
+          <Field label={t.serviceModal.duration}>
             <input
               type="number"
               min="1"
@@ -438,7 +439,7 @@ function ServiceModal({
               className={inputClass}
             />
           </Field>
-          <Field label="Precio">
+          <Field label={t.serviceModal.price}>
             <input
               type="number"
               step="0.01"
@@ -453,13 +454,13 @@ function ServiceModal({
         </div>
 
         {staff.length > 0 && (
-          <Field label="Con quién (opcional)">
+          <Field label={t.serviceModal.staff}>
             <select
               value={form.staffId}
               onChange={(e) => setForm({ ...form, staffId: e.target.value })}
               className={inputClass}
             >
-              <option value="">Cualquiera</option>
+              <option value="">{t.common.any}</option>
               {staff.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -474,7 +475,7 @@ function ServiceModal({
         <ModalActions
           saving={saving || processingImage}
           onClose={onClose}
-          submitLabel={mode === "create" ? "Agregar" : "Guardar cambios"}
+          submitLabel={mode === "create" ? t.common.add : t.common.save}
         />
       </form>
     </ModalShell>
@@ -494,6 +495,7 @@ function NewBookingModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const { t } = useDashboardLang();
   const [form, setForm] = useState({
     serviceId: "",
     staffId: "",
@@ -509,7 +511,7 @@ function NewBookingModal({
     e.preventDefault();
     setError(null);
     if (!form.serviceId) {
-      setError("Elige un servicio");
+      setError(t.bookingModal.chooseService);
       return;
     }
     setSaving(true);
@@ -549,16 +551,16 @@ function NewBookingModal({
   }
 
   return (
-    <ModalShell title="Nueva cita" onClose={onClose}>
+    <ModalShell title={t.bookingModal.title} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <Field label="Servicio">
+        <Field label={t.bookingModal.service}>
           <select
             value={form.serviceId}
             onChange={(e) => setForm({ ...form, serviceId: e.target.value })}
             required
             className={inputClass}
           >
-            <option value="">Selecciona un servicio</option>
+            <option value="">{t.bookingModal.selectService}</option>
             {services.map((s) => (
               <option key={s.id} value={s.id}>
                 {s.name} · {s.durationMinutes} min
@@ -568,13 +570,13 @@ function NewBookingModal({
         </Field>
 
         {staff.length > 0 && (
-          <Field label="Con (opcional)">
+          <Field label={t.bookingModal.staff}>
             <select
               value={form.staffId}
               onChange={(e) => setForm({ ...form, staffId: e.target.value })}
               className={inputClass}
             >
-              <option value="">Cualquiera</option>
+              <option value="">{t.common.any}</option>
               {staff.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -585,7 +587,7 @@ function NewBookingModal({
         )}
 
         <div className="flex gap-2">
-          <Field label="Fecha">
+          <Field label={t.bookingModal.date}>
             <input
               type="date"
               value={form.date}
@@ -594,7 +596,7 @@ function NewBookingModal({
               className={inputClass}
             />
           </Field>
-          <Field label="Hora">
+          <Field label={t.bookingModal.time}>
             <input
               type="time"
               value={form.time}
@@ -605,7 +607,7 @@ function NewBookingModal({
           </Field>
         </div>
 
-        <Field label="Nombre del cliente">
+        <Field label={t.bookingModal.customerName}>
           <input
             value={form.customerName}
             onChange={(e) => setForm({ ...form, customerName: e.target.value })}
@@ -615,7 +617,7 @@ function NewBookingModal({
           />
         </Field>
 
-        <Field label="Correo del cliente">
+        <Field label={t.bookingModal.customerEmail}>
           <input
             type="email"
             value={form.customerEmail}
@@ -628,7 +630,7 @@ function NewBookingModal({
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        <ModalActions saving={saving} onClose={onClose} submitLabel="Crear cita" />
+        <ModalActions saving={saving} onClose={onClose} submitLabel={t.bookingModal.submit} />
       </form>
     </ModalShell>
   );
@@ -643,6 +645,7 @@ function BlockScheduleModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const { t } = useDashboardLang();
   const [form, setForm] = useState({
     staffId: "",
     date: new Date().toISOString().slice(0, 10),
@@ -661,7 +664,7 @@ function BlockScheduleModal({
     const start = new Date(`${form.date}T${form.startTime}:00`);
     const end = new Date(`${form.date}T${form.endTime}:00`);
     if (end <= start) {
-      setError("La hora de fin debe ser posterior al inicio");
+      setError(t.blockModal.endBeforeStart);
       return;
     }
     setSaving(true);
@@ -698,31 +701,29 @@ function BlockScheduleModal({
 
   if (done) {
     return (
-      <ModalShell title="Horario bloqueado" onClose={onClose}>
-        <p className="text-sm text-[#343233]/70 mb-4">
-          Ese horario ya no aparecerá disponible para nuevas reservas.
-        </p>
+      <ModalShell title={t.blockModal.blocked} onClose={onClose}>
+        <p className="text-sm text-[#343233]/70 mb-4">{t.blockModal.blockedDesc}</p>
         <button
           onClick={onClose}
           className="w-full py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105"
         >
-          Listo
+          {t.blockModal.done}
         </button>
       </ModalShell>
     );
   }
 
   return (
-    <ModalShell title="Bloquear horario" onClose={onClose}>
+    <ModalShell title={t.blockModal.title} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
         {staff.length > 0 && (
-          <Field label="Staff (opcional — vacío bloquea para todos)">
+          <Field label={t.blockModal.staff}>
             <select
               value={form.staffId}
               onChange={(e) => setForm({ ...form, staffId: e.target.value })}
               className={inputClass}
             >
-              <option value="">Todos</option>
+              <option value="">{t.blockModal.staffAll}</option>
               {staff.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.name}
@@ -732,7 +733,7 @@ function BlockScheduleModal({
           </Field>
         )}
 
-        <Field label="Fecha">
+        <Field label={t.blockModal.date}>
           <input
             type="date"
             value={form.date}
@@ -743,7 +744,7 @@ function BlockScheduleModal({
         </Field>
 
         <div className="flex gap-2">
-          <Field label="Desde">
+          <Field label={t.blockModal.from}>
             <input
               type="time"
               value={form.startTime}
@@ -752,7 +753,7 @@ function BlockScheduleModal({
               className={inputClass}
             />
           </Field>
-          <Field label="Hasta">
+          <Field label={t.blockModal.to}>
             <input
               type="time"
               value={form.endTime}
@@ -763,7 +764,7 @@ function BlockScheduleModal({
           </Field>
         </div>
 
-        <Field label="Motivo (opcional)">
+        <Field label={t.blockModal.reason}>
           <input
             value={form.reason}
             onChange={(e) => setForm({ ...form, reason: e.target.value })}
@@ -774,7 +775,7 @@ function BlockScheduleModal({
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 
-        <ModalActions saving={saving} onClose={onClose} submitLabel="Bloquear" />
+        <ModalActions saving={saving} onClose={onClose} submitLabel={t.blockModal.block} />
       </form>
     </ModalShell>
   );
@@ -785,7 +786,7 @@ const inputClass =
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <label className="flex flex-col gap-1 flex-1">
+    <label className="flex flex-col gap-1 flex-1 min-w-0">
       <span className="text-xs text-[#343233]/70">{label}</span>
       {children}
     </label>
@@ -801,6 +802,7 @@ function ModalActions({
   onClose: () => void;
   submitLabel: string;
 }) {
+  const { t } = useDashboardLang();
   return (
     <div className="flex gap-2 mt-1">
       <button
@@ -808,14 +810,14 @@ function ModalActions({
         onClick={onClose}
         className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
       >
-        Cancelar
+        {t.common.cancel}
       </button>
       <button
         type="submit"
         disabled={saving}
         className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
       >
-        {saving ? "Guardando..." : submitLabel}
+        {saving ? t.common.saving : submitLabel}
       </button>
     </div>
   );

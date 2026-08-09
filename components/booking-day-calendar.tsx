@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Lock, Plus, Phone, Mail } from "lucide-react";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface DayHours {
   isOpen: boolean;
@@ -26,11 +27,11 @@ interface DayBlock {
   reason: string | null;
 }
 
-const statusStyles: Record<DayBooking["status"], { label: string; className: string }> = {
-  PENDING: { label: "Pendiente", className: "bg-amber-50 text-amber-700" },
-  CONFIRMED: { label: "Confirmada", className: "bg-green-50 text-green-700" },
-  CANCELLED: { label: "Cancelada", className: "bg-red-50 text-red-700" },
-  COMPLETED: { label: "Completada", className: "bg-[#F7F8F4] text-[#343233]/70" },
+const statusStyles: Record<DayBooking["status"], { className: string }> = {
+  PENDING: { className: "bg-amber-50 text-amber-700" },
+  CONFIRMED: { className: "bg-green-50 text-green-700" },
+  CANCELLED: { className: "bg-red-50 text-red-700" },
+  COMPLETED: { className: "bg-[#F7F8F4] text-[#343233]/70" },
 };
 
 function toDateParam(d: Date) {
@@ -59,6 +60,7 @@ export default function BookingDayCalendar({
   onUpdateStatus: (id: string, status: "CONFIRMED" | "CANCELLED") => Promise<void>;
   refreshKey: number;
 }) {
+  const { t, lang } = useDashboardLang();
   const [date, setDate] = useState(() => new Date());
   const [dayHours, setDayHours] = useState<DayHours | null>(null);
   const [bookings, setBookings] = useState<DayBooking[]>([]);
@@ -160,11 +162,11 @@ export default function BookingDayCalendar({
         </button>
         <div className="text-center">
           <p className="text-sm font-semibold capitalize">
-            {date.toLocaleDateString("es", { weekday: "long", day: "numeric", month: "long" })}
+            {date.toLocaleDateString(lang, { weekday: "long", day: "numeric", month: "long" })}
           </p>
           {!isToday && (
             <button onClick={() => setDate(new Date())} className="text-xs text-[#343233]/60 underline">
-              Volver a hoy
+              {t.calendar.backToToday}
             </button>
           )}
         </div>
@@ -174,10 +176,10 @@ export default function BookingDayCalendar({
       </div>
 
       {loading ? (
-        <p className="text-sm text-[#343233]/60">Cargando...</p>
+        <p className="text-sm text-[#343233]/60">{t.calendar.loading}</p>
       ) : !dayHours?.isOpen ? (
         <p className="text-sm text-[#343233]/60 py-6 text-center border border-[#002D09]/10 rounded-lg">
-          Cerrado este día. Cámbialo en "Horario de atención" si quieres atender igual.
+          {t.calendar.closedDay}
         </p>
       ) : (
         <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
@@ -190,7 +192,7 @@ export default function BookingDayCalendar({
                 <div key={row.minute} className="flex items-center gap-2.5 px-3.5 py-2 bg-red-50/60">
                   <span className="text-xs text-[#343233]/60 w-16 shrink-0">{minutesToLabel(row.minute)}</span>
                   <Lock size={13} className="text-red-500 shrink-0" aria-hidden />
-                  <span className="text-xs text-red-700">{row.block?.reason || "Horario bloqueado"}</span>
+                  <span className="text-xs text-red-700">{row.block?.reason || t.calendar.blockedFallback}</span>
                 </div>
               );
             }
@@ -204,7 +206,7 @@ export default function BookingDayCalendar({
                     <p className="text-sm font-medium">{b.serviceName}</p>
                     <p className="text-xs text-[#343233]/70">
                       {b.customerName}
-                      {b.staffName ? ` · con ${b.staffName}` : ""} · {b.durationMinutes} min
+                      {b.staffName ? ` · ${lang === "en" ? "with" : "con"} ${b.staffName}` : ""} · {b.durationMinutes} min
                     </p>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1">
                       {b.customerPhone && (
@@ -226,14 +228,16 @@ export default function BookingDayCalendar({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={`text-xs px-2 py-1 rounded-md font-medium ${s.className}`}>{s.label}</span>
+                    <span className={`text-xs px-2 py-1 rounded-md font-medium ${s.className}`}>
+                      {t.bookingStatus[b.status]}
+                    </span>
                     {b.status === "PENDING" && (
                       <button
                         onClick={() => handleUpdateStatus(b.id, "CONFIRMED")}
                         disabled={updating === b.id}
                         className="text-xs px-2 py-1 rounded-md border border-[#002D09]/15 hover:bg-white"
                       >
-                        Confirmar
+                        {t.calendar.confirm}
                       </button>
                     )}
                     {b.status !== "CANCELLED" && b.status !== "COMPLETED" && (
@@ -242,7 +246,7 @@ export default function BookingDayCalendar({
                         disabled={updating === b.id}
                         className="text-xs px-2 py-1 rounded-md border border-[#002D09]/15 hover:bg-white"
                       >
-                        Cancelar
+                        {t.calendar.cancel}
                       </button>
                     )}
                   </div>
@@ -259,7 +263,7 @@ export default function BookingDayCalendar({
                 <span className="text-xs text-[#343233]/60 w-16 shrink-0">{minutesToLabel(row.minute)}</span>
                 <span className="text-xs text-[#343233]/40 group-hover:text-[#002D09] flex items-center gap-1">
                   <Plus size={12} aria-hidden />
-                  Libre — agregar cita
+                  {t.calendar.freeSlot}
                 </span>
               </button>
             );

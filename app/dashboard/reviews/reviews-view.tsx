@@ -22,13 +22,15 @@ interface ExternalLinkRow {
   enabled: boolean;
 }
 
-const PLATFORM_LABELS: Record<Platform, string> = {
-  GOOGLE: "Google",
-  TRIPADVISOR: "TripAdvisor",
-  YELP: "Yelp",
-  FACEBOOK: "Facebook",
-  CUSTOM: "Otro",
-};
+function platformLabels(t: ReturnType<typeof useDashboardLang>["t"]): Record<Platform, string> {
+  return {
+    GOOGLE: "Google",
+    TRIPADVISOR: "TripAdvisor",
+    YELP: "Yelp",
+    FACEBOOK: "Facebook",
+    CUSTOM: t.externalReviewModal.customPlatform,
+  };
+}
 
 export default function ReviewsView({
   initialReviews,
@@ -78,7 +80,7 @@ export default function ReviewsView({
   }
 
   async function deleteLink(link: ExternalLinkRow) {
-    if (!confirm(`¿Borrar el link de ${PLATFORM_LABELS[link.platform]}?`)) return;
+    if (!confirm(`¿Borrar el link de ${platformLabels(t)[link.platform]}?`)) return;
     const res = await fetch(`/api/external-review-links/${link.id}`, { method: "DELETE" });
     if (res.ok) setLinks((l) => l.filter((x) => x.id !== link.id));
   }
@@ -135,7 +137,7 @@ export default function ReviewsView({
                 </a>
               </div>
               <span className="text-xs px-2 py-1 rounded-md bg-[#F7F8F4] shrink-0">
-                {PLATFORM_LABELS[link.platform]}
+                {platformLabels(t)[link.platform]}
               </span>
               <button
                 onClick={() => toggleLinkEnabled(link)}
@@ -224,6 +226,7 @@ function ExternalLinkModal({
   onCreated: (l: ExternalLinkRow) => void;
   onUpdated: (l: ExternalLinkRow) => void;
 }) {
+  const { t } = useDashboardLang();
   const [platform, setPlatform] = useState<Platform>(link?.platform ?? "GOOGLE");
   const [label, setLabel] = useState(link?.label ?? "");
   const [url, setUrl] = useState(link?.url ?? "");
@@ -269,7 +272,7 @@ function ExternalLinkModal({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
       <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold">{mode === "create" ? "Agregar link" : "Editar link"}</h2>
+          <h2 className="text-base font-semibold">{mode === "create" ? t.externalReviewModal.titleCreate : t.externalReviewModal.titleEdit}</h2>
           <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
@@ -277,22 +280,22 @@ function ExternalLinkModal({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">Plataforma</span>
+            <span className="text-xs text-[#343233]/70">{t.externalReviewModal.platform}</span>
             <select
               value={platform}
               onChange={(e) => setPlatform(e.target.value as Platform)}
               className={inputClass}
             >
-              {(Object.keys(PLATFORM_LABELS) as Platform[]).map((p) => (
+              {(Object.keys(platformLabels(t)) as Platform[]).map((p) => (
                 <option key={p} value={p}>
-                  {PLATFORM_LABELS[p]}
+                  {platformLabels(t)[p]}
                 </option>
               ))}
             </select>
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">Texto del botón</span>
+            <span className="text-xs text-[#343233]/70">{t.externalReviewModal.buttonText}</span>
             <input
               value={label}
               onChange={(e) => setLabel(e.target.value)}
@@ -303,7 +306,7 @@ function ExternalLinkModal({
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">URL de tu perfil</span>
+            <span className="text-xs text-[#343233]/70">{t.externalReviewModal.url}</span>
             <input
               type="url"
               value={url}
@@ -322,14 +325,14 @@ function ExternalLinkModal({
               onClick={onClose}
               className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
             >
-              Cancelar
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
             >
-              {saving ? "Guardando..." : mode === "create" ? "Agregar" : "Guardar"}
+              {saving ? t.common.saving : mode === "create" ? t.common.add : t.common.save}
             </button>
           </div>
         </form>

@@ -282,6 +282,18 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Fix visual: inputs desbordados en pares Fecha/Hora
+
+El componente `Field` compartido (usado en los pares "Fecha/Hora" y
+"Desde/Hasta" de los modales de Citas y en Ajustes) le faltaba
+`min-w-0`. Sin eso, un input nativo (`type="date"`/`type="time"`)
+imponía su ancho mínimo de contenido y el flexbox no lo dejaba
+encogerse — así que en pantallas angostas el segundo campo del par se
+desbordaba hacia la derecha, fuera del modal. Corregido en
+`bookings-view.tsx` y `settings-form.tsx`. También unifiqué el ancho y
+padding del formulario público de citas (`booking-flow.tsx`), que antes
+saltaba de tamaño entre la lista de servicios y el paso de fecha/hora.
+
 ## Idioma EN/ES en los 3 dashboards, y AWG
 
 Switch ES/EN en la sidebar (desktop) y la barra superior (mobile) del
@@ -292,15 +304,21 @@ manualmente desde cada `page.tsx`. Mismo `localStorage` (`zertoo_lang`)
 que ya usa la landing/login/signup — si alguien ya eligió inglés en
 otra parte del sitio, el dashboard lo respeta desde el primer momento.
 
-**Alcance real de esta traducción — sé honesto sobre esto**: traduje la
-navegación completa (los 6 items del menú lateral, el pie de página) y
-lo más visible de cada uno de los 3 módulos + Ajustes + Reseñas +
-Módulos: títulos de página, subtítulos, botones principales, y las
-cards de estadísticas. **Lo que NO quedó traducido en esta pasada**:
-las etiquetas de los campos dentro de los modales (crear/editar plato,
-servicio, link, etc.), los mensajes de error, y los estados de las
-citas (Pendiente/Confirmada/etc). Es una tarea real y grande aparte —
-avisa si quieres que sigamos con eso.
+**Alcance de esta traducción, actualizado**: además de la navegación y
+lo más visible de cada página (títulos, subtítulos, botones
+principales, cards de estadísticas), ahora también están traducidos
+**todos los modales de crear/editar** de los 3 módulos: platos y
+categorías (Menú), servicios/citas/bloqueos (Citas), links (Smartlink),
+y el link externo de reseñas — incluyendo sus mensajes de error, los
+estados de cita (Pendiente/Confirmada/Cancelada/Completada), y los
+nombres + textos de ayuda de cada tipo de link en Smartlink
+(WhatsApp, Instagram, Maps, vCard, etc., antes fijos en español).
+
+**Lo que sigue sin traducir** (no llegamos a esto todavía): el
+contenido dinámico que el propio dueño escribe — nombres de categorías
+y platos, nombres de servicios, textos de bloqueo, y similares — eso
+nunca se traduce automáticamente, es texto libre del negocio, no de la
+interfaz.
 
 Se agregó **AWG (florín arubeño)** a las monedas soportadas
 (`lib/currency.ts`, `app/api/tenant/settings/route.ts`) — ya aparece en
