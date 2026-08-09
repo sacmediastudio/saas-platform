@@ -8,6 +8,7 @@ import BookingDayCalendar from "@/components/booking-day-calendar";
 import PendingBookings from "@/components/pending-bookings";
 import GoogleCalendarConnect from "@/components/google-calendar-connect";
 import { formatCurrency } from "@/lib/currency";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface ServiceOption {
   id: string;
@@ -77,6 +78,7 @@ export default function BookingsView({
   initialServices: ServiceOption[];
   initialStaff: StaffOption[];
 }) {
+  const { t } = useDashboardLang();
   const [services, setServices] = useState(initialServices);
   const [staff] = useState(initialStaff);
   const [modal, setModal] = useState<"none" | "booking" | "block">("none");
@@ -133,27 +135,25 @@ export default function BookingsView({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
-        <TrendStatCard label="Vistas totales" value={totalViews} />
-        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
-        <TrendStatCard label="Reservas (7 días)" value={bookingsLast7Days} />
-        <TrendStatCard label="Citas totales" value={totalBookings} />
-        <TrendStatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+        <TrendStatCard label={t.bookings.totalViews} value={totalViews} />
+        <TrendStatCard label={t.bookings.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard label={t.bookings.bookings7d} value={bookingsLast7Days} />
+        <TrendStatCard label={t.bookings.totalBookings} value={totalBookings} />
+        <TrendStatCard label={t.bookings.avgRating} value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
       </div>
 
       {/* --- Servicios --- */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-        <h1 className="text-xl font-semibold">Tus servicios</h1>
+        <h1 className="text-xl font-semibold">{t.bookings.servicesTitle}</h1>
         <button
           onClick={() => setServiceModal({ mode: "create" })}
           className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
         >
           <Plus size={16} aria-hidden />
-          Agregar servicio
+          {t.bookings.addService}
         </button>
       </div>
-      <p className="text-sm text-[#343233]/70 mb-4">
-        Estos son los que tus clientes ven y eligen en tu página pública.
-      </p>
+      <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.servicesSubtitle}</p>
 
       {services.length === 0 ? (
         <p className="text-sm text-[#343233]/60 mb-8">Todavía no tienes servicios. Agrega el primero.</p>
@@ -193,7 +193,7 @@ export default function BookingsView({
 
       {topServices.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-sm font-semibold mb-2">Servicios más reservados</h2>
+          <h2 className="text-sm font-semibold mb-2">{t.bookings.topServices}</h2>
           <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
             {topServices.map((s) => (
               <div key={s.name} className="flex items-center gap-3 px-4 py-2.5">
@@ -206,17 +206,15 @@ export default function BookingsView({
       )}
 
       {/* --- Horario de atención --- */}
-      <h2 className="text-xl font-semibold mb-1">Horario de atención</h2>
-      <p className="text-sm text-[#343233]/70 mb-4">
-        Define cuándo puedes recibir citas y cuánto espacio dejar entre una y otra.
-      </p>
+      <h2 className="text-xl font-semibold mb-1">{t.bookings.hoursTitle}</h2>
+      <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.hoursSubtitle}</p>
       <div className="mb-8">
         <BusinessHoursEditor />
       </div>
 
       {/* --- Integraciones --- */}
-      <h2 className="text-xl font-semibold mb-1">Integraciones</h2>
-      <p className="text-sm text-[#343233]/70 mb-4">Conecta tu agenda con otras herramientas que ya uses.</p>
+      <h2 className="text-xl font-semibold mb-1">{t.bookings.integrationsTitle}</h2>
+      <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.integrationsSubtitle}</p>
       <div className="mb-8">
         <Suspense fallback={null}>
           <GoogleCalendarConnect />
@@ -228,7 +226,7 @@ export default function BookingsView({
 
       {/* --- Calendario --- */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-        <h2 className="text-xl font-semibold">Agenda</h2>
+        <h2 className="text-xl font-semibold">{t.bookings.agendaTitle}</h2>
         <button
           onClick={() => {
             setPrefill(null);
@@ -237,12 +235,10 @@ export default function BookingsView({
           className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
         >
           <Plus size={16} aria-hidden />
-          Nueva cita
+          {t.bookings.newBooking}
         </button>
       </div>
-      <p className="text-sm text-[#343233]/70 mb-4">
-        Toca cualquier espacio libre para agendar una cita ahí directamente.
-      </p>
+      <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.agendaSubtitle}</p>
 
       <BookingDayCalendar
         onCreateBooking={openNewBookingAt}

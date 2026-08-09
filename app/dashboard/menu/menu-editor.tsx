@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import TrendStatCard from "@/components/trend-stat-card";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface MenuItem {
   id: string;
@@ -76,6 +77,7 @@ export default function MenuEditor({
   totalViews: number;
   avgRating: number | null;
 }) {
+  const { t } = useDashboardLang();
   const [categories, setCategories] = useState(initialCategories);
   const [items, setItems] = useState(initialItems);
   const [saving, setSaving] = useState<string | null>(null);
@@ -147,8 +149,8 @@ export default function MenuEditor({
     <div>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-xl font-semibold">Tu menú</h1>
-          <p className="text-sm text-[#343233]/70 mt-1">Gestiona platos, precios y disponibilidad</p>
+          <h1 className="text-xl font-semibold">{t.menu.title}</h1>
+          <p className="text-sm text-[#343233]/70 mt-1">{t.menu.subtitle}</p>
         </div>
         <div className="flex gap-2">
           <button
@@ -156,7 +158,7 @@ export default function MenuEditor({
             className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
           >
             <Plus size={16} aria-hidden />
-            Nueva categoría
+            {t.menu.addCategory}
           </button>
           <button
             onClick={() => setDishModal({ mode: "create" })}
@@ -164,7 +166,7 @@ export default function MenuEditor({
             className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105 disabled:opacity-40"
           >
             <Plus size={16} aria-hidden />
-            Agregar plato
+            {t.menu.addDish}
           </button>
         </div>
       </div>
@@ -177,10 +179,10 @@ export default function MenuEditor({
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-        <TrendStatCard label="Platos activos" value={activeCount} />
-        <TrendStatCard label="Vistas totales" value={totalViews} />
-        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
-        <TrendStatCard label="Rating promedio" value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+        <TrendStatCard label={t.menu.activeDishes} value={activeCount} />
+        <TrendStatCard label={t.menu.totalViews} value={totalViews} />
+        <TrendStatCard label={t.menu.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard label={t.menu.avgRating} value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
       </div>
 
       {categories.length === 0 && (

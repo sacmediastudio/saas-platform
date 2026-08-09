@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UtensilsCrossed, Calendar, Link2, Check, Plus } from "lucide-react";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
 
@@ -28,6 +29,7 @@ const MODULES: { type: ModuleType; label: string; description: string; icon: any
 ];
 
 export default function ModulesManager({ initialEnabled }: { initialEnabled: ModuleType[] }) {
+  const { t } = useDashboardLang();
   const router = useRouter();
   const [enabled, setEnabled] = useState<ModuleType[]>(initialEnabled);
   const [busy, setBusy] = useState<ModuleType | null>(null);
@@ -63,10 +65,8 @@ export default function ModulesManager({ initialEnabled }: { initialEnabled: Mod
 
   return (
     <div>
-      <h1 className="text-xl font-semibold mb-1">Módulos</h1>
-      <p className="text-sm text-[#343233]/70 mb-6">
-        Activa los que necesite tu negocio — puedes tener más de uno a la vez.
-      </p>
+      <h1 className="text-xl font-semibold mb-1">{t.modules.title}</h1>
+      <p className="text-sm text-[#343233]/70 mb-6">{t.modules.subtitle}</p>
 
       <div className="flex flex-col gap-3">
         {MODULES.map((m) => {

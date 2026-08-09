@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import TrendStatCard from "@/components/trend-stat-card";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import {
   Plus,
   Pencil,
@@ -78,6 +79,7 @@ export default function SmartLinkEditor({
   totalViews: number;
   clicksByType: Partial<Record<LinkType, number>>;
 }) {
+  const { t } = useDashboardLang();
   const [items, setItems] = useState(initialItems);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; item?: SmartLinkItem } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -126,13 +128,13 @@ export default function SmartLinkEditor({
   return (
     <div className="max-w-lg">
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
-        <h1 className="text-xl font-semibold">Tu Smartlink</h1>
+        <h1 className="text-xl font-semibold">{t.smartlink.title}</h1>
         <button
           onClick={() => setModal({ mode: "create" })}
           className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
         >
           <Plus size={16} aria-hidden />
-          Agregar link
+          {t.smartlink.addLink}
         </button>
       </div>
       <p className="text-sm text-[#343233]/70 mb-4">
@@ -151,17 +153,17 @@ export default function SmartLinkEditor({
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-        <TrendStatCard label="Vistas totales" value={totalViews} />
-        <TrendStatCard label="Vistas (7 días)" value={viewsLast7Days} changePercent={viewsChangePercent} />
+        <TrendStatCard label={t.smartlink.totalViews} value={totalViews} />
+        <TrendStatCard label={t.smartlink.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
         <TrendStatCard
-          label="Clics totales"
+          label={t.smartlink.totalClicks}
           value={Object.values(clicksByType).reduce((sum, n) => sum + n, 0)}
         />
       </div>
 
       {Object.keys(clicksByType).length > 0 && (
         <div className="mb-6">
-          <h2 className="text-sm font-semibold mb-2">Clics por tipo</h2>
+          <h2 className="text-sm font-semibold mb-2">{t.smartlink.clicksByType}</h2>
           <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
             {(Object.entries(clicksByType) as [LinkType, number][])
               .sort((a, b) => b[1] - a[1])

@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { TIMEZONES } from "@/lib/timezone";
 
-const CURRENCIES = ["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN", "BRL"] as const;
+const CURRENCIES = ["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN", "BRL", "AWG"] as const;
 
 const updateSchema = z.object({
   name: z.string().min(1).optional(),

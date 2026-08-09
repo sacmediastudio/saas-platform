@@ -7,6 +7,7 @@ const LOCALE_BY_CURRENCY: Record<string, string> = {
   CLP: "es-CL",
   PEN: "es-PE",
   BRL: "pt-BR",
+  AWG: "nl-AW", // florín arubeño
 };
 
 export const SUPPORTED_CURRENCIES = Object.keys(LOCALE_BY_CURRENCY);

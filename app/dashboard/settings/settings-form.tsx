@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Image as ImageIcon, LogOut, Check } from "lucide-react";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { TIMEZONES } from "@/lib/timezone";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 const TIMEZONE_LABELS: Record<string, string> = {
   "America/Aruba": "Aruba (AST, UTC-4)",
@@ -66,6 +67,7 @@ function resizeImageToDataUrl(file: File, maxWidth: number): Promise<string> {
 }
 
 export default function SettingsForm({ tenant }: { tenant: TenantData }) {
+  const { t } = useDashboardLang();
   const router = useRouter();
   const [form, setForm] = useState(tenant);
   const [saving, setSaving] = useState(false);
@@ -128,8 +130,8 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-xl font-semibold mb-1">Ajustes</h1>
-      <p className="text-sm text-[#343233]/70 mb-6">Perfil, marca y preferencias de tu negocio</p>
+      <h1 className="text-xl font-semibold mb-1">{t.settings.title}</h1>
+      <p className="text-sm text-[#343233]/70 mb-6">{t.settings.subtitle}</p>
 
       <Section title="Perfil del negocio">
         <Field label="Nombre del negocio">
@@ -303,11 +305,11 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
           disabled={saving}
           className="flex items-center gap-1.5 bg-[#E7FF00] text-[#002D09] text-sm font-semibold px-5 h-10 rounded-full hover:brightness-105 disabled:opacity-50"
         >
-          {saving ? "Guardando..." : "Guardar cambios"}
+          {saving ? "..." : t.settings.save}
         </button>
         {saved && (
           <span className="flex items-center gap-1 text-sm text-green-700">
-            <Check size={14} aria-hidden /> Guardado
+            <Check size={14} aria-hidden /> {t.settings.saved}
           </span>
         )}
       </div>
@@ -318,7 +320,7 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
           className="flex items-center gap-1.5 text-sm text-[#343233]/70 hover:text-red-600"
         >
           <LogOut size={15} aria-hidden />
-          Cerrar sesión
+          {t.settings.logout}
         </button>
       </div>
     </div>

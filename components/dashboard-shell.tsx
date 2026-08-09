@@ -1,20 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks } from "lucide-react";
+import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
+import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 
 const LOGO = "/logo.svg";
 
 type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
-
-const MODULE_NAV: Record<ModuleType, { href: string; label: string; icon: any }> = {
-  RESTAURANT: { href: "/dashboard/menu", label: "Menú", icon: UtensilsCrossed },
-  SMALL_BUSINESS: { href: "/dashboard/bookings", label: "Citas", icon: Calendar },
-  SMARTLINK: { href: "/dashboard/smartlink", label: "Smartlink", icon: Link2 },
-};
-const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"];
 
 export default function DashboardShell({
   tenant,
@@ -28,13 +23,36 @@ export default function DashboardShell({
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
+  // Igual que en el resto del sitio: el idioma se guarda en localStorage
+  // bajo la misma clave que la landing/login/signup, así que si alguien
+  // ya lo cambió en otra parte del sitio, el dashboard respeta esa
+  // elección desde el primer momento.
+  const [lang, setLangState] = useState<DashLang>("es");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = window.localStorage.getItem("zertoo_lang");
+    setLangState(stored === "en" ? "en" : "es");
+  }, []);
+  function setLang(l: DashLang) {
+    setLangState(l);
+    if (typeof window !== "undefined") window.localStorage.setItem("zertoo_lang", l);
+  }
+  const t = dashboardTranslations[lang];
+
+  const MODULE_NAV: Record<ModuleType, { href: string; label: string; icon: any }> = {
+    RESTAURANT: { href: "/dashboard/menu", label: t.nav.menu, icon: UtensilsCrossed },
+    SMALL_BUSINESS: { href: "/dashboard/bookings", label: t.nav.bookings, icon: Calendar },
+    SMARTLINK: { href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2 },
+  };
+  const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"];
+
   // El nav muestra un link por cada módulo activo del negocio (puede
   // ser más de uno), en un orden fijo, más las secciones comunes.
   const navItems = [
     ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
-    { href: "/dashboard/reviews", label: "Reseñas", icon: Star },
-    { href: "/dashboard/modules", label: "Módulos", icon: Blocks },
-    { href: "/dashboard/settings", label: "Ajustes", icon: Settings },
+    { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star },
+    { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks },
+    { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
   ];
 
   const TenantBadge = ({ size = "w-8 h-8" }: { size?: string }) =>
@@ -46,6 +64,25 @@ export default function DashboardShell({
         {tenant.name.charAt(0).toUpperCase()}
       </div>
     );
+
+  const LangSwitch = () => (
+    <div className="flex items-center rounded-full border border-[#002D09]/15 p-0.5 text-xs font-bold shrink-0">
+      {(["ES", "EN"] as const).map((l) => {
+        const value = l.toLowerCase() as DashLang;
+        const active = lang === value;
+        return (
+          <button
+            key={l}
+            type="button"
+            onClick={() => setLang(value)}
+            className={`px-2 py-1 rounded-full transition-colors ${active ? "bg-[#002D09] text-white" : "text-[#343233]/60"}`}
+          >
+            {l}
+          </button>
+        );
+      })}
+    </div>
+  );
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex flex-col gap-0.5">
@@ -69,53 +106,61 @@ export default function DashboardShell({
   );
 
   return (
-    <div className="min-h-screen bg-white text-[#002D09] flex flex-col">
-      {/* Top bar solo en mobile */}
-      <div className="md:hidden flex items-center justify-between border-b border-[#002D09]/[0.08] px-4 h-16 sticky top-0 bg-white z-40">
-        <div className="flex items-center gap-2.5 min-w-0">
-          <TenantBadge size="w-7 h-7" />
-          <span className="text-sm font-semibold truncate">{tenant.name}</span>
-        </div>
-        <button
-          onClick={() => setMobileOpen((v) => !v)}
-          aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
-          className="p-1.5 shrink-0"
-        >
-          {mobileOpen ? <X size={22} aria-hidden /> : <Menu size={22} aria-hidden />}
-        </button>
-      </div>
-
-      {/* Menú desplegable en mobile */}
-      {mobileOpen && (
-        <div className="md:hidden border-b border-[#002D09]/[0.08] px-4 py-3 sticky top-16 bg-white z-30">
-          <NavLinks onNavigate={() => setMobileOpen(false)} />
-        </div>
-      )}
-
-      <div className="grid md:grid-cols-[240px_1fr] flex-1">
-        {/* Sidebar fija, solo en desktop */}
-        <aside className="hidden md:flex border-r border-[#002D09]/[0.08] p-5 flex-col gap-6">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="Zertoo" className="h-7 w-auto" />
-
-          <div className="flex items-center gap-2.5 px-1">
-            <TenantBadge />
+    <DashboardLangContext.Provider value={{ lang, setLang, t }}>
+      <div className="min-h-screen bg-white text-[#002D09] flex flex-col">
+        {/* Top bar solo en mobile */}
+        <div className="md:hidden flex items-center justify-between border-b border-[#002D09]/[0.08] px-4 h-16 sticky top-0 bg-white z-40">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <TenantBadge size="w-7 h-7" />
             <span className="text-sm font-semibold truncate">{tenant.name}</span>
           </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <LangSwitch />
+            <button
+              onClick={() => setMobileOpen((v) => !v)}
+              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              className="p-1.5"
+            >
+              {mobileOpen ? <X size={22} aria-hidden /> : <Menu size={22} aria-hidden />}
+            </button>
+          </div>
+        </div>
 
-          <NavLinks />
-        </aside>
+        {/* Menú desplegable en mobile */}
+        {mobileOpen && (
+          <div className="md:hidden border-b border-[#002D09]/[0.08] px-4 py-3 sticky top-16 bg-white z-30">
+            <NavLinks onNavigate={() => setMobileOpen(false)} />
+          </div>
+        )}
 
-        <main className="p-5 md:p-8 min-w-0">{children}</main>
+        <div className="grid md:grid-cols-[240px_1fr] flex-1">
+          {/* Sidebar fija, solo en desktop */}
+          <aside className="hidden md:flex border-r border-[#002D09]/[0.08] p-5 flex-col gap-6">
+            <div className="flex items-center justify-between">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={LOGO} alt="Zertoo" className="h-7 w-auto" />
+              <LangSwitch />
+            </div>
+
+            <div className="flex items-center gap-2.5 px-1">
+              <TenantBadge />
+              <span className="text-sm font-semibold truncate">{tenant.name}</span>
+            </div>
+
+            <NavLinks />
+          </aside>
+
+          <main className="p-5 md:p-8 min-w-0">{children}</main>
+        </div>
+
+        <footer className="border-t border-[#002D09]/[0.08] px-5 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={LOGO} alt="Zertoo" className="h-5 w-auto opacity-70" />
+          <p className="text-xs text-[#343233]/50">
+            © {new Date().getFullYear()} Zertoo. {t.footer.rights}
+          </p>
+        </footer>
       </div>
-
-      <footer className="border-t border-[#002D09]/[0.08] px-5 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={LOGO} alt="Zertoo" className="h-5 w-auto opacity-70" />
-        <p className="text-xs text-[#343233]/50">
-          © {new Date().getFullYear()} Zertoo. Todos los derechos reservados.
-        </p>
-      </footer>
-    </div>
+    </DashboardLangContext.Provider>
   );
 }
