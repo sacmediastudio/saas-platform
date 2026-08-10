@@ -9,6 +9,7 @@ import PendingBookings from "@/components/pending-bookings";
 import GoogleCalendarConnect from "@/components/google-calendar-connect";
 import { formatCurrency } from "@/lib/currency";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import { uploadImage } from "@/lib/upload-image";
 
 interface ServiceOption {
   id: string;
@@ -26,31 +27,6 @@ interface StaffOption {
 interface TopService {
   name: string;
   count: number;
-}
-
-// Igual que en el módulo de menú: reduce la foto a un JPEG chico en
-// base64 antes de guardarla, sin depender de un storage externo.
-function resizeImageToDataUrl(file: File, maxWidth = 480): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
-    reader.onload = () => {
-      const img = new window.Image();
-      img.onerror = () => reject(new Error("No se pudo leer la imagen"));
-      img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas no soportado"));
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.75));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
 }
 
 export default function BookingsView({
@@ -315,10 +291,10 @@ function ServiceModal({
     if (!file) return;
     setProcessingImage(true);
     try {
-      const dataUrl = await resizeImageToDataUrl(file);
-      setForm((f) => ({ ...f, imageUrl: dataUrl }));
-    } catch {
-      setError("No se pudo procesar la imagen. Intenta con otra foto.");
+      const publicUrl = await uploadImage(file);
+      setForm((f) => ({ ...f, imageUrl: publicUrl }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo subir la imagen. Intenta con otra foto.");
     } finally {
       setProcessingImage(false);
     }

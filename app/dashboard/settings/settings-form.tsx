@@ -6,6 +6,7 @@ import { Image as ImageIcon, LogOut, Check } from "lucide-react";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { TIMEZONES } from "@/lib/timezone";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import { uploadImage } from "@/lib/upload-image";
 
 const TIMEZONE_LABELS: Record<string, string> = {
   "America/Aruba": "Aruba (AST, UTC-4)",
@@ -43,28 +44,6 @@ interface TenantData {
   menuShowPhotos: boolean;
 }
 
-function resizeImageToDataUrl(file: File, maxWidth: number): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("No se pudo leer el archivo"));
-    reader.onload = () => {
-      const img = new window.Image();
-      img.onerror = () => reject(new Error("No se pudo leer la imagen"));
-      img.onload = () => {
-        const scale = Math.min(1, maxWidth / img.width);
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width * scale;
-        canvas.height = img.height * scale;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas no soportado"));
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL("image/jpeg", 0.8));
-      };
-      img.src = reader.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 export default function SettingsForm({ tenant }: { tenant: TenantData }) {
   const { t } = useDashboardLang();
@@ -78,10 +57,10 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
   async function handleImageUpload(field: "logoUrl" | "heroImageUrl", file: File) {
     setUploading(field === "logoUrl" ? "logo" : "hero");
     try {
-      const dataUrl = await resizeImageToDataUrl(file, field === "logoUrl" ? 200 : 1600);
-      setForm((f) => ({ ...f, [field]: dataUrl }));
-    } catch {
-      setError("No se pudo procesar la imagen.");
+      const publicUrl = await uploadImage(file, field === "logoUrl" ? 200 : 1600);
+      setForm((f) => ({ ...f, [field]: publicUrl }));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo subir la imagen.");
     } finally {
       setUploading(null);
     }

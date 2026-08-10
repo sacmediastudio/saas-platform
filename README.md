@@ -282,6 +282,44 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Storage de imágenes en S3/R2 (reemplaza el base64 en la base de datos)
+
+Hasta ahora, cada foto (plato, servicio, logo, foto de fondo) se
+guardaba como texto base64 directo en la columna `imageUrl` — funcionaba,
+pero hacía crecer la base de datos rápido y cada consulta que tocara
+esas filas movía mucho más dato del necesario. Ahora:
+
+- **`lib/s3.ts`** — cliente de S3 (usando `@aws-sdk/client-s3`, funciona
+  igual para AWS S3 real o Cloudflare R2, que es compatible con la
+  misma API) + `createPresignedUpload()`, que genera una URL de subida
+  firmada, válida 5 minutos.
+- **`POST /api/uploads/presign`** — el navegador pide esa URL firmada
+  (autenticado, cada negocio solo puede subir a su propia carpeta
+  dentro del bucket: `{tenantId}/archivo.jpg`).
+- **`lib/upload-image.ts`** — el helper de cliente que junta todo:
+  redimensiona la foto en el navegador (canvas, igual que antes), pide
+  la URL firmada, y sube el archivo **directo al bucket** — ya no pasa
+  por nuestro servidor, así que no consume ancho de banda de Railway ni
+  demora por eso.
+- Reemplazado en los 3 lugares que subían fotos: platos (Menú),
+  servicios (Citas), logo y foto de fondo (Ajustes, usado por los 3
+  módulos).
+
+**Esto no funciona todavía sin configurar credenciales reales** — mismo
+patrón que Resend y Google Calendar. Sin eso, subir una foto da un
+error claro ("El almacenamiento de imágenes todavía no está
+configurado") en vez de fallar en silencio o romper algo más. Los pasos
+completos para configurar **tanto Cloudflare R2 como AWS S3** (con cuál
+elegir y por qué) están en `.env.example`, incluyendo el CORS que hay
+que configurar en el bucket para que el navegador pueda subir directo.
+
+**Importante sobre las fotos que ya subiste antes de este cambio**:
+siguen funcionando exactamente igual (siguen siendo base64 en la base de
+datos, un navegador las muestra sin problema) — **no se migraron
+automáticamente a S3**. Si quieres moverlas también, sería un script
+aparte (leer cada `imageUrl` que empiece con `data:`, subirlo a S3,
+actualizar la fila) — no lo hicimos en este cambio, avisa si lo quieres.
+
 ## Fix visual: inputs desbordados en pares Fecha/Hora
 
 El componente `Field` compartido (usado en los pares "Fecha/Hora" y
