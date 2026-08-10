@@ -282,6 +282,51 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## Facturación real con Stripe (por módulo)
+
+Antes, los planes solo se podían asignar a mano desde `/admin` — ahora
+hay un flujo de cobro real, diseñado a propósito para calzar con el
+sistema de módulos escalables: **cada módulo activo (Menú, Citas,
+Smartlink) es su propio ítem dentro de una sola suscripción de
+Stripe**, así que un negocio con dos módulos activos paga la suma de
+ambos, no un plan fijo de "todo o nada".
+
+Precios actuales (ajustables en `lib/modules.ts` → `MODULE_PRICES`,
+pero también hay que actualizarlos en Stripe para que coincidan):
+Smartlink $12.90, Citas $29.90, Menú $39.90 — todos mensuales.
+
+**Piezas nuevas:**
+- `lib/stripe.ts` — cliente de Stripe, `getOrCreateStripeCustomer()`,
+  mapeo de status de Stripe a nuestro campo simple, y
+  `PRICE_ID_BY_MODULE` (lee los Price IDs desde variables de entorno).
+- `POST /api/billing/checkout` — arma el checkout con un ítem por cada
+  módulo que el negocio tiene activo *en ese momento*, y redirige a la
+  página de pago de Stripe.
+- `POST /api/billing/portal` — redirige al portal de Stripe donde el
+  negocio cambia su tarjeta, ve facturas, o cancela por su cuenta.
+- `POST /api/webhooks/stripe` — el corazón de la sincronización: reacciona
+  a `checkout.session.completed`, `customer.subscription.updated/created/
+  deleted`, e `invoice.payment_failed`, y mantiene nuestra tabla
+  `Subscription` (+ `SubscriptionModuleItem`, que guarda qué módulo
+  corresponde a qué ítem real de Stripe) al día con lo que Stripe dice.
+- **`/dashboard/billing`** — nueva página: muestra el estado
+  (prueba/activa/pago atrasado/cancelada), el desglose de precio por
+  módulo activo, el total mensual, y el botón "Suscribirse" o
+  "Gestionar facturación" según corresponda.
+- **Activar/desactivar un módulo en `/dashboard/modules` ahora también
+  actualiza la suscripción de Stripe** (si ya existe una) — agrega o
+  quita ese ítem de lo que se está cobrando, sin que el negocio tenga
+  que hacer nada aparte.
+
+**Esto no cobra nada todavía sin configurar credenciales reales** —
+mismo patrón que Resend, Google Calendar y R2. Los pasos completos
+(crear los 3 Products/Prices en Stripe, configurar el webhook, y qué
+eventos escuchar) están en `.env.example`. Mientras no esté
+configurado, `/dashboard/billing` muestra un aviso claro, y el plan
+sigue pudiéndose asignar manualmente desde `/admin/tenants/[id]` como
+hasta ahora — ese camino manual nunca se quitó, sigue funcionando en
+paralelo para casos especiales (cortesías, acuerdos manuales, etc).
+
 ## Storage de imágenes en S3/R2 (reemplaza el base64 en la base de datos)
 
 Hasta ahora, cada foto (plato, servicio, logo, foto de fondo) se

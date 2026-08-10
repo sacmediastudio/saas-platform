@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks } from "lucide-react";
+import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard } from "lucide-react";
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 
@@ -52,6 +52,7 @@ export default function DashboardShell({
     ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
     { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star },
     { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks },
+    { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard },
     { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
   ];
 

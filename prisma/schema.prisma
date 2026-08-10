@@ -428,12 +428,35 @@ model AdminActivityLog {
 model Subscription {
   id                   String   @id @default(cuid())
   tenantId             String   @unique
+  // Un Customer de Stripe por negocio — se reutiliza tanto para el
+  // checkout como para el portal de facturación (así el negocio no
+  // tiene que volver a poner su tarjeta cada vez).
+  stripeCustomerId     String?
   stripeSubscriptionId String?  @unique
   plan                 Plan     @default(STARTER)
   status               String   @default("trialing") // trialing | active | past_due | canceled
   currentPeriodEnd     DateTime?
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items  SubscriptionModuleItem[]
 
   @@map("subscriptions")
+}
+
+// Cada módulo activo y facturado por separado — se cobra la suma de
+// los que el negocio tenga habilitados. stripeItemId es el id del
+// "subscription item" real en Stripe, para poder agregar/quitar
+// módulos de la suscripción existente sin tener que cancelarla y
+// crear una nueva cada vez que el negocio activa/desactiva algo.
+model SubscriptionModuleItem {
+  id             String       @id @default(cuid())
+  subscriptionId String
+  module         BusinessType
+  stripeItemId   String?
+  createdAt      DateTime     @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@unique([subscriptionId, module])
+  @@map("subscription_module_items")
 }
