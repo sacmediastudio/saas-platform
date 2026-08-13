@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Star, Plus, Pencil, Trash2, X, ExternalLink } from "lucide-react";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import DashboardCard from "@/components/dashboard-card";
 
 interface ReviewRow {
   id: string;
@@ -86,7 +87,8 @@ export default function ReviewsView({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-5">
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">{t.reviews.title}</h1>
       <p className="text-sm text-[#343233]/70 mb-8">
         {reviews.length} reseñas · {avgRating.toFixed(1)} promedio
@@ -165,7 +167,9 @@ export default function ReviewsView({
           ))}
         </div>
       )}
+      </DashboardCard>
 
+      <DashboardCard>
       {/* --- Reseñas internas --- */}
       <h2 className="text-base font-semibold mb-4">{t.reviews.receivedTitle}</h2>
 
@@ -199,6 +203,7 @@ export default function ReviewsView({
           </div>
         ))}
       </div>
+      </DashboardCard>
 
       {linkModal && (
         <ExternalLinkModal

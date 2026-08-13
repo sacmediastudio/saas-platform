@@ -7,6 +7,7 @@ import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { TIMEZONES } from "@/lib/timezone";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
+import DashboardCard from "@/components/dashboard-card";
 
 const TIMEZONE_LABELS: Record<string, string> = {
   "America/Aruba": "Aruba (AST, UTC-4)",
@@ -109,6 +110,7 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
 
   return (
     <div className="max-w-lg">
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">{t.settings.title}</h1>
       <p className="text-sm text-[#343233]/70 mb-6">{t.settings.subtitle}</p>
 
@@ -302,6 +304,7 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
           {t.settings.logout}
         </button>
       </div>
+      </DashboardCard>
     </div>
   );
 }

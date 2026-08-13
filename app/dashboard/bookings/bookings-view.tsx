@@ -10,6 +10,7 @@ import GoogleCalendarConnect from "@/components/google-calendar-connect";
 import { formatCurrency } from "@/lib/currency";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
+import DashboardCard from "@/components/dashboard-card";
 
 interface ServiceOption {
   id: string;
@@ -102,22 +103,25 @@ export default function BookingsView({
   }
 
   return (
-    <div>
-      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
+    <div className="flex flex-col gap-5">
+      <DashboardCard>
+      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-7">
         <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
         <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
           {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         </button>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 divide-x divide-black/[0.06]">
         <TrendStatCard label={t.bookings.totalViews} value={totalViews} />
         <TrendStatCard label={t.bookings.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
         <TrendStatCard label={t.bookings.bookings7d} value={bookingsLast7Days} />
         <TrendStatCard label={t.bookings.totalBookings} value={totalBookings} />
         <TrendStatCard label={t.bookings.avgRating} value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
       </div>
+      </DashboardCard>
 
+      <DashboardCard>
       {/* --- Servicios --- */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
         <h1 className="text-xl font-semibold">{t.bookings.servicesTitle}</h1>
@@ -180,7 +184,9 @@ export default function BookingsView({
           </div>
         </div>
       )}
+      </DashboardCard>
 
+      <DashboardCard>
       {/* --- Horario de atención --- */}
       <h2 className="text-xl font-semibold mb-1">{t.bookings.hoursTitle}</h2>
       <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.hoursSubtitle}</p>
@@ -191,12 +197,14 @@ export default function BookingsView({
       {/* --- Integraciones --- */}
       <h2 className="text-xl font-semibold mb-1">{t.bookings.integrationsTitle}</h2>
       <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.integrationsSubtitle}</p>
-      <div className="mb-8">
+      <div>
         <Suspense fallback={null}>
           <GoogleCalendarConnect />
         </Suspense>
       </div>
+      </DashboardCard>
 
+      <DashboardCard>
       {/* --- Pendientes de confirmar (sin importar el día) --- */}
       <PendingBookings refreshKey={calendarRefreshKey} onUpdated={() => setCalendarRefreshKey((k) => k + 1)} />
 
@@ -221,6 +229,7 @@ export default function BookingsView({
         onUpdateStatus={updateBookingStatus}
         refreshKey={calendarRefreshKey}
       />
+      </DashboardCard>
 
       {modal === "booking" && (
         <NewBookingModal

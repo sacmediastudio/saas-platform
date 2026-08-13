@@ -6,6 +6,7 @@ import { formatCurrency } from "@/lib/currency";
 import TrendStatCard from "@/components/trend-stat-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
+import DashboardCard from "@/components/dashboard-card";
 
 interface MenuItem {
   id: string;
@@ -118,45 +119,48 @@ export default function MenuEditor({
   }
 
   return (
-    <div>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
-        <div>
-          <h1 className="text-xl font-semibold">{t.menu.title}</h1>
-          <p className="text-sm text-[#343233]/70 mt-1">{t.menu.subtitle}</p>
+    <div className="flex flex-col gap-5">
+      <DashboardCard>
+        <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-xl font-semibold">{t.menu.title}</h1>
+            <p className="text-sm text-[#343233]/70 mt-1">{t.menu.subtitle}</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => setCategoryModal({ mode: "create" })}
+              className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
+            >
+              <Plus size={16} aria-hidden />
+              {t.menu.addCategory}
+            </button>
+            <button
+              onClick={() => setDishModal({ mode: "create" })}
+              disabled={categories.length === 0}
+              className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105 disabled:opacity-40"
+            >
+              <Plus size={16} aria-hidden />
+              {t.menu.addDish}
+            </button>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setCategoryModal({ mode: "create" })}
-            className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
-          >
-            <Plus size={16} aria-hidden />
-            {t.menu.addCategory}
-          </button>
-          <button
-            onClick={() => setDishModal({ mode: "create" })}
-            disabled={categories.length === 0}
-            className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105 disabled:opacity-40"
-          >
-            <Plus size={16} aria-hidden />
-            {t.menu.addDish}
+
+        <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-7">
+          <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
+          <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
+            {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
           </button>
         </div>
-      </div>
 
-      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
-        <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
-        <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
-          {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
-        </button>
-      </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 divide-x divide-black/[0.06]">
+          <TrendStatCard label={t.menu.activeDishes} value={activeCount} />
+          <TrendStatCard label={t.menu.totalViews} value={totalViews} />
+          <TrendStatCard label={t.menu.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
+          <TrendStatCard label={t.menu.avgRating} value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
+        </div>
+      </DashboardCard>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-7">
-        <TrendStatCard label={t.menu.activeDishes} value={activeCount} />
-        <TrendStatCard label={t.menu.totalViews} value={totalViews} />
-        <TrendStatCard label={t.menu.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
-        <TrendStatCard label={t.menu.avgRating} value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
-      </div>
-
+      <DashboardCard>
       {categories.length === 0 && (
         <p className="text-sm text-[#343233]/60 mb-4">
           Todavía no tienes categorías. Crea la primera para poder agregar platos.
@@ -253,6 +257,7 @@ export default function MenuEditor({
           </div>
         );
       })}
+      </DashboardCard>
 
       {dishModal && (
         <DishModal

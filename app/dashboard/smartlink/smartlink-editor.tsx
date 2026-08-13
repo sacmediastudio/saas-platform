@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import TrendStatCard from "@/components/trend-stat-card";
+import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import {
   Plus,
@@ -126,7 +127,8 @@ export default function SmartLinkEditor({
   const sortedItems = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
 
   return (
-    <div className="max-w-lg">
+    <div className="max-w-lg flex flex-col gap-5">
+      <DashboardCard>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
         <h1 className="text-xl font-semibold">{t.smartlink.title}</h1>
         <button
@@ -145,14 +147,14 @@ export default function SmartLinkEditor({
         .
       </p>
 
-      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-6">
+      <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-7">
         <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
         <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
           {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         </button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 divide-x divide-black/[0.06]">
         <TrendStatCard label={t.smartlink.totalViews} value={totalViews} />
         <TrendStatCard label={t.smartlink.views7d} value={viewsLast7Days} changePercent={viewsChangePercent} />
         <TrendStatCard
@@ -160,7 +162,9 @@ export default function SmartLinkEditor({
           value={Object.values(clicksByType).reduce((sum, n) => sum + n, 0)}
         />
       </div>
+      </DashboardCard>
 
+      <DashboardCard>
       {Object.keys(clicksByType).length > 0 && (
         <div className="mb-6">
           <h2 className="text-sm font-semibold mb-2">{t.smartlink.clicksByType}</h2>
@@ -247,6 +251,7 @@ export default function SmartLinkEditor({
           );
         })}
       </div>
+      </DashboardCard>
 
       {modal && (
         <LinkModal

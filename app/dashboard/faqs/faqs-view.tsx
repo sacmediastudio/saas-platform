@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, MessageCircleQuestion } from "lucide-react";
+import DashboardCard from "@/components/dashboard-card";
 
 interface Faq {
   id: string;
@@ -58,6 +59,7 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
 
   return (
     <div>
+      <DashboardCard>
       <div className="flex flex-wrap items-start justify-between gap-3 mb-1">
         <div>
           <h1 className="text-xl font-semibold flex items-center gap-2">
@@ -127,6 +129,7 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
           </div>
         ))}
       </div>
+      </DashboardCard>
 
       {modal && (
         <FaqModal

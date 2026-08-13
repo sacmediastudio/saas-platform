@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
 import { MODULE_LABELS, MODULE_PRICES, MODULE_ORDER, type ModuleType } from "@/lib/modules";
 import { formatCurrency } from "@/lib/currency";
+import DashboardCard from "@/components/dashboard-card";
 
 interface SubscriptionData {
   status: string;
@@ -73,6 +74,7 @@ export default function BillingView({
 
   return (
     <div className="max-w-lg">
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">Facturación</h1>
       <p className="text-sm text-[#343233]/70 mb-6">Tu plan se calcula según los módulos que tengas activos.</p>
 
@@ -144,6 +146,7 @@ export default function BillingView({
         </a>
         , tu próxima factura se ajusta automáticamente.
       </p>
+      </DashboardCard>
     </div>
   );
 }

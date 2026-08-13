@@ -109,7 +109,7 @@ export default function DashboardShell({
 
   return (
     <DashboardLangContext.Provider value={{ lang, setLang, t }}>
-      <div className="min-h-screen bg-white text-[#002D09] flex flex-col">
+      <div className="min-h-screen bg-[#F5F5F5] text-[#002D09] flex flex-col">
         {/* Top bar solo en mobile */}
         <div className="md:hidden flex items-center justify-between border-b border-[#002D09]/[0.08] px-4 h-16 sticky top-0 bg-white z-40">
           <div className="flex items-center gap-2.5 min-w-0">
@@ -135,9 +135,9 @@ export default function DashboardShell({
           </div>
         )}
 
-        <div className="grid md:grid-cols-[240px_1fr] flex-1">
+        <div className="grid md:grid-cols-[248px_1fr] flex-1">
           {/* Sidebar fija, solo en desktop */}
-          <aside className="hidden md:flex border-r border-[#002D09]/[0.08] p-5 flex-col gap-6">
+          <aside className="hidden md:flex bg-white border-r border-black/[0.06] p-5 flex-col gap-7 sticky top-0 h-screen">
             <div className="flex items-center justify-between">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={LOGO} alt="Zertoo" className="h-7 w-auto" />
@@ -152,10 +152,12 @@ export default function DashboardShell({
             <NavLinks />
           </aside>
 
-          <main className="p-5 md:p-8 min-w-0">{children}</main>
+          <main className="p-4 sm:p-6 md:p-9 min-w-0">
+            <div className="max-w-5xl mx-auto flex flex-col gap-5">{children}</div>
+          </main>
         </div>
 
-        <footer className="border-t border-[#002D09]/[0.08] px-5 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+        <footer className="bg-white border-t border-black/[0.06] px-5 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={LOGO} alt="Zertoo" className="h-5 w-auto opacity-70" />
           <p className="text-xs text-[#343233]/50">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { UtensilsCrossed, Calendar, Link2, Check, Plus } from "lucide-react";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import DashboardCard from "@/components/dashboard-card";
 
 type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
 
@@ -65,6 +66,7 @@ export default function ModulesManager({ initialEnabled }: { initialEnabled: Mod
 
   return (
     <div>
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">{t.modules.title}</h1>
       <p className="text-sm text-[#343233]/70 mb-6">{t.modules.subtitle}</p>
 
@@ -110,6 +112,7 @@ export default function ModulesManager({ initialEnabled }: { initialEnabled: Mod
       </div>
 
       {error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+      </DashboardCard>
     </div>
   );
 }
