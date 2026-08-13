@@ -153,7 +153,7 @@ export default function DashboardShell({
           </aside>
 
           <main className="p-4 sm:p-6 md:p-9 min-w-0">
-            <div className="max-w-5xl mx-auto flex flex-col gap-5">{children}</div>
+            <div className="max-w-5xl flex flex-col gap-5">{children}</div>
           </main>
         </div>
 
