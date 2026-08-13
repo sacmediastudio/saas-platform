@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Star, Mail, Phone, MapPin, ChevronDown, X, Heart } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
+import FaqChatWidget from "@/components/faq-chat-widget";
 
 interface MenuItemData {
   id: string;
@@ -470,6 +471,14 @@ export default function PublicMenu({
           Llamar
         </a>
       )}
+
+      <FaqChatWidget
+        tenantSlug={tenant.slug}
+        buttonColor={tenant.buttonColor}
+        buttonTextColor={tenant.buttonTextColor}
+        themeBgColor={tenant.themeBgColor}
+        themeTextColor={tenant.themeTextColor}
+      />
 
       {zoomedItem && (
         <div

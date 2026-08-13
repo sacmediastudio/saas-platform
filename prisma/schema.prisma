@@ -107,6 +107,7 @@ model Tenant {
   pageViews      PageView[]
   businessHours  BusinessHours[]
   externalReviewLinks ExternalReviewLink[]
+  faqItems FaqItem[]
   googleCalendarConnection GoogleCalendarConnection?
   subscription   Subscription?
 
@@ -372,6 +373,23 @@ model GoogleCalendarConnection {
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("google_calendar_connections")
+}
+
+// FAQ simple (sin IA) — el negocio escribe preguntas y respuestas fijas,
+// se muestran como un chat flotante en sus 3 páginas públicas. No hay
+// costo variable de por medio, a diferencia de un chatbot con IA real.
+model FaqItem {
+  id        String   @id @default(cuid())
+  tenantId  String
+  question  String
+  answer    String
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("faq_items")
 }
 
 enum PageViewKind {

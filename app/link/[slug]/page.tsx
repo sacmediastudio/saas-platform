@@ -15,6 +15,7 @@ import {
 import { db } from "@/lib/db";
 import { recordPageView } from "@/lib/analytics";
 import { getEnabledModules } from "@/lib/modules";
+import FaqChatWidget from "@/components/faq-chat-widget";
 
 const ICONS: Record<string, any> = {
   WEBSITE: Globe,
@@ -141,6 +142,14 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
           />
         </div>
       </div>
+
+      <FaqChatWidget
+        tenantSlug={tenant.slug}
+        buttonColor={tenant.buttonColor}
+        buttonTextColor={tenant.buttonTextColor}
+        themeBgColor={tenant.themeBgColor}
+        themeTextColor={tenant.themeTextColor}
+      />
     </div>
   );
 }

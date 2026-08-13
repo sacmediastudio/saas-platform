@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
+import FaqChatWidget from "@/components/faq-chat-widget";
 
 interface ServiceOption {
   id: string;
@@ -254,6 +255,14 @@ export default function BookingFlow({
             />
           </div>
         </div>
+
+        <FaqChatWidget
+          tenantSlug={tenantSlug}
+          buttonColor={buttonColor}
+          buttonTextColor={buttonTextColor}
+          themeBgColor={themeBgColor}
+          themeTextColor={themeTextColor}
+        />
       </div>
     );
   }

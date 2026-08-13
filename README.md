@@ -282,6 +282,31 @@ Menú + Smartlink solo cuenta una vez, en la categoría de su módulo
 original. Es una simplificación aceptable para una vista general, pero
 si te importa el conteo exacto por módulo, se puede ajustar.
 
+## FAQ tipo chat (sin IA) en los 3 módulos
+
+Opción sin costo variable, pensada como primer paso antes de evaluar un
+chatbot con IA real (que sí tendría costo por mensaje). El negocio
+escribe preguntas y respuestas fijas desde **`/dashboard/faqs`**
+(reordenables con flechas arriba/abajo, igual patrón que otras listas
+del dashboard), y aparecen como un ícono de chat flotante en sus 3
+páginas públicas (`/menu`, `/book`, `/link`) — el cliente toca el
+ícono, ve la lista de preguntas, toca una y aparece la respuesta ahí
+mismo, simulando una conversación sin que haya ningún modelo de
+lenguaje de por medio.
+
+- Modelo nuevo: `FaqItem` (tenantId, question, answer, sortOrder).
+- `GET /api/public/faqs?slug=X` — público, sin autenticación, lo usa
+  `components/faq-chat-widget.tsx`.
+- El ícono se posiciona **abajo a la izquierda** a propósito, para no
+  chocar con el botón de "Llamar" que el menú público ya tiene abajo a
+  la derecha.
+- Si el negocio no configuró ninguna pregunta, el ícono no aparece —
+  nunca se muestra un chat vacío.
+- **Nota**: esta página del dashboard (`/dashboard/faqs`) todavía no
+  está traducida al inglés (queda en español fijo) — mismo caso que
+  otras piezas nuevas que se agregan después del sistema de traducción
+  de dashboards.
+
 ## Facturación real con Stripe (por módulo)
 
 Antes, los planes solo se podían asignar a mano desde `/admin` — ahora
