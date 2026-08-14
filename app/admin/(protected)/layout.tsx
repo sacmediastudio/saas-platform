@@ -16,8 +16,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!admin) redirect("/admin/login");
 
   return (
-    <div className="min-h-screen bg-white text-[#002D09] grid md:grid-cols-[240px_1fr]">
-      <aside className="border-r border-[#002D09]/[0.08] p-5 flex flex-col gap-6">
+    <div className="min-h-screen bg-[#F5F5F5] text-[#002D09] grid md:grid-cols-[248px_1fr]">
+      <aside className="bg-white border-r border-black/[0.06] p-5 flex flex-col gap-6 sticky top-0 h-screen">
         <div>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/logo.svg" alt="Zertoo" className="h-6 w-auto mb-1" />
@@ -53,7 +53,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <AdminLogoutButton />
         </div>
       </aside>
-      <main className="p-6 md:p-8">{children}</main>
+      <main className="p-5 sm:p-6 md:p-9">
+        <div className="max-w-5xl flex flex-col gap-5">{children}</div>
+      </main>
     </div>
   );
 }

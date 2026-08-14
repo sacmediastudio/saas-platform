@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import DashboardCard from "@/components/dashboard-card";
 
 const TYPE_LABELS: Record<string, string> = {
   RESTAURANT: "Restaurantes",
@@ -25,18 +26,21 @@ export default async function AdminOverviewPage() {
   const statusCount = Object.fromEntries(subsByStatus.map((s) => [s.status, s._count]));
 
   return (
-    <div>
+    <div className="flex flex-col gap-5">
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">Resumen</h1>
-      <p className="text-sm text-[#343233]/70 mb-8">Todos tus negocios clientes, de un vistazo</p>
+      <p className="text-sm text-[#343233]/70 mb-7">Todos tus negocios clientes, de un vistazo</p>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 divide-x divide-black/[0.06]">
         <Stat label="Negocios totales" value={totalTenants} />
         <Stat label="Nuevos (7 días)" value={newLast7Days} />
         <Stat label="Nuevos (30 días)" value={newLast30Days} />
         <Stat label="Suspendidos" value={suspendedCount} />
       </div>
+      </DashboardCard>
 
-      <div className="grid md:grid-cols-2 gap-6 mb-8">
+      <DashboardCard>
+      <div className="grid md:grid-cols-2 gap-6">
         <div>
           <h2 className="text-sm font-semibold mb-3">Por tipo de negocio</h2>
           <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
@@ -61,30 +65,31 @@ export default async function AdminOverviewPage() {
           </div>
         </div>
       </div>
+      </DashboardCard>
 
-      <div>
-        <h2 className="text-sm font-semibold mb-3">Últimos negocios registrados</h2>
-        <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
-          {recentTenants.map((t) => (
-            <a
-              key={t.id}
-              href={`/admin/tenants/${t.id}`}
-              className="flex items-center justify-between px-4 py-3 hover:bg-[#F7F8F4]"
-            >
-              <div>
-                <p className="text-sm font-medium">{t.name}</p>
-                <p className="text-xs text-[#343233]/60">{TYPE_LABELS[t.businessType]}</p>
-              </div>
-              <span className="text-xs text-[#343233]/60">
-                {t.createdAt.toLocaleDateString("es", { day: "numeric", month: "short" })}
-              </span>
-            </a>
-          ))}
-          {recentTenants.length === 0 && (
-            <p className="px-4 py-6 text-sm text-[#343233]/60">Todavía no hay negocios registrados.</p>
-          )}
-        </div>
+      <DashboardCard>
+      <h2 className="text-sm font-semibold mb-3">Últimos negocios registrados</h2>
+      <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
+        {recentTenants.map((t) => (
+          <a
+            key={t.id}
+            href={`/admin/tenants/${t.id}`}
+            className="flex items-center justify-between px-4 py-3 hover:bg-[#F7F8F4]"
+          >
+            <div>
+              <p className="text-sm font-medium">{t.name}</p>
+              <p className="text-xs text-[#343233]/60">{TYPE_LABELS[t.businessType]}</p>
+            </div>
+            <span className="text-xs text-[#343233]/60">
+              {t.createdAt.toLocaleDateString("es", { day: "numeric", month: "short" })}
+            </span>
+          </a>
+        ))}
+        {recentTenants.length === 0 && (
+          <p className="px-4 py-6 text-sm text-[#343233]/60">Todavía no hay negocios registrados.</p>
+        )}
       </div>
+      </DashboardCard>
     </div>
   );
 }
@@ -101,9 +106,9 @@ function statusLabel(status: string) {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="bg-[#F7F8F4] rounded-lg p-4">
-      <p className="text-sm text-[#343233]/70">{label}</p>
-      <p className="text-2xl font-semibold mt-1">{value}</p>
+    <div className="flex flex-col items-center text-center gap-1.5 px-2 py-1">
+      <span className="text-[2.1rem] leading-none font-extrabold tracking-tight text-[#002D09]">{value}</span>
+      <span className="text-[13px] text-[#343233]/60">{label}</span>
     </div>
   );
 }

@@ -1,4 +1,5 @@
 import { db } from "@/lib/db";
+import DashboardCard from "@/components/dashboard-card";
 
 const ACTION_LABELS: Record<string, { label: string; className: string }> = {
   SUSPEND: { label: "Suspendió", className: "bg-red-50 text-red-700" },
@@ -15,6 +16,7 @@ export default async function AdminActivityPage() {
 
   return (
     <div>
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">Actividad</h1>
       <p className="text-sm text-[#343233]/70 mb-6">Últimas 100 acciones hechas desde este panel</p>
 
@@ -49,6 +51,7 @@ export default async function AdminActivityPage() {
           <p className="px-4 py-6 text-sm text-[#343233]/60">Todavía no hay actividad registrada.</p>
         )}
       </div>
+      </DashboardCard>
     </div>
   );
 }

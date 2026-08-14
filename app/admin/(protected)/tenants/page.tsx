@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { getEnabledModules, MODULE_LABELS } from "@/lib/modules";
+import DashboardCard from "@/components/dashboard-card";
 
 export default async function AdminTenantsPage({
   searchParams,
@@ -29,6 +30,7 @@ export default async function AdminTenantsPage({
 
   return (
     <div>
+      <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">Negocios</h1>
       <p className="text-sm text-[#343233]/70 mb-6">{tenants.length} resultado(s)</p>
 
@@ -94,6 +96,7 @@ export default async function AdminTenantsPage({
           <p className="px-4 py-6 text-sm text-[#343233]/60">No hay negocios que coincidan con la búsqueda.</p>
         )}
       </div>
+      </DashboardCard>
     </div>
   );
 }
