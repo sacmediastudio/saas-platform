@@ -22,8 +22,9 @@ import { getStoredLang, setStoredLang } from "@/lib/i18n-auth";
 
 const LOGO = "/logo.svg";
 const DASHBOARD = "https://images.hostinger.com/7d431ae5-239d-4f18-8ad3-1a498cd57431.png";
-const STAND = "https://images.hostinger.com/03fbdfcd-c634-4e8e-8715-24e2cecd708e.png";
-const NFC_CARD = "https://images.hostinger.com/83bf8b46-4f88-4c55-a45a-67d1802ba685.png";
+const HERO_CUSTOMER = "/hero-customer.webp";
+const STAND = "/nfc-stand.webp";
+const NFC_CARD = "/nfc-card.webp";
 
 const PRODUCT_ICONS = [UtensilsCrossed, CalendarCheck, Link2];
 const PLAN_TYPES = ["SMARTLINK", "SMALL_BUSINESS", "RESTAURANT"];
@@ -168,22 +169,33 @@ function Hero({ t }: { t: (typeof translations)["en"] }) {
           </Reveal>
         </div>
         <Reveal delay={0.2} y={28}>
-          <div className="zt-float relative">
-            <div className="absolute -inset-6 rounded-[2.5rem] bg-forest/[0.04] blur-2xl" />
-            <div className="relative overflow-hidden rounded-[24px] border border-forest/10 bg-white shadow-[0_24px_70px_-40px_rgba(0,45,9,0.35)]">
-              <div className="flex items-center gap-1.5 border-b border-forest/[0.07] px-5 py-3.5">
-                <span className="h-2.5 w-2.5 rounded-full bg-forest/10" />
-                <span className="h-2.5 w-2.5 rounded-full bg-forest/10" />
-                <span className="h-2.5 w-2.5 rounded-full bg-forest/10" />
-                <span className="ml-3 text-xs font-medium text-graphite/60">{t.hero.panelUrl}</span>
+          <div className="relative">
+            <div className="zt-float relative">
+              <div className="absolute -inset-6 rounded-[2.5rem] bg-forest/[0.04] blur-2xl" />
+              <div className="relative overflow-hidden rounded-[24px] border border-forest/10 bg-white shadow-[0_24px_70px_-40px_rgba(0,45,9,0.35)]">
+                <div className="flex items-center gap-1.5 border-b border-forest/[0.07] px-5 py-3.5">
+                  <span className="h-2.5 w-2.5 rounded-full bg-forest/10" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-forest/10" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-forest/10" />
+                  <span className="ml-3 text-xs font-medium text-graphite/60">{t.hero.panelUrl}</span>
+                </div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={DASHBOARD} alt="Zertoo dashboard" className="block w-full" loading="eager" />
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={DASHBOARD} alt="Zertoo dashboard" className="block w-full" loading="eager" />
+              <div className="absolute -bottom-6 -left-4 hidden rounded-2xl border border-forest/10 bg-white px-5 py-4 shadow-[0_18px_40px_-28px_rgba(0,45,9,0.4)] sm:block">
+                <p className="text-xs font-medium text-graphite/70">{t.hero.publishedIn}</p>
+                <p className="text-xl font-extrabold tracking-tight text-forest">8 min</p>
+              </div>
             </div>
-            <div className="absolute -bottom-6 -left-4 hidden rounded-2xl border border-forest/10 bg-white px-5 py-4 shadow-[0_18px_40px_-28px_rgba(0,45,9,0.4)] sm:block">
-              <p className="text-xs font-medium text-graphite/70">{t.hero.publishedIn}</p>
-              <p className="text-xl font-extrabold tracking-tight text-forest">8 min</p>
-            </div>
+            {/* Foto estática a propósito (sin zt-float) — queda fija sobre
+                la marquesina mientras el mockup de arriba sigue flotando. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={HERO_CUSTOMER}
+              alt=""
+              aria-hidden="true"
+              className="pointer-events-none absolute -bottom-20 -right-6 hidden h-auto w-[300px] drop-shadow-[0_20px_35px_rgba(0,45,9,0.28)] sm:block md:-bottom-24 md:w-[370px] lg:-bottom-28 lg:-right-4 lg:w-[420px] xl:-bottom-32 xl:w-[460px]"
+            />
           </div>
         </Reveal>
       </div>
