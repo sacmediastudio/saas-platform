@@ -23,6 +23,7 @@ import { getStoredLang, setStoredLang } from "@/lib/i18n-auth";
 const LOGO = "/logo.svg";
 const DASHBOARD = "https://images.hostinger.com/7d431ae5-239d-4f18-8ad3-1a498cd57431.png";
 const HERO_CUSTOMER = "/hero-customer.webp";
+const CTA_GUY = "/cta-guy.webp";
 const STAND = "/nfc-stand.webp";
 const NFC_CARD = "/nfc-card.webp";
 
@@ -426,19 +427,32 @@ function CtaBand({ t }: { t: (typeof translations)["en"] }) {
   return (
     <section className="mx-auto w-full max-w-[90rem] px-6 pb-24 lg:px-10 lg:pb-32">
       <Reveal y={22}>
-        <div className="relative overflow-hidden rounded-[24px] bg-forest px-8 py-16 text-center lg:px-16 lg:py-24">
+        <div className="relative overflow-hidden rounded-[24px] bg-forest p-8 lg:p-14">
           <div className="pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-lime/15 blur-[90px]" />
-          <h2 className="mx-auto max-w-[24ch] text-[clamp(1.9rem,3.6vw,3rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-white">
-            {t.ctaBand.title}
-          </h2>
-          <p className="mx-auto mt-5 max-w-[48ch] text-lg text-white/70">{t.ctaBand.subtitle}</p>
-          <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row">
-            <Btn href="/signup">
-              {t.ctaBand.primary} <ArrowRight className="h-4 w-4" strokeWidth={2} />
-            </Btn>
-            <Btn href="#productos" className="border border-white/20 bg-transparent text-white hover:-translate-y-0.5 hover:bg-white/10" variant="ghost">
-              {t.ctaBand.secondary}
-            </Btn>
+          <div className="relative grid items-center gap-10 lg:grid-cols-3 lg:gap-8">
+            <div className="flex justify-center lg:col-span-1">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={CTA_GUY}
+                alt=""
+                aria-hidden="true"
+                className="h-auto w-[240px] sm:w-[280px] lg:w-[320px] xl:w-[360px]"
+              />
+            </div>
+            <div className="text-center lg:col-span-2 lg:text-left">
+              <h2 className="mx-auto max-w-[24ch] text-[clamp(1.9rem,3.6vw,3rem)] font-extrabold leading-[1.05] tracking-[-0.03em] text-white lg:mx-0">
+                {t.ctaBand.title}
+              </h2>
+              <p className="mx-auto mt-5 max-w-[48ch] text-lg text-white/70 lg:mx-0">{t.ctaBand.subtitle}</p>
+              <div className="mt-9 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
+                <Btn href="/signup">
+                  {t.ctaBand.primary} <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                </Btn>
+                <Btn href="#productos" className="border border-white/20 bg-transparent text-white hover:-translate-y-0.5 hover:bg-white/10" variant="ghost">
+                  {t.ctaBand.secondary}
+                </Btn>
+              </div>
+            </div>
           </div>
         </div>
       </Reveal>
