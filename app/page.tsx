@@ -194,7 +194,7 @@ function Hero({ t }: { t: (typeof translations)["en"] }) {
               src={HERO_CUSTOMER}
               alt=""
               aria-hidden="true"
-              className="pointer-events-none absolute -bottom-20 -right-6 hidden h-auto w-[300px] drop-shadow-[0_20px_35px_rgba(0,45,9,0.28)] sm:block md:-bottom-24 md:w-[370px] lg:-bottom-28 lg:-right-4 lg:w-[420px] xl:-bottom-32 xl:w-[460px]"
+              className="pointer-events-none absolute -bottom-20 -right-6 hidden h-auto w-[300px] drop-shadow-[0_20px_35px_rgba(0,45,9,0.28)] sm:block md:-bottom-16 md:w-[350px] lg:-bottom-28 lg:-right-4 lg:w-[420px] xl:-bottom-32 xl:w-[460px]"
             />
           </div>
         </Reveal>
