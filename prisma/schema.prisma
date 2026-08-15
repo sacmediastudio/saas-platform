@@ -91,6 +91,11 @@ model Tenant {
   // causaba que algunas citas no aparecieran bien en el calendario.
   timezone String @default("America/Aruba")
 
+  // Recordatorios de citas por WhatsApp — activado por defecto (reduce
+  // ausencias), cada negocio puede apagarlo o cambiar cuántas horas antes.
+  remindersEnabled     Boolean @default(true)
+  reminderHoursBefore  Int     @default(24)
+
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
   suspended Boolean @default(false)
@@ -249,6 +254,9 @@ model Booking {
   // Si el negocio tiene Google Calendar conectado, acá queda el id del
   // evento creado allá — para poder borrarlo si la cita se cancela.
   googleEventId String?
+  // Marca cuándo se mandó el recordatorio por WhatsApp — null significa
+  // que todavía no se ha mandado. Evita que el cron job lo mande dos veces.
+  reminderSentAt DateTime?
 
   tenant  Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   service Service      @relation(fields: [serviceId], references: [id])

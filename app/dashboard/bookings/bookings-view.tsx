@@ -7,6 +7,7 @@ import BusinessHoursEditor from "@/components/business-hours-editor";
 import BookingDayCalendar from "@/components/booking-day-calendar";
 import PendingBookings from "@/components/pending-bookings";
 import GoogleCalendarConnect from "@/components/google-calendar-connect";
+import WhatsAppReminders from "@/components/whatsapp-reminders";
 import { formatCurrency } from "@/lib/currency";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
@@ -197,10 +198,11 @@ export default function BookingsView({
       {/* --- Integraciones --- */}
       <h2 className="text-xl font-semibold mb-1">{t.bookings.integrationsTitle}</h2>
       <p className="text-sm text-[#343233]/70 mb-4">{t.bookings.integrationsSubtitle}</p>
-      <div>
+      <div className="flex flex-col gap-3">
         <Suspense fallback={null}>
           <GoogleCalendarConnect />
         </Suspense>
+        <WhatsAppReminders />
       </div>
       </DashboardCard>
 

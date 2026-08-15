@@ -307,6 +307,36 @@ lenguaje de por medio.
   otras piezas nuevas que se agregan después del sistema de traducción
   de dashboards.
 
+## Recordatorios de citas por WhatsApp
+
+Primer diferencial "de negocio" que agregamos (no solo funcionalidad):
+reduce las ausencias a citas — el dolor #1 de cualquier negocio de
+citas — avisando al cliente por WhatsApp antes de su hora, además del
+correo de confirmación que ya mandábamos.
+
+- **`lib/whatsapp.ts`** — llamadas directas a la API oficial de Meta
+  (WhatsApp Cloud API), sin SDK. Como WhatsApp exige una plantilla
+  aprobada por Meta para mensajes que el negocio inicia (no se puede
+  mandar texto libre para esto), la plantilla se configura una vez en
+  Meta Business Manager — instrucciones completas en `.env.example`.
+- **`POST /api/cron/send-booking-reminders`** — revisa, por cada
+  negocio con recordatorios activos, qué citas confirmadas caen dentro
+  de su ventana configurada (por defecto 24h antes) y todavía no
+  recibieron el recordatorio (`Booking.reminderSentAt`), y lo manda.
+  Protegido con un secreto (`CRON_SECRET`) — **este endpoint necesita
+  que algo externo lo llame periódicamente** (cron-job.org gratis, o
+  Railway Cron Schedules) — Next.js no corre nada en segundo plano por
+  su cuenta, instrucciones también en `.env.example`.
+- **Dashboard** (`/dashboard/bookings` → Integraciones): cada negocio
+  puede activar/desactivar los recordatorios y elegir cuántas horas
+  antes avisar — activado por defecto (24h antes).
+
+**Igual que las demás integraciones — esto no manda nada todavía sin
+credenciales reales.** Sin `WHATSAPP_ACCESS_TOKEN`/`WHATSAPP_PHONE_NUMBER_ID`
+configurados, el toggle del dashboard muestra un aviso claro, y sin el
+cron externo llamando al endpoint, simplemente nunca se dispara —
+ninguno de los dos casos rompe nada más de la plataforma.
+
 ## Facturación real con Stripe (por módulo)
 
 Antes, los planes solo se podían asignar a mano desde `/admin` — ahora
