@@ -37,6 +37,8 @@ interface TenantData {
   buttonColor: string;
   buttonTextColor: string;
   menuShowPhotos: boolean;
+  menuLeadEnabled: boolean;
+  menuLeadButtonLabel: string;
 }
 
 export default function PublicMenu({
@@ -111,6 +113,7 @@ export default function PublicMenu({
   const featuredItems = visibleItems.filter((i) => i.featured && i.status !== "SOLD_OUT").slice(0, 2);
   const [activeCategory, setActiveCategory] = useState<string | null>(categoriesWithItems[0]?.id ?? null);
   const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
 
@@ -456,6 +459,18 @@ export default function PublicMenu({
         )}
       </div>
 
+      {tenant.menuLeadEnabled && (
+        <div className="flex justify-center px-6 pt-2">
+          <button
+            onClick={() => setLeadModalOpen(true)}
+            className="w-full max-w-sm py-3 rounded-xl font-semibold text-sm shadow-[0_4px_20px_-8px_rgba(0,0,0,0.15)] hover:brightness-105 transition-all"
+            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+          >
+            {tenant.menuLeadButtonLabel}
+          </button>
+        </div>
+      )}
+
       <div className="flex justify-center py-6 opacity-50">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto" />
@@ -523,6 +538,135 @@ export default function PublicMenu({
           </div>
         </div>
       )}
+
+      {leadModalOpen && (
+        <LeadClaimModal
+          slug={tenant.slug}
+          rewardLabel={tenant.menuLeadButtonLabel}
+          buttonColor={tenant.buttonColor}
+          buttonTextColor={tenant.buttonTextColor}
+          onClose={() => setLeadModalOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function LeadClaimModal({
+  slug,
+  rewardLabel,
+  buttonColor,
+  buttonTextColor,
+  onClose,
+}: {
+  slug: string;
+  rewardLabel: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  onClose: () => void;
+}) {
+  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+  const [alreadyClaimed, setAlreadyClaimed] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/public/menu-leads", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, ...form }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setErrorMsg(body.error ?? "No se pudo procesar tu solicitud");
+        setStatus("error");
+        return;
+      }
+      setAlreadyClaimed(Boolean(body.alreadyClaimed));
+      setStatus("done");
+    } catch {
+      setErrorMsg("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-sm bg-white rounded-2xl p-6 text-neutral-800"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {status === "done" ? (
+          <div className="text-center">
+            <p className="text-lg font-semibold mb-2">
+              {alreadyClaimed ? "Ya habías reclamado tu premio" : "¡Listo!"}
+            </p>
+            <p className="text-sm opacity-70 mb-4">
+              {alreadyClaimed
+                ? "Te reenviamos tu código por WhatsApp — revisa tus mensajes."
+                : "Te mandamos tu código de canje por WhatsApp. Muéstralo en tu próxima visita."}
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full py-2.5 rounded-lg text-sm font-semibold"
+              style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+            >
+              Cerrar
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <p className="text-lg font-semibold mb-1">{rewardLabel}</p>
+            <p className="text-sm opacity-70 mb-2">
+              Déjanos tus datos y te mandamos tu código de canje por WhatsApp.
+            </p>
+            <input
+              placeholder="Tu nombre"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+            />
+            <input
+              type="email"
+              placeholder="name@correo.com"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              required
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+            />
+            <input
+              type="tel"
+              placeholder="Tu WhatsApp (con código de país)"
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              required
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+            />
+            {status === "error" && <p className="text-red-600 text-sm">{errorMsg}</p>}
+            <div className="flex gap-2 mt-1">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={status === "sending"}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+              >
+                {status === "sending" ? "Enviando..." : "Reclamar"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
   );
 }

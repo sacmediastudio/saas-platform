@@ -42,6 +42,8 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
         buttonColor: tenant.buttonColor,
         buttonTextColor: tenant.buttonTextColor,
         menuShowPhotos: tenant.menuShowPhotos,
+        menuLeadEnabled: tenant.menuLeadEnabled,
+        menuLeadButtonLabel: tenant.menuLeadButtonLabel,
       }}
       categories={categories.map((c) => ({ id: c.id, name: c.name, nameEn: c.nameEn }))}
       items={items.map((i) => ({

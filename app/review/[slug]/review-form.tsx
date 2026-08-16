@@ -29,6 +29,7 @@ export default function ReviewForm({
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [reviewerName, setReviewerName] = useState("");
+  const [customerEmail, setCustomerEmail] = useState("");
   const [comment, setComment] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -50,6 +51,7 @@ export default function ReviewForm({
         body: JSON.stringify({
           tenantSlug: tenant.slug,
           reviewerName,
+          customerEmail: customerEmail || undefined,
           rating,
           comment: comment || undefined,
           source: "qr",
@@ -182,6 +184,15 @@ export default function ReviewForm({
             onChange={(e) => setReviewerName(e.target.value)}
             required
             placeholder="Tu nombre"
+            className="w-full px-4 py-3 rounded-xl border text-sm bg-transparent outline-none"
+            style={{ borderColor: "currentColor", opacity: 1 }}
+          />
+
+          <input
+            type="email"
+            value={customerEmail}
+            onChange={(e) => setCustomerEmail(e.target.value)}
+            placeholder="Tu correo (opcional)"
             className="w-full px-4 py-3 rounded-xl border text-sm bg-transparent outline-none"
             style={{ borderColor: "currentColor", opacity: 1 }}
           />

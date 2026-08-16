@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { isSlotFree } from "@/lib/availability";
+import { upsertCustomer } from "@/lib/customers";
 
 const createSchema = z.object({
   serviceId: z.string(),
@@ -71,6 +72,14 @@ export async function POST(req: NextRequest) {
       status: "PENDING",
       ...customer,
     },
+  });
+
+  await upsertCustomer({
+    tenantId: service.tenantId,
+    email: customer.customerEmail,
+    name: customer.customerName,
+    phone: customer.customerPhone,
+    source: "booking",
   });
 
   return NextResponse.json({ booking }, { status: 201 });

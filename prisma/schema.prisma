@@ -104,6 +104,15 @@ model Tenant {
   loyaltyReward       String  @default("Tu próxima visita es gratis")
   loyaltyCards        LoyaltyCard[]
 
+  // "Postre gratis" (o cualquier premio) en el menú — captura nombre,
+  // correo y WhatsApp de un cliente nuevo a cambio de un código de
+  // canje que se le manda por WhatsApp. Solo aplica al módulo de Menú.
+  menuLeadEnabled     Boolean @default(false)
+  menuLeadButtonLabel String  @default("Postre gratis 🎁")
+  menuLeadRewardText  String  @default("un postre gratis en tu próxima visita")
+  menuLeads           MenuLead[]
+  customers           Customer[]
+
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
   suspended Boolean @default(false)
@@ -284,6 +293,7 @@ model Review {
   id           String       @id @default(cuid())
   tenantId     String
   reviewerName String
+  customerEmail String? // opcional — si se da, alimenta el CRM de clientes
   rating       Int // 1-5
   comment      String?
   source       String       @default("manual") // qr | booking | manual
@@ -427,6 +437,67 @@ model LoyaltyCard {
 
   @@unique([tenantId, customerEmail])
   @@map("loyalty_cards")
+}
+
+// Un cliente que reclamó el premio de "postre gratis" (o el que sea)
+// desde el menú público — nombre/correo/WhatsApp, y un código corto que
+// se le manda por WhatsApp para canjear en el local.
+model MenuLead {
+  id         String    @id @default(cuid())
+  tenantId   String
+  name       String
+  email      String
+  phone      String
+  claimCode  String    @unique
+  redeemedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("menu_leads")
+}
+
+// Vista unificada de "quién es cliente de este negocio", alimentada
+// automáticamente desde citas, reseñas (si dejaron correo), y el
+// premio del menú — un registro por correo, no uno por cada
+// interacción. Es la base para que el negocio (y el admin de Zertoo)
+// puedan ver/exportar/contactar a sus clientes reales.
+model Customer {
+  id           String   @id @default(cuid())
+  tenantId     String
+  email        String
+  name         String?
+  phone        String?
+  fromBooking  Boolean  @default(false)
+  fromReview   Boolean  @default(false)
+  fromMenuLead Boolean  @default(false)
+  unsubscribed Boolean  @default(false)
+  firstSeenAt  DateTime @default(now())
+  lastSeenAt   DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("customers")
+}
+
+// Historial de campañas de email/WhatsApp mandadas desde el panel de
+// admin de Zertoo — no es por negocio, es a nivel plataforma.
+model CampaignLog {
+  id            String   @id @default(cuid())
+  adminEmail    String
+  channel       String // email | whatsapp
+  tenantFilter  String? // null = todos los negocios, o el id de uno específico
+  subject       String?
+  message       String
+  recipientCount Int
+  sentCount     Int
+  failedCount   Int
+  createdAt     DateTime @default(now())
+
+  @@map("campaign_logs")
 }
 
 enum PageViewKind {

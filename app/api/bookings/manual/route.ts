@@ -6,6 +6,7 @@ import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/emai
 import { isSlotFree } from "@/lib/availability";
 import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
 import { addLoyaltyStamp } from "@/lib/loyalty";
+import { upsertCustomer } from "@/lib/customers";
 
 const schema = z.object({
   serviceId: z.string(),
@@ -89,6 +90,15 @@ export async function POST(req: NextRequest) {
     customerEmail: customer.customerEmail,
     customerName: customer.customerName,
   });
+
+  await upsertCustomer({
+    tenantId: session.tenantId,
+    email: customer.customerEmail,
+    name: customer.customerName,
+    phone: customer.customerPhone,
+    source: "booking",
+  });
+
   if (loyalty?.justEarnedReward && tenant) {
     const tenantLoyalty = await db.tenant.findUnique({ where: { id: session.tenantId }, select: { loyaltyReward: true } });
     await sendLoyaltyRewardEmail({

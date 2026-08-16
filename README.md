@@ -307,6 +307,70 @@ lenguaje de por medio.
   otras piezas nuevas que se agregan después del sistema de traducción
   de dashboards.
 
+## CRM unificado de clientes + campañas de admin
+
+El vacío que señalaste: hasta ahora, los datos de cada cliente vivían
+aislados en cada módulo (una cita acá, una reseña allá) sin nada que
+los uniera como "esta misma persona", ni forma de que tú (como admin
+de Zertoo) vieras clientes más allá de un solo negocio.
+
+- **Modelo nuevo `Customer`** — un registro por correo, por negocio,
+  alimentado automáticamente por `lib/customers.ts` desde 3 puntos:
+  toda cita (pública o manual), reseñas cuando el cliente sí deja su
+  correo (ahora es un campo opcional nuevo en el formulario público de
+  reseñas — antes no se pedía en absoluto), y el premio del menú.
+- **Dashboard del negocio** (`/dashboard/customers`) — cada negocio ve
+  y exporta a CSV solo sus propios clientes.
+- **Admin de Zertoo** (`/admin/customers`) — mismo listado pero de
+  **todos** los negocios juntos, con buscador y exportar CSV.
+- **Campañas** (`/admin/campaigns`) — arma y manda una campaña de
+  correo (asunto + cuerpo libre) o de WhatsApp (plantilla de Marketing
+  aprobada + una variable de texto), filtrando por un negocio específico
+  o todos a la vez. Cada envío queda registrado en `CampaignLog`.
+- **Baja obligatoria** — cada correo de campaña incluye un link de
+  "Darme de baja" (`/unsubscribe`) que marca `Customer.unsubscribed` —
+  a partir de ahí, esa persona queda excluida de toda campaña futura
+  automáticamente, sin que nadie tenga que acordarse de filtrarla a mano.
+
+**Dos advertencias que dejé bien visibles en el código y en la propia
+pantalla de campañas, no solo acá:**
+1. Estos clientes dejaron sus datos para un propósito puntual (reservar,
+   reseñar, reclamar un premio) — no para recibir marketing. Mandar
+   campañas no solicitadas puede pisar leyes de spam según la
+   jurisdicción, y las plantillas de WhatsApp de categoría Marketing
+   tienen reglas de consentimiento más estrictas que las de Utility que
+   usamos para recordatorios — mal uso puede llevar a que Meta suspenda
+   la cuenta de WhatsApp Business de la plataforma entera, afectando a
+   todos los negocios que dependen de ella.
+2. El envío de campañas es **síncrono** (una sola petición HTTP,
+   limitada a 500 destinatarios por envío como techo de seguridad) —
+   funciona bien para el tamaño actual de la plataforma, pero si la
+   base de clientes crece mucho, esto habría que rediseñarlo como un
+   trabajo en segundo plano para no toparse con límites de tiempo de
+   una sola petición.
+
+## "Premio en el menú" — captura de datos + código por WhatsApp (solo Restaurantes)
+
+Versión del programa de fidelidad pensada para Menú, donde no existe el
+concepto de "cita confirmada" que usa el programa de sellos de Citas.
+Acá la mecánica es de una sola vez: un botón al final del menú público
+(texto configurable, ej. "Postre gratis 🎁") invita al cliente a dejar
+nombre, correo y WhatsApp a cambio de un premio — recibe un código de
+6 caracteres por WhatsApp al instante para canjear en el local.
+
+- **Modelo nuevo**: `MenuLead` (nombre, correo, WhatsApp, código, si ya
+  se canjeó). El correo evita duplicados — si la misma persona vuelve a
+  reclamar, le reenviamos su código existente en vez de crear uno nuevo.
+- **Dashboard** (`/dashboard/menu-leads`, solo visible si el módulo de
+  Restaurante está activo): activar/desactivar, texto del botón, texto
+  del premio, y dos formas de canjear — buscando por código (lo más
+  práctico en el mostrador) o desde la lista completa.
+- **Segunda plantilla de WhatsApp**: esta función necesita su propia
+  plantilla aprobada por Meta (`menu_lead_reward`), separada de la de
+  recordatorios de citas — `lib/whatsapp.ts` ahora tiene una función
+  base compartida (`sendTemplateMessage`) que ambas funciones usan por
+  dentro. Instrucciones completas en `.env.example`.
+
 ## Programa de sellos/fidelidad
 
 Segundo diferencial "de negocio" — sin costo, sin app nueva, usa el

@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { upsertCustomer } from "@/lib/customers";
 
 const createSchema = z.object({
   tenantSlug: z.string(),
   reviewerName: z.string().min(1),
+  customerEmail: z.string().email().optional(),
   rating: z.number().int().min(1).max(5),
   comment: z.string().optional(),
   source: z.enum(["qr", "booking", "manual"]).default("qr"),
@@ -44,6 +46,17 @@ export async function POST(req: NextRequest) {
       ...data,
     },
   });
+
+  // El correo es opcional en una reseña (no queremos ponerle fricción a
+  // dejar una reseña) — solo alimentamos el CRM si sí lo dieron.
+  if (data.customerEmail) {
+    await upsertCustomer({
+      tenantId: tenant.id,
+      email: data.customerEmail,
+      name: data.reviewerName,
+      source: "review",
+    });
+  }
 
   return NextResponse.json({ review }, { status: 201 });
 }

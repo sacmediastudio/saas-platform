@@ -135,3 +135,31 @@ export async function sendLoyaltyRewardEmail(params: {
     `${customerName} ganó un premio en ${businessName}: ${reward}\nConfigura RESEND_API_KEY para enviar correos reales.`
   );
 }
+
+/**
+ * Correo de campaña de marketing (admin de Zertoo) — a diferencia de
+ * los demás correos de este archivo, el asunto y el cuerpo son texto
+ * libre que escribe el admin, no una plantilla fija. Siempre incluye
+ * un link de baja al final (obligatorio para este tipo de envío).
+ */
+export async function sendCampaignEmail(params: {
+  to: string;
+  subject: string;
+  bodyHtml: string;
+  unsubscribeUrl: string;
+}) {
+  await sendEmail(
+    params.to,
+    params.subject,
+    `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px; color: #343233;">
+        <div style="font-size: 14px; line-height: 1.6;">${params.bodyHtml}</div>
+        <p style="font-size: 11px; color: #999; margin-top: 32px; border-top: 1px solid #eee; padding-top: 12px;">
+          Recibiste este correo porque interactuaste con este negocio en Zertoo.
+          <a href="${params.unsubscribeUrl}" style="color: #999;">Darme de baja</a>
+        </p>
+      </div>
+    `,
+    `Campaña para ${params.to}: ${params.subject}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
