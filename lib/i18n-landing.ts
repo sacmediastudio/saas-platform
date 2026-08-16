@@ -27,14 +27,14 @@ export const translations = {
           name: "Restaurants",
           price: "39.90",
           desc: "Your restaurant's menu, always up to date.",
-          benefits: ["Photos for every dish, tap to zoom", "Unlimited categories, sold-out items", "Featured dishes section", "Bilingual menu (EN/ES)", "Customer wishlist (favorites)", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "Custom branding & local currency"],
+          benefits: ["Photos for every dish, tap to zoom", "Unlimited categories, sold-out items", "Featured dishes section", "Bilingual menu (EN/ES)", "Customer wishlist (favorites)", "New-customer reward via WhatsApp", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "Custom branding & local currency"],
         },
         {
           id: "appointments",
           name: "Appointment businesses",
           price: "29.90",
           desc: "Your schedule, organized — no calls or missed messages.",
-          benefits: ["Real availability, calculated live", "Automatic buffer between bookings", "Day-by-day calendar in your dashboard", "Google Calendar sync", "Email confirmations", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "No phone calls needed"],
+          benefits: ["Real availability, calculated live", "Automatic buffer between bookings", "Day-by-day calendar in your dashboard", "Google Calendar sync", "WhatsApp reminders (fewer no-shows)", "Loyalty stamp program", "Email confirmations", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "No phone calls needed"],
         },
         {
           id: "smartlink",
@@ -131,14 +131,14 @@ export const translations = {
           name: "Restaurantes",
           price: "39.90",
           desc: "El menú de tu restaurante, siempre actualizado.",
-          benefits: ["Fotos de cada plato, toca para ampliar", "Categorías ilimitadas, agotados", "Sección de platos destacados", "Menú bilingüe (EN/ES)", "Lista de favoritos del cliente", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Marca y moneda local personalizables"],
+          benefits: ["Fotos de cada plato, toca para ampliar", "Categorías ilimitadas, agotados", "Sección de platos destacados", "Menú bilingüe (EN/ES)", "Lista de favoritos del cliente", "Premio de bienvenida por WhatsApp", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Marca y moneda local personalizables"],
         },
         {
           id: "citas",
           name: "Negocios de citas",
           price: "29.90",
           desc: "Tu agenda ordenada, sin llamadas ni mensajes perdidos.",
-          benefits: ["Disponibilidad real, calculada al momento", "Espacio automático entre citas", "Calendario por día en tu dashboard", "Sincronización con Google Calendar", "Confirmaciones por correo", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Sin llamadas telefónicas"],
+          benefits: ["Disponibilidad real, calculada al momento", "Espacio automático entre citas", "Calendario por día en tu dashboard", "Sincronización con Google Calendar", "Recordatorios por WhatsApp (menos ausencias)", "Programa de sellos de fidelidad", "Confirmaciones por correo", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Sin llamadas telefónicas"],
         },
         {
           id: "smartlink",
