@@ -307,6 +307,31 @@ lenguaje de por medio.
   otras piezas nuevas que se agregan después del sistema de traducción
   de dashboards.
 
+## Recuperar contraseña olvidada
+
+Faltaba desde el principio — flujo estándar con link de un solo uso
+por correo (no un código a escribir, mismo criterio que usa cualquier
+plataforma seria para esto):
+
+- **`/forgot-password`** — el usuario escribe su correo. La respuesta
+  es **siempre la misma** exista o no esa cuenta (`{ok:true}`), para no
+  filtrarle a nadie qué correos están registrados en la plataforma —
+  mismo criterio que ya usaba el login con "correo o contraseña
+  incorrectos" en vez de decir cuál de los dos falló.
+- Si el correo existe, se genera un **token largo y aleatorio**
+  (`crypto.randomBytes`, no un código corto de 6 dígitos — es una
+  acción más sensible que verificar un correo, así que el link es más
+  difícil de adivinar), válido por **1 hora**, y se manda por correo.
+- **`/reset-password?token=...`** — el usuario elige su nueva
+  contraseña. El token se invalida apenas se usa una vez (no sirve de
+  nuevo si alguien vuelve a abrir el mismo link), y lo deja con la
+  sesión iniciada de una vez, sin tener que pasar por el login después.
+- Mismo *cooldown* de 30 segundos entre pedidos que ya usaba el
+  reenvío del código de verificación de correo, para no facilitar spam.
+- Las traducciones (EN/ES) se agregaron a `lib/i18n-auth.ts`, mismo
+  sistema que ya usaba el login — el idioma se hereda de lo que la
+  persona eligió en la landing, no hay un selector nuevo.
+
 ## Pedidos desde el menú (pickup / delivery, sin pago online)
 
 Decisión de alcance consciente: el cliente arma su pedido y lo manda,

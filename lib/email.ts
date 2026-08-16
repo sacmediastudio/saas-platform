@@ -62,6 +62,29 @@ export function generateVerificationCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+export async function sendPasswordResetEmail(to: string, resetUrl: string, userName: string) {
+  await sendEmail(
+    to,
+    "Recupera tu contraseña de Zertoo",
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">Hola ${userName},</p>
+        <p style="font-size: 14px; color: #343233;">
+          Pediste cambiar tu contraseña. Haz clic en el botón de abajo para elegir una nueva —
+          este link expira en 1 hora.
+        </p>
+        <a href="${resetUrl}" style="display: inline-block; background: #E7FF00; color: #002D09; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 999px; text-decoration: none; margin: 20px 0;">
+          Elegir nueva contraseña
+        </a>
+        <p style="font-size: 12px; color: #888;">
+          Si no pediste esto, ignora este correo — tu contraseña actual sigue funcionando igual.
+        </p>
+      </div>
+    `,
+    `Recupera tu contraseña: ${resetUrl}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
+
 export async function sendBookingConfirmationEmail(params: {
   to: string;
   customerName: string;

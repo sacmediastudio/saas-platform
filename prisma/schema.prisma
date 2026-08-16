@@ -164,6 +164,13 @@ model User {
   verificationCodeExpiresAt  DateTime?
   verificationCodeSentAt     DateTime?
 
+  // Recuperación de contraseña — token largo (no un código corto), va
+  // en un link por correo, mismo criterio de "cooldown" que arriba
+  // para no facilitar spam de correos de reset.
+  passwordResetToken          String?   @unique
+  passwordResetTokenExpiresAt DateTime?
+  passwordResetSentAt         DateTime?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])

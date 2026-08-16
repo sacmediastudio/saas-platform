@@ -85,6 +85,12 @@ export default function LoginPage() {
             required
             style={inputStyle}
           />
+          <a
+            href="/forgot-password"
+            style={{ fontSize: 13, color: "#666", textAlign: "right", textDecoration: "underline", marginTop: -4 }}
+          >
+            {t.forgotPasswordLink}
+          </a>
           {error && <p style={{ color: "#c0392b", fontSize: 13 }}>{error}</p>}
           <button
             type="submit"
