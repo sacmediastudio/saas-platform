@@ -96,6 +96,14 @@ model Tenant {
   remindersEnabled     Boolean @default(true)
   reminderHoursBefore  Int     @default(24)
 
+  // Programa de sellos/fidelidad simple — cada visita confirmada (cita o
+  // reseña, según el módulo) suma un sello por correo del cliente. Sin
+  // costo, sin app nueva — el correo que ya capturamos es el identificador.
+  loyaltyEnabled      Boolean @default(false)
+  loyaltyVisitsNeeded Int     @default(6)
+  loyaltyReward       String  @default("Tu próxima visita es gratis")
+  loyaltyCards        LoyaltyCard[]
+
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
   suspended Boolean @default(false)
@@ -401,6 +409,24 @@ model FaqItem {
 
   @@index([tenantId])
   @@map("faq_items")
+}
+
+// Una "tarjeta" de sellos por cliente (identificado por correo) por
+// negocio — no requiere que el cliente tenga cuenta ni app.
+model LoyaltyCard {
+  id              String   @id @default(cuid())
+  tenantId        String
+  customerEmail   String
+  customerName    String?
+  stamps          Int      @default(0)
+  rewardsRedeemed Int      @default(0)
+  lastVisitAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, customerEmail])
+  @@map("loyalty_cards")
 }
 
 enum PageViewKind {

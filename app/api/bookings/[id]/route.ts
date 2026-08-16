@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
-import { sendBookingConfirmationEmail } from "@/lib/email";
+import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/email";
 import { syncBookingToGoogleCalendar, deleteGoogleCalendarEvent } from "@/lib/google-calendar";
+import { addLoyaltyStamp } from "@/lib/loyalty";
 
 const schema = z.object({
   status: z.enum(["PENDING", "CONFIRMED", "CANCELLED", "COMPLETED"]),
@@ -52,6 +53,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       datetime: existing.datetime,
       durationMinutes: existing.service.durationMinutes,
     });
+
+    const loyalty = await addLoyaltyStamp({
+      tenantId: session.tenantId,
+      customerEmail: existing.customerEmail,
+      customerName: existing.customerName,
+    });
+    if (loyalty?.justEarnedReward) {
+      const tenant = await db.tenant.findUnique({ where: { id: session.tenantId }, select: { loyaltyReward: true } });
+      await sendLoyaltyRewardEmail({
+        to: existing.customerEmail,
+        customerName: existing.customerName,
+        businessName: existing.tenant.name,
+        reward: tenant?.loyaltyReward ?? "Tu próxima visita es gratis",
+        stamps: loyalty.stamps,
+      }).catch((err) => console.error("No se pudo enviar el correo de premio:", err));
+    }
   }
 
   // Si se cancela una cita que ya estaba sincronizada, borramos el

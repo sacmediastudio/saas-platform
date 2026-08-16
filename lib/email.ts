@@ -107,3 +107,31 @@ export async function sendBookingConfirmationEmail(params: {
     `Confirmación de cita para ${to}: ${serviceName} el ${formattedDate} a las ${formattedTime}.\nConfigura RESEND_API_KEY para enviar correos reales.`
   );
 }
+
+export async function sendLoyaltyRewardEmail(params: {
+  to: string;
+  customerName: string;
+  businessName: string;
+  reward: string;
+  stamps: number;
+}) {
+  const { to, customerName, businessName, reward, stamps } = params;
+
+  await sendEmail(
+    to,
+    `¡Ganaste un premio en ${businessName}!`,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">Hola ${customerName},</p>
+        <p style="font-size: 14px; color: #343233;">
+          ¡Completaste ${stamps} visitas en <strong>${businessName}</strong> y ganaste tu premio!
+        </p>
+        <div style="background: #E7FF00; border-radius: 12px; padding: 16px; margin: 20px 0; text-align: center;">
+          <p style="font-size: 16px; font-weight: 700; color: #002D09; margin: 0;">${reward}</p>
+        </div>
+        <p style="font-size: 13px; color: #888;">Muéstrale este correo al negocio en tu próxima visita para reclamarlo.</p>
+      </div>
+    `,
+    `${customerName} ganó un premio en ${businessName}: ${reward}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}

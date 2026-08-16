@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
-import { sendBookingConfirmationEmail } from "@/lib/email";
+import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/email";
 import { isSlotFree } from "@/lib/availability";
 import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
+import { addLoyaltyStamp } from "@/lib/loyalty";
 
 const schema = z.object({
   serviceId: z.string(),
@@ -82,6 +83,22 @@ export async function POST(req: NextRequest) {
     datetime: start,
     durationMinutes: service.durationMinutes,
   });
+
+  const loyalty = await addLoyaltyStamp({
+    tenantId: session.tenantId,
+    customerEmail: customer.customerEmail,
+    customerName: customer.customerName,
+  });
+  if (loyalty?.justEarnedReward && tenant) {
+    const tenantLoyalty = await db.tenant.findUnique({ where: { id: session.tenantId }, select: { loyaltyReward: true } });
+    await sendLoyaltyRewardEmail({
+      to: customer.customerEmail,
+      customerName: customer.customerName,
+      businessName: tenant.name,
+      reward: tenantLoyalty?.loyaltyReward ?? "Tu próxima visita es gratis",
+      stamps: loyalty.stamps,
+    }).catch((err) => console.error("No se pudo enviar el correo de premio:", err));
+  }
 
   return NextResponse.json({ booking }, { status: 201 });
 }

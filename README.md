@@ -307,6 +307,30 @@ lenguaje de por medio.
   otras piezas nuevas que se agregan después del sistema de traducción
   de dashboards.
 
+## Programa de sellos/fidelidad
+
+Segundo diferencial "de negocio" — sin costo, sin app nueva, usa el
+correo que ya se captura al reservar. Cada vez que una cita se
+confirma (manual o desde la reserva pública), el cliente (identificado
+por su correo, normalizado en minúsculas para que coincida siempre)
+suma un sello en `LoyaltyCard`. Al llegar a la cantidad configurada
+(por defecto 6), se le manda un correo avisándole que ganó el premio.
+
+- **Dashboard** (`/dashboard/loyalty`) — activar/desactivar, elegir
+  cuántas visitas hacen falta y el texto del premio, y ver la lista de
+  clientes con sus sellos. Cuando un cliente reclama el premio en
+  persona, el negocio hace clic en "Marcar premio canjeado" — le resta
+  las visitas usadas (sin perder el sobrante si tenía de más) y suma al
+  historial de premios canjeados.
+- **Página pública** (`/loyalty/[slug]`) — el cliente escribe su correo
+  y ve cuántos sellos lleva, sin necesidad de cuenta ni contraseña.
+- **Alcance actual**: el sello se suma al **confirmar** la cita (no al
+  completarla) — es la señal más simple que ya existe en el sistema.
+  Si más adelante se agrega una forma de marcar una cita como
+  "completada" después de que en verdad ocurrió, sería más preciso
+  mover el disparador ahí; por ahora esto ya funciona y no requería
+  construir esa pieza nueva primero.
+
 ## Recordatorios de citas por WhatsApp
 
 Primer diferencial "de negocio" que agregamos (no solo funcionalidad):
