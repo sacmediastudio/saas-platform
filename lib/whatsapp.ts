@@ -11,9 +11,17 @@
 const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || "booking_reminder";
-// Idioma con el que se aprobó la plantilla en Meta Business Manager —
-// tiene que coincidir exactamente (es común usar "es" o "es_MX").
-const TEMPLATE_LANG = process.env.WHATSAPP_TEMPLATE_LANG || "es";
+// WhatsApp permite tener la MISMA plantilla (mismo nombre) aprobada en
+// varios idiomas a la vez — Meta las trata como variantes de idioma de
+// una sola plantilla. Por eso acá hay dos códigos, no uno: el código
+// exacto tiene que coincidir con el que aprobaste en Meta Business
+// Manager para cada versión.
+const TEMPLATE_LANG_ES = process.env.WHATSAPP_TEMPLATE_LANG_ES || "es";
+const TEMPLATE_LANG_EN = process.env.WHATSAPP_TEMPLATE_LANG_EN || "en_US";
+
+function resolveTemplateLang(language: string): string {
+  return language === "en" ? TEMPLATE_LANG_EN : TEMPLATE_LANG_ES;
+}
 
 export function isWhatsAppConfigured(): boolean {
   return Boolean(ACCESS_TOKEN && PHONE_NUMBER_ID);
@@ -36,6 +44,7 @@ export async function sendBookingReminder(params: {
   businessName: string;
   dateLabel: string;
   timeLabel: string;
+  language: string;
 }): Promise<void> {
   if (!isWhatsAppConfigured()) return;
 
@@ -51,7 +60,7 @@ export async function sendBookingReminder(params: {
       type: "template",
       template: {
         name: TEMPLATE_NAME,
-        language: { code: TEMPLATE_LANG },
+        language: { code: resolveTemplateLang(params.language) },
         components: [
           {
             type: "body",

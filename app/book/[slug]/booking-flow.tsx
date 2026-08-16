@@ -63,6 +63,18 @@ export default function BookingFlow({
   const [customer, setCustomer] = useState({ name: "", email: "", phone: "" });
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  // Idioma que el cliente eligió — se guarda con la cita (para saber en
+  // qué idioma mandarle el recordatorio de WhatsApp después) y se
+  // recuerda entre visitas, mismo patrón que el resto del sitio.
+  const [lang, setLang] = useState<"es" | "en">("es");
+  useEffect(() => {
+    const stored = typeof window !== "undefined" ? window.localStorage.getItem("zertoo_lang") : null;
+    if (stored === "en") setLang("en");
+  }, []);
+  function toggleLang(l: "es" | "en") {
+    setLang(l);
+    if (typeof window !== "undefined") window.localStorage.setItem("zertoo_lang", l);
+  }
 
   useEffect(() => {
     if (!service || view !== "book") return;
@@ -107,6 +119,7 @@ export default function BookingFlow({
           customerName: customer.name,
           customerEmail: customer.email,
           customerPhone: customer.phone || undefined,
+          language: lang,
           datetime: datetime.toISOString(),
         }),
       });
@@ -169,6 +182,19 @@ export default function BookingFlow({
           className="relative z-10 max-w-md mx-auto min-h-screen px-6 pt-14 pb-10 flex flex-col items-center"
           style={{ color: hasBgImage ? "#ffffff" : themeTextColor }}
         >
+          <div className="absolute top-4 right-4 flex items-center rounded-full border px-0.5 py-0.5 text-[11px] font-bold" style={{ borderColor: "currentColor", opacity: 0.85 }}>
+            {(["es", "en"] as const).map((l) => (
+              <button
+                key={l}
+                type="button"
+                onClick={() => toggleLang(l)}
+                className="px-2 py-0.5 rounded-full transition-colors"
+                style={lang === l ? { backgroundColor: "currentColor", color: themeBgColor } : undefined}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

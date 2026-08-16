@@ -11,6 +11,7 @@ const createSchema = z.object({
   customerEmail: z.string().email(),
   customerPhone: z.string().optional(),
   datetime: z.string().datetime(), // ISO string
+  language: z.enum(["es", "en"]).optional(),
 });
 
 // GET /api/bookings?from=&to= — agenda del negocio en un rango de fechas.

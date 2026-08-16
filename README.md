@@ -314,6 +314,18 @@ reduce las ausencias a citas — el dolor #1 de cualquier negocio de
 citas — avisando al cliente por WhatsApp antes de su hora, además del
 correo de confirmación que ya mandábamos.
 
+**Idioma por cita**: la página pública de citas ahora tiene un
+selector ES/EN (arriba a la derecha de la pantalla principal, mismo
+patrón de `localStorage` que el resto del sitio) — lo que el cliente
+elige ahí queda guardado en `Booking.language`, y el recordatorio le
+llega en ese idioma, usando la variante correspondiente de la
+plantilla de WhatsApp (Meta permite tener la misma plantilla aprobada
+en varios idiomas a la vez). **Nota de alcance**: el selector cambia
+el idioma del recordatorio; el resto del texto de esa página pública
+(los pasos, botones, etc.) todavía está fijo en español — traducir esa
+página por completo sería una tarea aparte, similar a la que hicimos
+con los dashboards.
+
 - **`lib/whatsapp.ts`** — llamadas directas a la API oficial de Meta
   (WhatsApp Cloud API), sin SDK. Como WhatsApp exige una plantilla
   aprobada por Meta para mensajes que el negocio inicia (no se puede

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       try {
         const minutes = getMinutesOfDayInTz(booking.datetime, tenant.timezone);
         const timeLabel = `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
-        const dateLabel = booking.datetime.toLocaleDateString("es", {
+        const dateLabel = booking.datetime.toLocaleDateString(booking.language === "en" ? "en-US" : "es", {
           timeZone: tenant.timezone,
           day: "numeric",
           month: "long",
@@ -64,6 +64,7 @@ export async function POST(req: NextRequest) {
           businessName: tenant.name,
           dateLabel,
           timeLabel,
+          language: booking.language,
         });
 
         await db.booking.update({ where: { id: booking.id }, data: { reminderSentAt: new Date() } });

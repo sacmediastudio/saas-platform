@@ -257,6 +257,9 @@ model Booking {
   // Marca cuándo se mandó el recordatorio por WhatsApp — null significa
   // que todavía no se ha mandado. Evita que el cron job lo mande dos veces.
   reminderSentAt DateTime?
+  // Idioma que el cliente tenía seleccionado al reservar (es|en) — se usa
+  // para elegir la variante correcta de la plantilla de WhatsApp.
+  language String @default("es")
 
   tenant  Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   service Service      @relation(fields: [serviceId], references: [id])
