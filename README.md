@@ -307,6 +307,33 @@ lenguaje de por medio.
   otras piezas nuevas que se agregan después del sistema de traducción
   de dashboards.
 
+## Pedidos desde el menú (pickup / delivery, sin pago online)
+
+Decisión de alcance consciente: el cliente arma su pedido y lo manda,
+pero **paga al retirar o recibir** (efectivo o como ya cobre el
+negocio hoy) — no hay pasarela de pago online todavía. Se evaluó y
+descartó Stripe Connect para esta primera versión (ver discusión sobre
+por qué NO conviene rutear el dinero de terceros por la cuenta propia
+de Stripe de la plataforma) — queda documentado como el camino a seguir
+el día que se quiera agregar cobro real.
+
+- **Pickup y delivery se activan por separado** — no todo negocio
+  ofrece ambos. Configurable desde `/dashboard/orders`: activar
+  pedidos, cuál de los dos (o ambos), costo de envío, y pedido mínimo
+  para delivery.
+- **Carrito en el menú público** — un botón "+" junto a cada plato
+  (solo visible si el negocio activó pedidos y el plato no está
+  agotado), con una barra flotante abajo mostrando el total, que abre
+  el checkout.
+- **Los precios se recalculan siempre en el servidor** desde la base de
+  datos al confirmar el pedido — nunca se confía en lo que mande el
+  navegador, para que nadie pueda manipular el precio final.
+- **Dashboard** (`/dashboard/orders`) — pedidos activos vs. historial,
+  con botones para avanzar el estado (Confirmar → Marcar listo →
+  Completar) o cancelar.
+- Cada pedido también alimenta el **CRM de clientes** (`fromOrder`), y
+  el cliente recibe un correo de confirmación con el detalle.
+
 ## CRM unificado de clientes + campañas de admin
 
 El vacío que señalaste: hasta ahora, los datos de cada cliente vivían

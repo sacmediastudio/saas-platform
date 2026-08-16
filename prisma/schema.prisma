@@ -113,6 +113,16 @@ model Tenant {
   menuLeads           MenuLead[]
   customers           Customer[]
 
+  // Pedidos desde el menú (pickup / delivery) — se paga al retirar o
+  // recibir, sin pasarela de pago online por ahora. Pickup y delivery
+  // se activan por separado porque no todo negocio ofrece ambos.
+  orderingEnabled     Boolean @default(false)
+  pickupEnabled       Boolean @default(true)
+  deliveryEnabled     Boolean @default(false)
+  deliveryFee         Float?
+  minDeliveryAmount   Float?
+  menuOrders          MenuOrder[]
+
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
   suspended Boolean @default(false)
@@ -472,6 +482,7 @@ model Customer {
   fromBooking  Boolean  @default(false)
   fromReview   Boolean  @default(false)
   fromMenuLead Boolean  @default(false)
+  fromOrder    Boolean  @default(false)
   unsubscribed Boolean  @default(false)
   firstSeenAt  DateTime @default(now())
   lastSeenAt   DateTime @default(now())
@@ -498,6 +509,61 @@ model CampaignLog {
   createdAt     DateTime @default(now())
 
   @@map("campaign_logs")
+}
+
+enum OrderFulfillment {
+  PICKUP
+  DELIVERY
+}
+
+enum OrderStatus {
+  PENDING // recién llegó, el negocio todavía no lo vio
+  CONFIRMED // el negocio lo aceptó y lo está preparando
+  READY // listo para retirar, o en camino si es delivery
+  COMPLETED
+  CANCELLED
+}
+
+// Un pedido hecho desde el menú público — se paga al retirar/recibir,
+// no hay cobro online todavía (ver README para el porqué de esta
+// decisión y cómo se ampliaría a pago real más adelante).
+model MenuOrder {
+  id              String           @id @default(cuid())
+  tenantId        String
+  customerName    String
+  customerEmail   String
+  customerPhone   String
+  fulfillment     OrderFulfillment
+  deliveryAddress String? // solo si fulfillment = DELIVERY
+  notes           String?
+  status          OrderStatus      @default(PENDING)
+  subtotal        Float
+  deliveryFee     Float            @default(0)
+  total           Float
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  tenant Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  items  MenuOrderItem[]
+
+  @@index([tenantId])
+  @@index([tenantId, status])
+  @@map("menu_orders")
+}
+
+// Snapshot del plato al momento del pedido (nombre y precio propios,
+// no una referencia en vivo) — así si el negocio cambia el precio del
+// plato después, los pedidos viejos no se alteran retroactivamente.
+model MenuOrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  name     String
+  price    Float
+  quantity Int
+
+  order MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@map("menu_order_items")
 }
 
 enum PageViewKind {

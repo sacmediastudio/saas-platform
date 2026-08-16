@@ -11,7 +11,7 @@ export async function upsertCustomer(params: {
   email: string;
   name?: string | null;
   phone?: string | null;
-  source: "booking" | "review" | "menuLead";
+  source: "booking" | "review" | "menuLead" | "order";
 }): Promise<void> {
   const email = params.email.toLowerCase().trim();
   if (!email) return;
@@ -21,7 +21,9 @@ export async function upsertCustomer(params: {
       ? { fromBooking: true }
       : params.source === "review"
         ? { fromReview: true }
-        : { fromMenuLead: true };
+        : params.source === "menuLead"
+          ? { fromMenuLead: true }
+          : { fromOrder: true };
 
   await db.customer.upsert({
     where: { tenantId_email: { tenantId: params.tenantId, email } },

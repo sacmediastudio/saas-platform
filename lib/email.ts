@@ -163,3 +163,50 @@ export async function sendCampaignEmail(params: {
     `Campaña para ${params.to}: ${params.subject}\nConfigura RESEND_API_KEY para enviar correos reales.`
   );
 }
+
+export async function sendOrderConfirmationEmail(params: {
+  to: string;
+  customerName: string;
+  businessName: string;
+  fulfillment: "PICKUP" | "DELIVERY";
+  items: { name: string; price: number; quantity: number }[];
+  total: number;
+  currency: string;
+}) {
+  const fulfillmentLabel = params.fulfillment === "PICKUP" ? "Retiras en el local" : "Te lo llevamos (delivery)";
+  const itemsHtml = params.items
+    .map(
+      (i) =>
+        `<tr><td style="padding:4px 0;">${i.quantity}x ${i.name}</td><td style="padding:4px 0; text-align:right;">${formatMoney(i.price * i.quantity, params.currency)}</td></tr>`
+    )
+    .join("");
+
+  await sendEmail(
+    params.to,
+    `Tu pedido en ${params.businessName} fue recibido`,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">Hola ${params.customerName},</p>
+        <p style="font-size: 14px; color: #343233;">
+          Tu pedido en <strong>${params.businessName}</strong> fue recibido. ${fulfillmentLabel}.
+        </p>
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; color: #343233;">
+          ${itemsHtml}
+        </table>
+        <p style="font-size: 15px; font-weight: 700; color: #002D09; border-top: 1px solid #eee; padding-top: 8px;">
+          Total: ${formatMoney(params.total, params.currency)}
+        </p>
+        <p style="font-size: 13px; color: #888;">Te avisamos cuando el negocio confirme tu pedido.</p>
+      </div>
+    `,
+    `Pedido recibido en ${params.businessName}. Total: ${formatMoney(params.total, params.currency)}.\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
+
+function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("es", { style: "currency", currency }).format(amount);
+  } catch {
+    return `${amount.toFixed(2)} ${currency}`;
+  }
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Star, Mail, Phone, MapPin, ChevronDown, X, Heart } from "lucide-react";
+import { Star, Mail, Phone, MapPin, ChevronDown, X, Heart, ArrowRight } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
@@ -39,6 +39,11 @@ interface TenantData {
   menuShowPhotos: boolean;
   menuLeadEnabled: boolean;
   menuLeadButtonLabel: string;
+  orderingEnabled: boolean;
+  pickupEnabled: boolean;
+  deliveryEnabled: boolean;
+  deliveryFee: number | null;
+  minDeliveryAmount: number | null;
 }
 
 export default function PublicMenu({
@@ -114,6 +119,28 @@ export default function PublicMenu({
   const [activeCategory, setActiveCategory] = useState<string | null>(categoriesWithItems[0]?.id ?? null);
   const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  const allItems = items;
+  const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
+  const cartSubtotal = Object.entries(cart).reduce((sum, [id, q]) => {
+    const item = allItems.find((i) => i.id === id);
+    return sum + (item ? item.price * q : 0);
+  }, 0);
+
+  function addToCart(itemId: string) {
+    setCart((prev) => ({ ...prev, [itemId]: (prev[itemId] ?? 0) + 1 }));
+  }
+  function removeFromCart(itemId: string) {
+    setCart((prev) => {
+      const next = { ...prev };
+      if (!next[itemId]) return prev;
+      next[itemId] -= 1;
+      if (next[itemId] <= 0) delete next[itemId];
+      return next;
+    });
+  }
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
 
@@ -403,6 +430,31 @@ export default function PublicMenu({
                           )}
                         </div>
                       </div>
+                      {tenant.orderingEnabled && item.status !== "SOLD_OUT" && (
+                        <div className="flex items-center gap-2 shrink-0">
+                          {cart[item.id] > 0 && (
+                            <>
+                              <button
+                                onClick={() => removeFromCart(item.id)}
+                                aria-label="Quitar uno"
+                                className="w-6 h-6 rounded-full border flex items-center justify-center text-sm"
+                                style={{ borderColor: "currentColor" }}
+                              >
+                                −
+                              </button>
+                              <span className="text-sm font-semibold w-4 text-center">{cart[item.id]}</span>
+                            </>
+                          )}
+                          <button
+                            onClick={() => addToCart(item.id)}
+                            aria-label="Agregar al pedido"
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -548,6 +600,43 @@ export default function PublicMenu({
           onClose={() => setLeadModalOpen(false)}
         />
       )}
+
+      {cartCount > 0 && !checkoutOpen && (
+        <button
+          onClick={() => setCheckoutOpen(true)}
+          className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 font-semibold text-sm shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.15)]"
+          style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+        >
+          <span>
+            {cartCount} {cartCount === 1 ? "ítem" : "ítems"}
+          </span>
+          <span className="flex items-center gap-2">
+            {formatCurrency(cartSubtotal, tenant.currency)}
+            <ArrowRight size={16} aria-hidden />
+          </span>
+        </button>
+      )}
+
+      {checkoutOpen && (
+        <CheckoutModal
+          slug={tenant.slug}
+          currency={tenant.currency}
+          pickupEnabled={tenant.pickupEnabled}
+          deliveryEnabled={tenant.deliveryEnabled}
+          deliveryFee={tenant.deliveryFee}
+          minDeliveryAmount={tenant.minDeliveryAmount}
+          buttonColor={tenant.buttonColor}
+          buttonTextColor={tenant.buttonTextColor}
+          cart={cart}
+          allItems={allItems}
+          subtotal={cartSubtotal}
+          onClose={() => setCheckoutOpen(false)}
+          onSuccess={() => {
+            setCart({});
+            setCheckoutOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -662,6 +751,222 @@ function LeadClaimModal({
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
                 {status === "sending" ? "Enviando..." : "Reclamar"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function CheckoutModal({
+  slug,
+  currency,
+  pickupEnabled,
+  deliveryEnabled,
+  deliveryFee,
+  minDeliveryAmount,
+  buttonColor,
+  buttonTextColor,
+  cart,
+  allItems,
+  subtotal,
+  onClose,
+  onSuccess,
+}: {
+  slug: string;
+  currency: string;
+  pickupEnabled: boolean;
+  deliveryEnabled: boolean;
+  deliveryFee: number | null;
+  minDeliveryAmount: number | null;
+  buttonColor: string;
+  buttonTextColor: string;
+  cart: Record<string, number>;
+  allItems: MenuItemData[];
+  subtotal: number;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const defaultFulfillment: "PICKUP" | "DELIVERY" = pickupEnabled ? "PICKUP" : "DELIVERY";
+  const [fulfillment, setFulfillment] = useState<"PICKUP" | "DELIVERY">(defaultFulfillment);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
+  const [error, setError] = useState("");
+
+  const fee = fulfillment === "DELIVERY" ? (deliveryFee ?? 0) : 0;
+  const total = subtotal + fee;
+  const belowMinimum =
+    fulfillment === "DELIVERY" && minDeliveryAmount !== null && subtotal < minDeliveryAmount;
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (belowMinimum) return;
+    setStatus("sending");
+    setError("");
+    try {
+      const res = await fetch("/api/public/menu-orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          slug,
+          customerName: name,
+          customerEmail: email,
+          customerPhone: phone,
+          fulfillment,
+          deliveryAddress: fulfillment === "DELIVERY" ? address : undefined,
+          notes: notes || undefined,
+          items: Object.entries(cart).map(([menuItemId, quantity]) => ({ menuItemId, quantity })),
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setError(body.error ?? "No se pudo enviar tu pedido");
+        setStatus("error");
+        return;
+      }
+      setStatus("done");
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setStatus("error");
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div
+        className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-6 text-neutral-800 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {status === "done" ? (
+          <div className="text-center py-6">
+            <p className="text-lg font-semibold mb-2">¡Pedido enviado!</p>
+            <p className="text-sm opacity-70 mb-4">Te mandamos la confirmación por correo.</p>
+            <button
+              onClick={onSuccess}
+              className="w-full py-2.5 rounded-lg text-sm font-semibold"
+              style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+            >
+              Cerrar
+            </button>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+            <p className="text-lg font-semibold mb-1">Tu pedido</p>
+
+            <div className="flex flex-col gap-1 mb-2">
+              {Object.entries(cart).map(([id, qty]) => {
+                const item = allItems.find((i) => i.id === id);
+                if (!item) return null;
+                return (
+                  <div key={id} className="flex justify-between text-sm">
+                    <span>
+                      {qty}x {item.name}
+                    </span>
+                    <span>{formatCurrency(item.price * qty, currency)}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {(pickupEnabled || deliveryEnabled) && pickupEnabled && deliveryEnabled && (
+              <div className="flex gap-2 mb-1">
+                <button
+                  type="button"
+                  onClick={() => setFulfillment("PICKUP")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border ${fulfillment === "PICKUP" ? "border-neutral-800" : "border-neutral-200"}`}
+                >
+                  Pickup
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFulfillment("DELIVERY")}
+                  className={`flex-1 py-2 rounded-lg text-sm font-medium border ${fulfillment === "DELIVERY" ? "border-neutral-800" : "border-neutral-200"}`}
+                >
+                  Delivery
+                </button>
+              </div>
+            )}
+
+            {fulfillment === "DELIVERY" && (
+              <input
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                required
+                placeholder="Dirección de entrega"
+                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              />
+            )}
+
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              placeholder="Tu nombre"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+            />
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              placeholder="Tu correo"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+            />
+            <input
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              required
+              placeholder="Tu teléfono"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+            />
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={2}
+              placeholder="Notas (opcional)"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none"
+            />
+
+            {fee > 0 && (
+              <div className="flex justify-between text-sm opacity-70">
+                <span>Envío</span>
+                <span>{formatCurrency(fee, currency)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-base font-bold border-t border-neutral-100 pt-2">
+              <span>Total</span>
+              <span>{formatCurrency(total, currency)}</span>
+            </div>
+
+            {belowMinimum && (
+              <p className="text-xs text-red-600">
+                El pedido mínimo para delivery es {formatCurrency(minDeliveryAmount!, currency)}.
+              </p>
+            )}
+            {status === "error" && <p className="text-sm text-red-600">{error}</p>}
+
+            <div className="flex gap-2 mt-1">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={status === "sending" || belowMinimum}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+              >
+                {status === "sending" ? "Enviando..." : "Confirmar pedido"}
               </button>
             </div>
           </form>

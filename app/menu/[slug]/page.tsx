@@ -44,6 +44,11 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
         menuShowPhotos: tenant.menuShowPhotos,
         menuLeadEnabled: tenant.menuLeadEnabled,
         menuLeadButtonLabel: tenant.menuLeadButtonLabel,
+        orderingEnabled: tenant.orderingEnabled,
+        pickupEnabled: tenant.pickupEnabled,
+        deliveryEnabled: tenant.deliveryEnabled,
+        deliveryFee: tenant.deliveryFee,
+        minDeliveryAmount: tenant.minDeliveryAmount,
       }}
       categories={categories.map((c) => ({ id: c.id, name: c.name, nameEn: c.nameEn }))}
       items={items.map((i) => ({
