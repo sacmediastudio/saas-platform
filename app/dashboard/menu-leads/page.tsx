@@ -18,7 +18,14 @@ export default async function MenuLeadsPage() {
       initialEnabled={tenant?.menuLeadEnabled ?? false}
       initialButtonLabel={tenant?.menuLeadButtonLabel ?? "Postre gratis 🎁"}
       initialRewardText={tenant?.menuLeadRewardText ?? "un postre gratis en tu próxima visita"}
-      initialLeads={leads}
+      initialLeads={leads.map((l) => ({
+        id: l.id,
+        name: l.name,
+        email: l.email,
+        phone: l.phone,
+        claimCode: l.claimCode,
+        redeemedAt: l.redeemedAt ? l.redeemedAt.toISOString() : null,
+      }))}
     />
   );
 }
