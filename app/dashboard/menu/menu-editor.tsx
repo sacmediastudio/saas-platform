@@ -499,7 +499,7 @@ function DishModal({
                     setAddOns((prev) => prev.map((a, j) => (j === i ? { ...a, name: e.target.value } : a)))
                   }
                   placeholder="Papas fritas"
-                  className={`${inputClass} flex-1`}
+                  className="flex-1 min-w-0 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40"
                 />
                 <input
                   type="number"
@@ -512,7 +512,7 @@ function DishModal({
                     )
                   }
                   placeholder="0"
-                  className={`${inputClass} w-20`}
+                  className="w-20 shrink-0 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40"
                 />
                 <button
                   type="button"
