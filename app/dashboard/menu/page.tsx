@@ -24,6 +24,7 @@ export default async function MenuPage() {
     }),
     db.menuItem.findMany({
       where: { tenantId: session.tenantId },
+      include: { addOns: { orderBy: { sortOrder: "asc" } } },
       orderBy: { sortOrder: "asc" },
     }),
     db.review.findMany({ where: { tenantId: session.tenantId, status: "PUBLISHED" } }),

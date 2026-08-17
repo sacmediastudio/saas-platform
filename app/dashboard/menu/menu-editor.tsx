@@ -8,6 +8,11 @@ import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import DashboardCard from "@/components/dashboard-card";
 
+interface AddOn {
+  id?: string;
+  name: string;
+  price: number;
+}
 interface MenuItem {
   id: string;
   categoryId: string;
@@ -18,6 +23,7 @@ interface MenuItem {
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   imageUrl: string | null;
   featured: boolean;
+  addOns?: AddOn[];
 }
 interface Category {
   id: string;
@@ -308,6 +314,7 @@ function DishModal({
     imageUrl: (item?.imageUrl ?? null) as string | null,
     featured: item?.featured ?? false,
   });
+  const [addOns, setAddOns] = useState<AddOn[]>(item?.addOns ?? []);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
@@ -355,6 +362,7 @@ function DishModal({
           price,
           imageUrl: form.imageUrl,
           featured: form.featured,
+          addOns: addOns.filter((a) => a.name.trim()).map((a) => ({ name: a.name.trim(), price: a.price || 0 })),
           ...(mode === "create" ? { allergens: [] } : {}),
         }),
       });
@@ -479,6 +487,53 @@ function DishModal({
             className={`${inputClass} resize-none`}
           />
         </Field>
+
+        <div>
+          <p className="text-xs text-[#343233]/70 mb-1.5">Add-ons (papas, extra queso, etc.)</p>
+          <div className="flex flex-col gap-2">
+            {addOns.map((addOn, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <input
+                  value={addOn.name}
+                  onChange={(e) =>
+                    setAddOns((prev) => prev.map((a, j) => (j === i ? { ...a, name: e.target.value } : a)))
+                  }
+                  placeholder="Papas fritas"
+                  className={`${inputClass} flex-1`}
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={addOn.price || ""}
+                  onChange={(e) =>
+                    setAddOns((prev) =>
+                      prev.map((a, j) => (j === i ? { ...a, price: Number(e.target.value) || 0 } : a))
+                    )
+                  }
+                  placeholder="0"
+                  className={`${inputClass} w-20`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setAddOns((prev) => prev.filter((_, j) => j !== i))}
+                  aria-label="Quitar add-on"
+                  className="text-[#343233]/50 hover:text-red-600 shrink-0"
+                >
+                  <X size={16} aria-hidden />
+                </button>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => setAddOns((prev) => [...prev, { name: "", price: 0 }])}
+            className="flex items-center gap-1 text-xs font-medium mt-2 text-[#343233]/70 hover:text-[#002D09]"
+          >
+            <Plus size={13} aria-hidden />
+            Agregar add-on
+          </button>
+        </div>
 
         {error && <p className="text-red-600 text-sm">{error}</p>}
 

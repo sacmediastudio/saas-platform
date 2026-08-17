@@ -15,6 +15,12 @@ const TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || "booking_reminder";
 // o el premio que sea) — es una plantilla SEPARADA de la de
 // recordatorios, con su propio texto, así que Meta la aprueba aparte.
 const LEAD_TEMPLATE_NAME = process.env.WHATSAPP_LEAD_TEMPLATE_NAME || "menu_lead_reward";
+// Dos plantillas más para pedidos del menú — una para el cliente ("tu
+// pedido fue recibido") y otra para el negocio ("te llegó un pedido
+// nuevo"). Contenido distinto para cada audiencia, así que son
+// plantillas separadas, no la misma reutilizada.
+const ORDER_CONFIRMATION_TEMPLATE_NAME = process.env.WHATSAPP_ORDER_CONFIRMATION_TEMPLATE_NAME || "order_confirmation";
+const NEW_ORDER_ALERT_TEMPLATE_NAME = process.env.WHATSAPP_NEW_ORDER_ALERT_TEMPLATE_NAME || "new_order_alert";
 // WhatsApp permite tener la MISMA plantilla (mismo nombre) aprobada en
 // varios idiomas a la vez — Meta las trata como variantes de idioma de
 // una sola plantilla. Por eso acá hay dos códigos, no uno: el código
@@ -140,5 +146,36 @@ export async function sendMarketingMessage(params: {
     templateName: params.templateName,
     language: params.language,
     bodyParams: params.bodyParams,
+  });
+}
+
+/** Le confirma al CLIENTE que su pedido llegó — complementa el correo, no lo reemplaza. */
+export async function sendOrderConfirmationWhatsApp(params: {
+  toPhone: string;
+  customerName: string;
+  businessName: string;
+  total: string;
+  language?: string;
+}): Promise<void> {
+  await sendTemplateMessage({
+    toPhone: params.toPhone,
+    templateName: ORDER_CONFIRMATION_TEMPLATE_NAME,
+    language: params.language ?? "es",
+    bodyParams: [params.customerName, params.businessName, params.total],
+  });
+}
+
+/** Le avisa al NEGOCIO que le llegó un pedido nuevo — al número de contacto configurado en Ajustes. */
+export async function sendNewOrderAlertWhatsApp(params: {
+  toPhone: string;
+  customerName: string;
+  total: string;
+  language?: string;
+}): Promise<void> {
+  await sendTemplateMessage({
+    toPhone: params.toPhone,
+    templateName: NEW_ORDER_ALERT_TEMPLATE_NAME,
+    language: params.language ?? "es",
+    bodyParams: [params.customerName, params.total],
   });
 }

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 
+const addOnSchema = z.object({ name: z.string().min(1).max(60), price: z.number().min(0).max(10000) });
+
 const updateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
@@ -12,6 +14,7 @@ const updateSchema = z.object({
   categoryId: z.string().optional(),
   imageUrl: z.string().min(1).nullable().optional(),
   featured: z.boolean().optional(),
+  addOns: z.array(addOnSchema).max(30).optional(),
 });
 
 async function findOwnedItem(tenantId: string, id: string) {
@@ -43,9 +46,22 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
   }
 
+  const { addOns, ...itemData } = parsed.data;
+
+  // Simplemente se borran y se recrean — los pedidos ya hechos guardan
+  // su propia copia (nombre + precio) de los add-ons que eligieron en
+  // su momento, así que borrar/recrear acá no altera pedidos pasados.
+  if (addOns !== undefined) {
+    await db.menuItemAddOn.deleteMany({ where: { menuItemId: params.id } });
+  }
+
   const item = await db.menuItem.update({
     where: { id: params.id },
-    data: parsed.data,
+    data: {
+      ...itemData,
+      ...(addOns !== undefined ? { addOns: { create: addOns.map((a, i) => ({ ...a, sortOrder: i })) } } : {}),
+    },
+    include: { addOns: true },
   });
 
   return NextResponse.json({ item });

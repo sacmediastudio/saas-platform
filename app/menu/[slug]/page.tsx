@@ -18,7 +18,11 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
 
   const [categories, items, reviews] = await Promise.all([
     db.menuCategory.findMany({ where: { tenantId: tenant.id }, orderBy: { sortOrder: "asc" } }),
-    db.menuItem.findMany({ where: { tenantId: tenant.id }, orderBy: { sortOrder: "asc" } }),
+    db.menuItem.findMany({
+      where: { tenantId: tenant.id },
+      include: { addOns: { orderBy: { sortOrder: "asc" } } },
+      orderBy: { sortOrder: "asc" },
+    }),
     db.review.findMany({ where: { tenantId: tenant.id, status: "PUBLISHED" } }),
   ]);
 
@@ -61,6 +65,7 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
         status: i.status,
         featured: i.featured,
         imageUrl: i.imageUrl,
+        addOns: i.addOns.map((a) => ({ id: a.id, name: a.name, price: a.price })),
       }))}
       avgRating={avgRating}
       reviewCount={reviews.length}

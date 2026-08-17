@@ -3,6 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { upsertCustomer } from "@/lib/customers";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { sendOrderConfirmationWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsapp";
+import { formatCurrency } from "@/lib/currency";
 
 const schema = z.object({
   slug: z.string(),
@@ -13,7 +15,14 @@ const schema = z.object({
   deliveryAddress: z.string().max(300).optional(),
   notes: z.string().max(300).optional(),
   items: z
-    .array(z.object({ menuItemId: z.string(), quantity: z.number().int().min(1).max(50) }))
+    .array(
+      z.object({
+        menuItemId: z.string(),
+        quantity: z.number().int().min(1).max(50),
+        addOnIds: z.array(z.string()).max(20).optional(),
+        notes: z.string().max(200).optional(), // algo muy específico de ESA línea, ej. "sin cebolla"
+      })
+    )
     .min(1)
     .max(50),
 });
@@ -48,6 +57,7 @@ export async function POST(req: NextRequest) {
   // el cliente — evita que alguien manipule el precio desde el navegador.
   const menuItems = await db.menuItem.findMany({
     where: { id: { in: data.items.map((i) => i.menuItemId) }, tenantId: tenant.id },
+    include: { addOns: true },
   });
   if (menuItems.length !== data.items.length) {
     return NextResponse.json({ error: "Algún plato ya no está disponible." }, { status: 400 });
@@ -55,7 +65,21 @@ export async function POST(req: NextRequest) {
 
   const orderItems = data.items.map((i) => {
     const menuItem = menuItems.find((m) => m.id === i.menuItemId)!;
-    return { name: menuItem.name, price: Number(menuItem.price), quantity: i.quantity };
+    // Solo se aceptan add-ons que de verdad pertenezcan a ESTE plato —
+    // evita que alguien mande el id de un add-on de otro negocio/plato
+    // para inflar o alterar el pedido.
+    const selectedAddOns = (i.addOnIds ?? [])
+      .map((id) => menuItem.addOns.find((a) => a.id === id))
+      .filter((a): a is (typeof menuItem.addOns)[number] => Boolean(a));
+    const addOnsTotal = selectedAddOns.reduce((sum, a) => sum + a.price, 0);
+
+    return {
+      name: menuItem.name,
+      price: Number(menuItem.price) + addOnsTotal,
+      quantity: i.quantity,
+      notes: i.notes,
+      addOns: selectedAddOns.length > 0 ? selectedAddOns.map((a) => ({ name: a.name, price: a.price })) : undefined,
+    };
   });
   const subtotal = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
   const deliveryFee = data.fulfillment === "DELIVERY" ? (tenant.deliveryFee ?? 0) : 0;
@@ -93,6 +117,8 @@ export async function POST(req: NextRequest) {
     source: "order",
   });
 
+  const totalLabel = formatCurrency(total, tenant.currency);
+
   await sendOrderConfirmationEmail({
     to: data.customerEmail,
     customerName: data.customerName,
@@ -102,6 +128,25 @@ export async function POST(req: NextRequest) {
     total,
     currency: tenant.currency,
   }).catch((err) => console.error("No se pudo enviar el correo de confirmación de pedido:", err));
+
+  // Confirmación al cliente por WhatsApp — complementa el correo, no lo
+  // reemplaza (si WhatsApp no está configurado, esto no hace nada).
+  await sendOrderConfirmationWhatsApp({
+    toPhone: data.customerPhone,
+    customerName: data.customerName,
+    businessName: tenant.name,
+    total: totalLabel,
+  }).catch((err) => console.error("No se pudo enviar la confirmación de pedido por WhatsApp:", err));
+
+  // Aviso al NEGOCIO — al número de contacto configurado en Ajustes, no
+  // al mismo número que usa para mandar mensajes (son cosas distintas).
+  if (tenant.contactPhone) {
+    await sendNewOrderAlertWhatsApp({
+      toPhone: tenant.contactPhone,
+      customerName: data.customerName,
+      total: totalLabel,
+    }).catch((err) => console.error("No se pudo avisarle al negocio del pedido nuevo por WhatsApp:", err));
+  }
 
   return NextResponse.json({ order }, { status: 201 });
 }

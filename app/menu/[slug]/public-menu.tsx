@@ -6,6 +6,18 @@ import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
 
+interface MenuItemAddOnData {
+  id: string;
+  name: string;
+  price: number;
+}
+interface CartLine {
+  lineId: string;
+  menuItemId: string;
+  quantity: number;
+  addOnIds: string[];
+  notes: string;
+}
 interface MenuItemData {
   id: string;
   categoryId: string;
@@ -16,6 +28,7 @@ interface MenuItemData {
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   featured: boolean;
   imageUrl: string | null;
+  addOns: MenuItemAddOnData[];
 }
 interface CategoryData {
   id: string;
@@ -119,28 +132,57 @@ export default function PublicMenu({
   const [activeCategory, setActiveCategory] = useState<string | null>(categoriesWithItems[0]?.id ?? null);
   const [zoomedItem, setZoomedItem] = useState<MenuItemData | null>(null);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
-  const [cart, setCart] = useState<Record<string, number>>({});
+  // Cada línea del carrito es su propia configuración — así el mismo
+  // plato puede estar dos veces en el carrito con add-ons distintos
+  // (ej. una hamburguesa con papas, otra sin nada).
+  const [cartLines, setCartLines] = useState<CartLine[]>([]);
+  const [customizeItem, setCustomizeItem] = useState<MenuItemData | null>(null);
   const [checkoutOpen, setCheckoutOpen] = useState(false);
 
   const allItems = items;
-  const cartCount = Object.values(cart).reduce((sum, q) => sum + q, 0);
-  const cartSubtotal = Object.entries(cart).reduce((sum, [id, q]) => {
-    const item = allItems.find((i) => i.id === id);
-    return sum + (item ? item.price * q : 0);
-  }, 0);
 
-  function addToCart(itemId: string) {
-    setCart((prev) => ({ ...prev, [itemId]: (prev[itemId] ?? 0) + 1 }));
+  function lineTotal(line: CartLine): number {
+    const item = allItems.find((i) => i.id === line.menuItemId);
+    if (!item) return 0;
+    const addOnsTotal = line.addOnIds.reduce((sum, id) => {
+      const addOn = item.addOns.find((a) => a.id === id);
+      return sum + (addOn?.price ?? 0);
+    }, 0);
+    return (item.price + addOnsTotal) * line.quantity;
   }
-  function removeFromCart(itemId: string) {
-    setCart((prev) => {
-      const next = { ...prev };
-      if (!next[itemId]) return prev;
-      next[itemId] -= 1;
-      if (next[itemId] <= 0) delete next[itemId];
-      return next;
+
+  const cartCount = cartLines.reduce((sum, l) => sum + l.quantity, 0);
+  const cartSubtotal = cartLines.reduce((sum, l) => sum + lineTotal(l), 0);
+
+  // Para platos SIN add-ons, "+"/"-" es un ajuste rápido de cantidad,
+  // sin abrir ningún modal — mismo comportamiento simple que ya había.
+  function quickAdd(itemId: string) {
+    setCartLines((prev) => {
+      const existing = prev.find((l) => l.menuItemId === itemId && l.addOnIds.length === 0 && !l.notes);
+      if (existing) {
+        return prev.map((l) => (l.lineId === existing.lineId ? { ...l, quantity: l.quantity + 1 } : l));
+      }
+      return [...prev, { lineId: crypto.randomUUID(), menuItemId: itemId, quantity: 1, addOnIds: [], notes: "" }];
     });
   }
+  function quickRemove(itemId: string) {
+    setCartLines((prev) => {
+      const existing = prev.find((l) => l.menuItemId === itemId && l.addOnIds.length === 0 && !l.notes);
+      if (!existing) return prev;
+      if (existing.quantity <= 1) return prev.filter((l) => l.lineId !== existing.lineId);
+      return prev.map((l) => (l.lineId === existing.lineId ? { ...l, quantity: l.quantity - 1 } : l));
+    });
+  }
+  function quickQuantityFor(itemId: string): number {
+    return cartLines.find((l) => l.menuItemId === itemId && l.addOnIds.length === 0 && !l.notes)?.quantity ?? 0;
+  }
+  function addCustomizedLine(line: Omit<CartLine, "lineId">) {
+    setCartLines((prev) => [...prev, { ...line, lineId: crypto.randomUUID() }]);
+  }
+  function removeLine(lineId: string) {
+    setCartLines((prev) => prev.filter((l) => l.lineId !== lineId));
+  }
+
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
 
@@ -432,27 +474,42 @@ export default function PublicMenu({
                       </div>
                       {tenant.orderingEnabled && item.status !== "SOLD_OUT" && (
                         <div className="flex items-center gap-2 shrink-0">
-                          {cart[item.id] > 0 && (
+                          {item.addOns.length > 0 ? (
+                            <button
+                              onClick={() => setCustomizeItem(item)}
+                              aria-label="Personalizar y agregar al pedido"
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                              style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+                            >
+                              +
+                            </button>
+                          ) : (
                             <>
+                              {quickQuantityFor(item.id) > 0 && (
+                                <>
+                                  <button
+                                    onClick={() => quickRemove(item.id)}
+                                    aria-label="Quitar uno"
+                                    className="w-6 h-6 rounded-full border flex items-center justify-center text-sm"
+                                    style={{ borderColor: "currentColor" }}
+                                  >
+                                    −
+                                  </button>
+                                  <span className="text-sm font-semibold w-4 text-center">
+                                    {quickQuantityFor(item.id)}
+                                  </span>
+                                </>
+                              )}
                               <button
-                                onClick={() => removeFromCart(item.id)}
-                                aria-label="Quitar uno"
-                                className="w-6 h-6 rounded-full border flex items-center justify-center text-sm"
-                                style={{ borderColor: "currentColor" }}
+                                onClick={() => quickAdd(item.id)}
+                                aria-label="Agregar al pedido"
+                                className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                                style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
                               >
-                                −
+                                +
                               </button>
-                              <span className="text-sm font-semibold w-4 text-center">{cart[item.id]}</span>
                             </>
                           )}
-                          <button
-                            onClick={() => addToCart(item.id)}
-                            aria-label="Agregar al pedido"
-                            className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
-                            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-                          >
-                            +
-                          </button>
                         </div>
                       )}
                     </div>
@@ -617,6 +674,20 @@ export default function PublicMenu({
         </button>
       )}
 
+      {customizeItem && (
+        <ItemCustomizeModal
+          item={customizeItem}
+          currency={tenant.currency}
+          buttonColor={tenant.buttonColor}
+          buttonTextColor={tenant.buttonTextColor}
+          onClose={() => setCustomizeItem(null)}
+          onAdd={(line) => {
+            addCustomizedLine(line);
+            setCustomizeItem(null);
+          }}
+        />
+      )}
+
       {checkoutOpen && (
         <CheckoutModal
           slug={tenant.slug}
@@ -627,12 +698,14 @@ export default function PublicMenu({
           minDeliveryAmount={tenant.minDeliveryAmount}
           buttonColor={tenant.buttonColor}
           buttonTextColor={tenant.buttonTextColor}
-          cart={cart}
+          cartLines={cartLines}
           allItems={allItems}
           subtotal={cartSubtotal}
+          lineTotal={lineTotal}
+          onRemoveLine={removeLine}
           onClose={() => setCheckoutOpen(false)}
           onSuccess={() => {
-            setCart({});
+            setCartLines([]);
             setCheckoutOpen(false);
           }}
         />
@@ -769,9 +842,11 @@ function CheckoutModal({
   minDeliveryAmount,
   buttonColor,
   buttonTextColor,
-  cart,
+  cartLines,
   allItems,
   subtotal,
+  lineTotal,
+  onRemoveLine,
   onClose,
   onSuccess,
 }: {
@@ -783,9 +858,11 @@ function CheckoutModal({
   minDeliveryAmount: number | null;
   buttonColor: string;
   buttonTextColor: string;
-  cart: Record<string, number>;
+  cartLines: CartLine[];
   allItems: MenuItemData[];
   subtotal: number;
+  lineTotal: (line: CartLine) => number;
+  onRemoveLine: (lineId: string) => void;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -795,7 +872,7 @@ function CheckoutModal({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
-  const [notes, setNotes] = useState("");
+  const [orderNotes, setOrderNotes] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
 
@@ -820,8 +897,13 @@ function CheckoutModal({
           customerPhone: phone,
           fulfillment,
           deliveryAddress: fulfillment === "DELIVERY" ? address : undefined,
-          notes: notes || undefined,
-          items: Object.entries(cart).map(([menuItemId, quantity]) => ({ menuItemId, quantity })),
+          notes: orderNotes || undefined,
+          items: cartLines.map((l) => ({
+            menuItemId: l.menuItemId,
+            quantity: l.quantity,
+            addOnIds: l.addOnIds,
+            notes: l.notes || undefined,
+          })),
         }),
       });
       if (!res.ok) {
@@ -846,7 +928,7 @@ function CheckoutModal({
         {status === "done" ? (
           <div className="text-center py-6">
             <p className="text-lg font-semibold mb-2">¡Pedido enviado!</p>
-            <p className="text-sm opacity-70 mb-4">Te mandamos la confirmación por correo.</p>
+            <p className="text-sm opacity-70 mb-4">Te mandamos la confirmación por correo y WhatsApp.</p>
             <button
               onClick={onSuccess}
               className="w-full py-2.5 rounded-lg text-sm font-semibold"
@@ -859,16 +941,37 @@ function CheckoutModal({
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <p className="text-lg font-semibold mb-1">Tu pedido</p>
 
-            <div className="flex flex-col gap-1 mb-2">
-              {Object.entries(cart).map(([id, qty]) => {
-                const item = allItems.find((i) => i.id === id);
+            <div className="flex flex-col gap-2 mb-2">
+              {cartLines.map((line) => {
+                const item = allItems.find((i) => i.id === line.menuItemId);
                 if (!item) return null;
+                const selectedAddOns = line.addOnIds
+                  .map((id) => item.addOns.find((a) => a.id === id))
+                  .filter((a): a is MenuItemAddOnData => Boolean(a));
                 return (
-                  <div key={id} className="flex justify-between text-sm">
-                    <span>
-                      {qty}x {item.name}
-                    </span>
-                    <span>{formatCurrency(item.price * qty, currency)}</span>
+                  <div key={line.lineId} className="flex justify-between text-sm gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p>
+                        {line.quantity}x {item.name}
+                      </p>
+                      {selectedAddOns.length > 0 && (
+                        <p className="text-xs opacity-60 pl-3">
+                          + {selectedAddOns.map((a) => a.name).join(", ")}
+                        </p>
+                      )}
+                      {line.notes && <p className="text-xs opacity-60 pl-3">Nota: {line.notes}</p>}
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span>{formatCurrency(lineTotal(line), currency)}</span>
+                      <button
+                        type="button"
+                        onClick={() => onRemoveLine(line.lineId)}
+                        aria-label="Quitar"
+                        className="opacity-50 hover:opacity-100"
+                      >
+                        <X size={14} aria-hidden />
+                      </button>
+                    </div>
                   </div>
                 );
               })}
@@ -923,14 +1026,14 @@ function CheckoutModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              placeholder="Tu teléfono"
+              placeholder="Tu WhatsApp (con código de país)"
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
             />
             <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
+              value={orderNotes}
+              onChange={(e) => setOrderNotes(e.target.value)}
               rows={2}
-              placeholder="Notas (opcional)"
+              placeholder="Notas del pedido en general (opcional)"
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none"
             />
 
@@ -962,7 +1065,7 @@ function CheckoutModal({
               </button>
               <button
                 type="submit"
-                disabled={status === "sending" || belowMinimum}
+                disabled={status === "sending" || belowMinimum || cartLines.length === 0}
                 className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
@@ -971,6 +1074,119 @@ function CheckoutModal({
             </div>
           </form>
         )}
+      </div>
+    </div>
+  );
+}
+
+function ItemCustomizeModal({
+  item,
+  currency,
+  buttonColor,
+  buttonTextColor,
+  onClose,
+  onAdd,
+}: {
+  item: MenuItemData;
+  currency: string;
+  buttonColor: string;
+  buttonTextColor: string;
+  onClose: () => void;
+  onAdd: (line: Omit<CartLine, "lineId">) => void;
+}) {
+  const [selectedAddOnIds, setSelectedAddOnIds] = useState<string[]>([]);
+  const [quantity, setQuantity] = useState(1);
+  const [notes, setNotes] = useState("");
+
+  function toggleAddOn(id: string) {
+    setSelectedAddOnIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  }
+
+  const addOnsTotal = selectedAddOnIds.reduce((sum, id) => {
+    const addOn = item.addOns.find((a) => a.id === id);
+    return sum + (addOn?.price ?? 0);
+  }, 0);
+  const lineTotal = (item.price + addOnsTotal) * quantity;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-end sm:items-center justify-center" onClick={onClose}>
+      <div
+        className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-6 text-neutral-800 max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <p className="text-lg font-semibold mb-1">{item.name}</p>
+        <p className="text-sm opacity-60 mb-4">{formatCurrency(item.price, currency)}</p>
+
+        {item.addOns.length > 0 && (
+          <div className="flex flex-col gap-2 mb-4">
+            <p className="text-xs font-semibold uppercase opacity-60">Add-ons</p>
+            {item.addOns.map((addOn) => (
+              <label key={addOn.id} className="flex items-center justify-between gap-2 text-sm cursor-pointer">
+                <span className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedAddOnIds.includes(addOn.id)}
+                    onChange={() => toggleAddOn(addOn.id)}
+                    className="w-4 h-4"
+                  />
+                  {addOn.name}
+                </span>
+                <span className="opacity-60">
+                  {addOn.price > 0 ? `+${formatCurrency(addOn.price, currency)}` : "Gratis"}
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+
+        <textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={2}
+          placeholder="Algo específico para este plato (opcional), ej. sin cebolla"
+          className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none mb-4"
+        />
+
+        <div className="flex items-center justify-between mb-5">
+          <span className="text-sm font-medium">Cantidad</span>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+              aria-label="Quitar uno"
+              className="w-7 h-7 rounded-full border border-neutral-200 flex items-center justify-center"
+            >
+              −
+            </button>
+            <span className="text-sm font-semibold w-4 text-center">{quantity}</span>
+            <button
+              type="button"
+              onClick={() => setQuantity((q) => q + 1)}
+              aria-label="Agregar uno"
+              className="w-7 h-7 rounded-full border border-neutral-200 flex items-center justify-center"
+            >
+              +
+            </button>
+          </div>
+        </div>
+
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => onAdd({ menuItemId: item.id, quantity, addOnIds: selectedAddOnIds, notes })}
+            className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
+            style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+          >
+            Agregar · {formatCurrency(lineTotal, currency)}
+          </button>
+        </div>
       </div>
     </div>
   );

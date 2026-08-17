@@ -346,18 +346,33 @@ el día que se quiera agregar cobro real.
   ofrece ambos. Configurable desde `/dashboard/orders`: activar
   pedidos, cuál de los dos (o ambos), costo de envío, y pedido mínimo
   para delivery.
-- **Carrito en el menú público** — un botón "+" junto a cada plato
-  (solo visible si el negocio activó pedidos y el plato no está
-  agotado), con una barra flotante abajo mostrando el total, que abre
-  el checkout.
-- **Los precios se recalculan siempre en el servidor** desde la base de
-  datos al confirmar el pedido — nunca se confía en lo que mande el
-  navegador, para que nadie pueda manipular el precio final.
+- **Add-ons por plato** (papas, extra queso, etc.) — cada plato define
+  los suyos desde el modal de edición del plato en `/dashboard/menu`,
+  no son compartidos entre platos.
+- **Carrito con líneas independientes** — el mismo plato puede estar en
+  el carrito varias veces con configuraciones distintas (ej. una
+  hamburguesa con papas, otra sin nada), porque cada "agregar" con
+  add-ons crea su propia línea en vez de solo sumar cantidad. Los
+  platos sin add-ons siguen con el ajuste rápido +/- de siempre.
+- **Notas por línea** — un cuadro pequeño para algo muy específico de
+  ESE plato (ej. "sin cebolla"), además de un campo de notas generales
+  para todo el pedido.
+- **Los precios (platos y add-ons) se recalculan siempre en el
+  servidor** desde la base de datos al confirmar el pedido — nunca se
+  confía en lo que mande el navegador. Los add-ons que el cliente
+  seleccione también se validan contra el plato correcto, para que
+  nadie pueda mandar el id de un add-on de otro plato/negocio.
+- **Confirmación doble por WhatsApp** — además del correo, se le manda
+  un WhatsApp al **cliente** confirmando su pedido, y otro al
+  **negocio** (a su número de contacto en Ajustes) avisándole que le
+  llegó un pedido nuevo. Necesita dos plantillas más aprobadas por
+  Meta (`order_confirmation` y `new_order_alert`, distintas entre sí
+  porque el contenido es para audiencias distintas) — instrucciones
+  completas en `.env.example`.
 - **Dashboard** (`/dashboard/orders`) — pedidos activos vs. historial,
   con botones para avanzar el estado (Confirmar → Marcar listo →
   Completar) o cancelar.
-- Cada pedido también alimenta el **CRM de clientes** (`fromOrder`), y
-  el cliente recibe un correo de confirmación con el detalle.
+- Cada pedido también alimenta el **CRM de clientes** (`fromOrder`).
 
 ## CRM unificado de clientes + campañas de admin
 

@@ -217,10 +217,25 @@ model MenuItem {
 
   tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   category MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  addOns   MenuItemAddOn[]
 
   @@index([tenantId])
   @@index([tenantId, categoryId])
   @@map("menu_items")
+}
+
+// Extra opcional de un plato (papas, extra queso, etc.) — cada plato
+// define los suyos, no son compartidos entre platos.
+model MenuItemAddOn {
+  id         String @id @default(cuid())
+  menuItemId String
+  name       String
+  price      Float  @default(0) // puede ser 0 (gratis)
+  sortOrder  Int    @default(0)
+
+  menuItem MenuItem @relation(fields: [menuItemId], references: [id], onDelete: Cascade)
+
+  @@map("menu_item_addons")
 }
 
 // ---------- Módulo Bookings ----------
@@ -567,6 +582,12 @@ model MenuOrderItem {
   name     String
   price    Float
   quantity Int
+  // Snapshot de los add-ons elegidos (nombre + precio de cada uno, tal
+  // como estaban al momento del pedido) — guardado como JSON, igual
+  // criterio que name/price: si el negocio cambia sus add-ons después,
+  // los pedidos viejos no se alteran retroactivamente.
+  addOns   Json?
+  notes    String? // algo muy específico de esta línea, ej. "sin cebolla"
 
   order MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 

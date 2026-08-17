@@ -3,6 +3,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 
+const addOnSchema = z.object({ name: z.string().min(1).max(60), price: z.number().min(0).max(10000) });
+
 const createSchema = z.object({
   categoryId: z.string(),
   name: z.string().min(1),
@@ -12,6 +14,7 @@ const createSchema = z.object({
   imageUrl: z.string().min(1).nullable().optional(), // acepta URL http(s), data URI, null (sin foto), o ausente
   featured: z.boolean().default(false),
   allergens: z.array(z.string()).default([]),
+  addOns: z.array(addOnSchema).max(30).default([]),
 });
 
 // GET /api/menu-items — lista los platos del tenant autenticado, agrupados
@@ -21,7 +24,7 @@ export async function GET() {
 
   const items = await db.menuItem.findMany({
     where: { tenantId: session.tenantId },
-    include: { category: true },
+    include: { category: true, addOns: { orderBy: { sortOrder: "asc" } } },
     orderBy: [{ categoryId: "asc" }, { sortOrder: "asc" }],
   });
 
@@ -38,11 +41,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const { addOns, ...itemData } = parsed.data;
+
   const item = await db.menuItem.create({
     data: {
       tenantId: session.tenantId, // nunca viene del body
-      ...parsed.data,
+      ...itemData,
+      addOns: { create: addOns.map((a, i) => ({ ...a, sortOrder: i })) },
     },
+    include: { addOns: true },
   });
 
   return NextResponse.json({ item }, { status: 201 });
