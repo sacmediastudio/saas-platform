@@ -801,6 +801,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
             {loading ? "Leyendo..." : "Subir archivo lleno"}
             <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} disabled={loading} className="hidden" />
           </label>
+          <p className="text-xs text-[#343233]/50 text-center -mt-2">Máximo 5 MB, hasta 500 platos por archivo.</p>
           {error && <p className="text-red-600 text-sm">{error}</p>}
         </div>
       )}
