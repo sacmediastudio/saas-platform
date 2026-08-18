@@ -625,6 +625,12 @@ model AdminUser {
   name         String
   createdAt    DateTime @default(now())
 
+  // Verificación en dos pasos (TOTP, tipo Google Authenticator) — este
+  // panel puede ver clientes de TODOS los negocios y mandar campañas
+  // masivas, así que vale la pena la capa extra de protección.
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean @default(false)
+
   @@map("admin_users")
 }
 

@@ -5,6 +5,7 @@ import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { signSession, sessionCookieName } from "@/lib/auth";
 import { sendVerificationEmail, generateVerificationCode } from "@/lib/email";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   businessName: z.string().min(1),
@@ -29,6 +30,16 @@ function slugify(name: string) {
 // con plan STARTER en trial y el primer usuario como OWNER, todo en una
 // transacción para no dejar tenants huérfanos si algo falla a mitad.
 export async function POST(req: NextRequest) {
+  // 5 cuentas por hora por IP — deja registrar varios negocios legítimos
+  // desde la misma red, pero frena la creación masiva de cuentas.
+  const { allowed, retryAfterSeconds } = rateLimit(`signup:${getClientIp(req)}`, 5, 60 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera un momento e intenta de nuevo." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

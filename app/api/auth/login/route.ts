@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signSession, sessionCookieName } from "@/lib/auth";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   email: z.string().email(),
@@ -10,6 +11,16 @@ const schema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  // 10 intentos cada 15 minutos por IP — deja pasar a alguien que se
+  // equivoca de contraseña un par de veces, pero frena la fuerza bruta.
+  const { allowed, retryAfterSeconds } = rateLimit(`login:${getClientIp(req)}`, 10, 15 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera un momento e intenta de nuevo." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const body = await req.json();
   const parsed = schema.safeParse(body);
   if (!parsed.success) {

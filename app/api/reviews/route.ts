@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { upsertCustomer } from "@/lib/customers";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const createSchema = z.object({
   tenantSlug: z.string(),
@@ -27,6 +28,14 @@ export async function GET() {
 // POST /api/reviews — endpoint público: cualquier cliente final puede
 // dejar una reseña sin autenticarse, identificando el negocio por slug.
 export async function POST(req: NextRequest) {
+  const { allowed, retryAfterSeconds } = rateLimit(`reviews:${getClientIp(req)}`, 10, 60 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo en un rato." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {

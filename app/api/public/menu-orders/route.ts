@@ -5,6 +5,7 @@ import { upsertCustomer } from "@/lib/customers";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { sendOrderConfirmationWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsapp";
 import { formatCurrency } from "@/lib/currency";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   slug: z.string(),
@@ -31,6 +32,17 @@ const schema = z.object({
 // público y lo manda; se paga al retirar/recibir, sin pasarela de pago
 // online por ahora (ver README).
 export async function POST(req: NextRequest) {
+  // Cada pedido manda 2 WhatsApp reales (cliente + negocio) más un
+  // correo — 10 por hora por IP, generoso para un cliente real pero
+  // frena a alguien mandando pedidos falsos en bucle.
+  const { allowed, retryAfterSeconds } = rateLimit(`menu-orders:${getClientIp(req)}`, 10, 60 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados pedidos seguidos. Intenta de nuevo en un rato." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

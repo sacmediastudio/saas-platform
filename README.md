@@ -332,6 +332,52 @@ plataforma seria para esto):
   sistema que ya usaba el login — el idioma se hereda de lo que la
   persona eligió en la landing, no hay un selector nuevo.
 
+## Revisión de seguridad (auditoría + límite de frecuencia + 2FA de admin)
+
+Tres mejoras hechas a partir de una revisión honesta de qué tan
+expuesta estaba la plataforma, después de haber construido tanto en
+tan poco tiempo.
+
+**1. Auditoría de aislamiento entre negocios** — se revisaron
+manualmente los 44 endpoints que requieren sesión de negocio,
+confirmando que todos filtran correctamente por `tenantId` (o, en el
+patrón "buscar dueño primero, después mutar", que cortan con 404 antes
+de la escritura si el registro no pertenece al tenant de la sesión). No
+se encontró ningún hueco de aislamiento. Los dos endpoints públicos que
+NO filtran por tenant en su primera consulta (`/api/bookings` POST y
+`/api/reviews` POST) son así **a propósito** — son formularios públicos
+donde el tenant se resuelve desde el slug/servicio, no desde una sesión.
+
+**2. Límite de frecuencia** (`lib/rate-limit.ts`) — en memoria, por IP;
+sirve mientras la plataforma corra en una sola instancia (si algún día
+se escala a varias instancias en paralelo, esto habría que moverlo a
+un almacén compartido como Redis). Conectado en:
+- Login de negocio y de admin, y signup — contra fuerza bruta y
+  creación masiva de cuentas
+- Olvidé mi contraseña — límite extra por IP, además del cooldown por
+  correo que ya existía
+- Reclamar el premio del menú, crear pedidos, crear citas, dejar
+  reseñas — los 4 endpoints públicos que **cuestan dinero real**
+  (WhatsApp) o son fáciles de saturar
+
+**3. Verificación en dos pasos para el panel de admin** (TOTP, tipo
+Google Authenticator) — ese panel puede ver clientes de **todos** los
+negocios y mandar campañas masivas, así que vale la pena la capa
+extra. Nuevas dependencias: `otplib` (genera/verifica los códigos,
+sin depender de ningún servicio externo) y `qrcode` (para el QR de
+configuración). Flujo:
+- `/admin/security` — activar (escanear QR o escribir el código a
+  mano, confirmar con el primer código de 6 dígitos) o desactivar
+  (exige un código válido actual, para que una sesión robada sola no
+  alcance para bajar la protección)
+- El secreto **no se guarda** hasta que el admin confirme que sí lo
+  configuró bien — si abandona el proceso a medias, no queda activado
+  por accidente con un secreto que nunca sincronizó
+- Login de admin ahora es de dos pasos cuando está activo: contraseña
+  correcta → token "pendiente" de 5 minutos (cookie separada, no
+  sirve para nada del panel todavía) → código de 6 dígitos → recién
+  ahí la sesión real
+
 ## Importar el menú desde Excel
 
 Le ahorra al negocio cargar el menú plato por plato a mano — pensado

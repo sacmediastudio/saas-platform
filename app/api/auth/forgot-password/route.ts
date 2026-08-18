@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { sendPasswordResetEmail } from "@/lib/email";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({ email: z.string().email() });
 
@@ -12,6 +13,14 @@ const COOLDOWN_MS = 30_000; // mismo criterio que el reenvío de verificación d
 // no el correo, para no dejarle saber a nadie qué correos están
 // registrados en la plataforma.
 export async function POST(req: NextRequest) {
+  // Además del cooldown por correo de abajo, un límite por IP — evita
+  // que alguien recorra una lista de miles de correos probando cuáles
+  // existen (aunque la respuesta ya sea genérica, esto frena el intento).
+  const { allowed, retryAfterSeconds } = rateLimit(`forgot-password:${getClientIp(req)}`, 10, 60 * 60_000);
+  if (!allowed) {
+    return NextResponse.json({ ok: true }, { headers: { "Retry-After": String(retryAfterSeconds) } });
+  }
+
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ ok: true }); // mismo criterio: no revelar nada por el formato tampoco

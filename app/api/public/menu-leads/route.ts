@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { sendMenuLeadCode } from "@/lib/whatsapp";
 import { upsertCustomer } from "@/lib/customers";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   slug: z.string(),
@@ -24,6 +25,16 @@ function generateClaimCode(): string {
 // menú público a cambio de un premio (ej. "Postre gratis"), y le
 // mandamos un código de canje por WhatsApp.
 export async function POST(req: NextRequest) {
+  // Cada llamada exitosa manda un WhatsApp real (cuesta dinero) — 5 por
+  // hora por IP alcanza de sobra para uso legítimo y frena el abuso.
+  const { allowed, retryAfterSeconds } = rateLimit(`menu-leads:${getClientIp(req)}`, 5, 60 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo más tarde." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

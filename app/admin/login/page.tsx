@@ -9,10 +9,12 @@ const LIME = "#E7FF00";
 export default function AdminLoginPage() {
   const router = useRouter();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [step, setStep] = useState<"credentials" | "twoFactor">("credentials");
+  const [twoFactorToken, setTwoFactorToken] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -24,8 +26,42 @@ export default function AdminLoginPage() {
         body: JSON.stringify(form),
       });
 
+      const body = await res.json().catch(() => ({}));
+
       if (!res.ok) {
-        let message = "No se pudo iniciar sesión";
+        setError(typeof body.error === "string" ? body.error : "No se pudo iniciar sesión");
+        setLoading(false);
+        return;
+      }
+
+      if (body.needsTwoFactor) {
+        setStep("twoFactor");
+        setLoading(false);
+        return;
+      }
+
+      router.push("/admin");
+      router.refresh();
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setLoading(false);
+    }
+  }
+
+  async function handleTwoFactorSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/admin/auth/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: twoFactorToken }),
+      });
+
+      if (!res.ok) {
+        let message = "Código incorrecto";
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -50,40 +86,76 @@ export default function AdminLoginPage() {
         PANEL DE ADMINISTRACIÓN
       </p>
 
-      <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        <input
-          type="email"
-          placeholder="admin@zertoo.com"
-          value={form.email}
-          onChange={(e) => setForm({ ...form, email: e.target.value })}
-          required
-          style={inputStyle}
-        />
-        <input
-          type="password"
-          placeholder="Contraseña"
-          value={form.password}
-          onChange={(e) => setForm({ ...form, password: e.target.value })}
-          required
-          style={inputStyle}
-        />
-        {error && <p style={{ color: "#c0392b", fontSize: 13 }}>{error}</p>}
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            padding: "11px 0",
-            borderRadius: 999,
-            background: LIME,
-            color: GREEN,
-            fontWeight: 700,
-            fontSize: 14,
-            marginTop: 6,
-          }}
-        >
-          {loading ? "Entrando..." : "Entrar"}
-        </button>
-      </form>
+      {step === "credentials" ? (
+        <form onSubmit={handleCredentialsSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <input
+            type="email"
+            placeholder="admin@zertoo.com"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={form.password}
+            onChange={(e) => setForm({ ...form, password: e.target.value })}
+            required
+            style={inputStyle}
+          />
+          {error && <p style={{ color: "#c0392b", fontSize: 13 }}>{error}</p>}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              padding: "11px 0",
+              borderRadius: 999,
+              background: LIME,
+              color: GREEN,
+              fontWeight: 700,
+              fontSize: 14,
+              marginTop: 6,
+            }}
+          >
+            {loading ? "Entrando..." : "Entrar"}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={handleTwoFactorSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <p style={{ fontSize: 13, color: "#343233", textAlign: "center", marginBottom: 4 }}>
+            Escribe el código de 6 dígitos de tu app de autenticación.
+          </p>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="123456"
+            value={twoFactorToken}
+            onChange={(e) => setTwoFactorToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            required
+            maxLength={6}
+            autoFocus
+            style={{ ...inputStyle, textAlign: "center", fontSize: 20, letterSpacing: 6 }}
+          />
+          {error && <p style={{ color: "#c0392b", fontSize: 13 }}>{error}</p>}
+          <button
+            type="submit"
+            disabled={loading || twoFactorToken.length !== 6}
+            style={{
+              padding: "11px 0",
+              borderRadius: 999,
+              background: LIME,
+              color: GREEN,
+              fontWeight: 700,
+              fontSize: 14,
+              marginTop: 6,
+              opacity: loading || twoFactorToken.length !== 6 ? 0.5 : 1,
+            }}
+          >
+            {loading ? "Verificando..." : "Verificar"}
+          </button>
+        </form>
+      )}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 import { isSlotFree } from "@/lib/availability";
 import { upsertCustomer } from "@/lib/customers";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const createSchema = z.object({
   serviceId: z.string(),
@@ -39,6 +40,16 @@ export async function GET(req: NextRequest) {
 // requiere saber a qué tenant pertenece vía slug -> se resuelve antes
 // de llamar este endpoint, ver app/book/[slug]/actions.ts).
 export async function POST(req: NextRequest) {
+  // Solo aplica a esta creación pública — el GET de arriba ya requiere
+  // sesión de negocio, no necesita este límite.
+  const { allowed, retryAfterSeconds } = rateLimit(`bookings:${getClientIp(req)}`, 10, 60 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo en un rato." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
   if (!parsed.success) {
