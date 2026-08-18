@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check, Upload } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import TrendStatCard from "@/components/trend-stat-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
@@ -65,6 +65,7 @@ export default function MenuEditor({
     null
   );
   const [copied, setCopied] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
 
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/menu/${slug}` : `/menu/${slug}`;
 
@@ -133,6 +134,13 @@ export default function MenuEditor({
             <p className="text-sm text-[#343233]/70 mt-1">{t.menu.subtitle}</p>
           </div>
           <div className="flex gap-2">
+            <button
+              onClick={() => setImportModalOpen(true)}
+              className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
+            >
+              <Upload size={16} aria-hidden />
+              Importar desde Excel
+            </button>
             <button
               onClick={() => setCategoryModal({ mode: "create" })}
               className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
@@ -285,6 +293,8 @@ export default function MenuEditor({
           onUpdated={(cat) => setCategories((prev) => prev.map((c) => (c.id === cat.id ? cat : c)))}
         />
       )}
+
+      {importModalOpen && <ImportModal onClose={() => setImportModalOpen(false)} />}
     </div>
   );
 }
@@ -692,5 +702,172 @@ function ModalShell({
         {children}
       </div>
     </div>
+  );
+}
+
+interface ImportRow {
+  rowNumber: number;
+  categoria: string;
+  nombre: string;
+  descripcion: string;
+  descripcionEn: string;
+  precio: number | null;
+  destacado: boolean;
+  errors: string[];
+}
+
+function ImportModal({ onClose }: { onClose: () => void }) {
+  const [step, setStep] = useState<"upload" | "preview" | "done">("upload");
+  const [validRows, setValidRows] = useState<ImportRow[]>([]);
+  const [invalidRows, setInvalidRows] = useState<ImportRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [result, setResult] = useState<{ created: number; categoriesCreated: number } | null>(null);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/menu-items/import/preview", { method: "POST", body: formData });
+      const body = await res.json();
+      if (!res.ok) {
+        setError(body.error ?? "No se pudo leer el archivo");
+        setLoading(false);
+        return;
+      }
+      setValidRows(body.validRows);
+      setInvalidRows(body.invalidRows);
+      setStep("preview");
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+    }
+    setLoading(false);
+    e.target.value = ""; // permite volver a subir el mismo archivo si hace falta reintentar
+  }
+
+  async function handleConfirm() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/menu-items/import/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rows: validRows.map((r) => ({
+            categoria: r.categoria,
+            nombre: r.nombre,
+            descripcion: r.descripcion || undefined,
+            descripcionEn: r.descripcionEn || undefined,
+            precio: r.precio,
+            destacado: r.destacado,
+          })),
+        }),
+      });
+      const body = await res.json();
+      if (!res.ok) {
+        setError(body.error ?? "No se pudo importar el menú");
+        setLoading(false);
+        return;
+      }
+      setResult(body);
+      setStep("done");
+    } catch {
+      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <ModalShell title="Importar menú desde Excel" onClose={onClose}>
+      {step === "upload" && (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[#343233]/70">
+            Descarga la plantilla, complétala con tu menú, y súbela — te dejamos revisar todo antes
+            de que se guarde nada. Las fotos se agregan después, plato por plato.
+          </p>
+          <a
+            href="/api/menu-items/template"
+            className="flex items-center justify-center gap-1.5 text-sm font-medium border border-[#002D09]/15 h-9 rounded-lg hover:bg-[#F7F8F4]"
+          >
+            Descargar plantilla
+          </a>
+          <label className="flex items-center justify-center gap-1.5 text-sm font-semibold h-10 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 cursor-pointer">
+            <Upload size={15} aria-hidden />
+            {loading ? "Leyendo..." : "Subir archivo lleno"}
+            <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} disabled={loading} className="hidden" />
+          </label>
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+        </div>
+      )}
+
+      {step === "preview" && (
+        <div className="flex flex-col gap-4">
+          <p className="text-sm text-[#343233]/70">
+            {validRows.length} platos listos para importar
+            {invalidRows.length > 0 ? `, ${invalidRows.length} con errores (no se van a importar)` : ""}.
+          </p>
+
+          {validRows.length > 0 && (
+            <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10 max-h-52 overflow-y-auto">
+              {validRows.map((r) => (
+                <div key={r.rowNumber} className="px-3 py-2 text-sm">
+                  <span className="font-medium">{r.nombre}</span>
+                  <span className="text-[#343233]/60"> — {r.categoria} — ${r.precio?.toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {invalidRows.length > 0 && (
+            <div className="border border-red-200 bg-red-50 rounded-lg overflow-hidden divide-y divide-red-200 max-h-40 overflow-y-auto">
+              {invalidRows.map((r) => (
+                <div key={r.rowNumber} className="px-3 py-2 text-sm">
+                  <span className="font-medium">Fila {r.rowNumber}</span>
+                  <span className="text-red-700"> — {r.errors.join(", ")}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {error && <p className="text-red-600 text-sm">{error}</p>}
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setStep("upload")}
+              className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
+            >
+              Volver
+            </button>
+            <button
+              onClick={handleConfirm}
+              disabled={loading || validRows.length === 0}
+              className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
+            >
+              {loading ? "Importando..." : `Importar ${validRows.length} platos`}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {step === "done" && result && (
+        <div className="flex flex-col gap-4 items-center text-center py-2">
+          <p className="text-sm text-[#343233]/80">
+            ¡Listo! Se importaron <strong>{result.created}</strong> platos
+            {result.categoriesCreated > 0 ? ` y se crearon ${result.categoriesCreated} categorías nuevas` : ""}.
+          </p>
+          <button
+            onClick={() => window.location.reload()}
+            className="w-full py-2.5 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-semibold hover:brightness-105"
+          >
+            Ver mi menú actualizado
+          </button>
+        </div>
+      )}
+    </ModalShell>
   );
 }

@@ -332,6 +332,32 @@ plataforma seria para esto):
   sistema que ya usaba el login — el idioma se hereda de lo que la
   persona eligió en la landing, no hay un selector nuevo.
 
+## Importar el menú desde Excel
+
+Le ahorra al negocio cargar el menú plato por plato a mano — pensado
+sobre todo para el momento de arranque, con un menú grande de una vez.
+
+- **Nueva dependencia**: `xlsx` (SheetJS) — lee y genera archivos Excel
+  tanto del lado del servidor.
+- **Plantilla descargable** (`/api/menu-items/template`) — columnas ya
+  armadas (Categoría, Nombre, Descripción, Descripción en inglés,
+  Precio, Destacado) con un par de filas de ejemplo.
+- **Vista previa antes de guardar nada** — al subir el archivo lleno,
+  se valida fila por fila (categoría y nombre obligatorios, precio
+  válido) y se muestra qué se va a importar y qué filas tienen errores
+  (con el número de fila real del Excel, para ubicarlas fácil) — recién
+  al confirmar se guarda de verdad.
+- **Categorías automáticas** — si la categoría de una fila ya existe
+  (comparación sin importar mayúsculas/espacios), se usa esa; si es
+  nueva, se crea sola.
+- **Sin fotos** — decisión de alcance consciente, no hay forma
+  práctica de meter una imagen en una celda de Excel. El menú entra
+  completo con textos y precios de una sola vez, y las fotos se
+  agregan después plato por plato, como ya funciona hoy.
+- Límite de 500 filas por importación, y todo se crea dentro de una
+  única transacción (o se crea todo, o no se crea nada si algo falla
+  a mitad de camino).
+
 ## Pedidos desde el menú (pickup / delivery, sin pago online)
 
 Decisión de alcance consciente: el cliente arma su pedido y lo manda,
