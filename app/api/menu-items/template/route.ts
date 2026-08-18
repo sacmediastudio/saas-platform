@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { requireTenant } from "@/lib/auth";
 
 // GET /api/menu-items/template — plantilla de Excel con las columnas
@@ -9,21 +9,40 @@ import { requireTenant } from "@/lib/auth";
 export async function GET() {
   await requireTenant();
 
-  const headers = ["Categoría", "Nombre del plato", "Descripción", "Descripción (inglés)", "Precio", "Destacado (Sí/No)"];
-  const exampleRows = [
-    ["Platos principales", "Hamburguesa clásica", "Pan, carne, queso, lechuga y tomate", "Bun, beef, cheese, lettuce and tomato", 8.5, "No"],
-    ["Postres", "Cheesecake", "Con salsa de frutos rojos", "With red berry sauce", 5, "Sí"],
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Menú");
+
+  sheet.columns = [
+    { header: "Categoría", key: "categoria", width: 20 },
+    { header: "Nombre del plato", key: "nombre", width: 26 },
+    { header: "Descripción", key: "descripcion", width: 34 },
+    { header: "Descripción (inglés)", key: "descripcionEn", width: 34 },
+    { header: "Precio", key: "precio", width: 10 },
+    { header: "Destacado (Sí/No)", key: "destacado", width: 16 },
   ];
+  sheet.getRow(1).font = { bold: true };
 
-  const sheet = XLSX.utils.aoa_to_sheet([headers, ...exampleRows]);
-  sheet["!cols"] = [{ wch: 20 }, { wch: 26 }, { wch: 34 }, { wch: 34 }, { wch: 10 }, { wch: 16 }];
+  sheet.addRow({
+    categoria: "Platos principales",
+    nombre: "Hamburguesa clásica",
+    descripcion: "Pan, carne, queso, lechuga y tomate",
+    descripcionEn: "Bun, beef, cheese, lettuce and tomato",
+    precio: 8.5,
+    destacado: "No",
+  });
+  sheet.addRow({
+    categoria: "Postres",
+    nombre: "Cheesecake",
+    descripcion: "Con salsa de frutos rojos",
+    descripcionEn: "With red berry sauce",
+    precio: 5,
+    destacado: "Sí",
+  });
 
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, "Menú");
+  const buffer = await workbook.xlsx.writeBuffer();
 
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
-
-  return new NextResponse(buffer, {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new NextResponse(buffer as any, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": 'attachment; filename="plantilla-menu.xlsx"',

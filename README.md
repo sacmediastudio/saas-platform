@@ -334,6 +334,32 @@ plataforma seria para esto):
 
 ## Revisión de seguridad (auditoría + límite de frecuencia + 2FA de admin)
 
+Cuatro mejoras hechas a partir de una revisión honesta de qué tan
+expuesta estaba la plataforma, después de haber construido tanto en
+tan poco tiempo.
+
+**0. Auditoría de dependencias (`npm audit`)** — corrida por primera
+vez con el proyecto ya armado (nunca se pudo correr antes, por no
+tener internet en este entorno de desarrollo). Encontró 4 alertas:
+- **`nanoid`** — riesgo bajo, arreglado con `npm audit fix` normal
+  (sin `--force`), no rompe nada.
+- **`next` / `postcss`** — **NO se corrió `npm audit fix --force`** a
+  propósito. Ese comando instalaría Next.js 16, un salto de versión
+  mayor — Next.js 15 cambió `cookies()`, `headers()`, `params` y
+  `searchParams` de funciones síncronas a asíncronas, lo cual rompería
+  literalmente toda la aplicación (login, admin, cada página
+  dinámica). Esto queda pendiente como una migración planeada aparte,
+  no algo para resolver con un solo comando.
+- **`xlsx`** — sí se resolvió de raíz: el paquete `xlsx` (SheetJS) en
+  npm está abandonado por su mantenedor, con vulnerabilidades conocidas
+  (contaminación de prototipo, ReDoS) sin parche publicado ahí — el
+  fix real solo vive en su propio CDN, algo frágil para depender en un
+  `package.json` normal. Se **reemplazó por `exceljs`** (activa,
+  mantenida) en los dos endpoints que la usaban
+  (`/api/menu-items/template` y `/api/menu-items/import/preview`). De
+  paso, se agregó un límite explícito de 5 MB al archivo subido en la
+  importación, como capa extra antes de siquiera intentar leerlo.
+
 Tres mejoras hechas a partir de una revisión honesta de qué tan
 expuesta estaba la plataforma, después de haber construido tanto en
 tan poco tiempo.
