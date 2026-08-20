@@ -181,7 +181,7 @@ function SignupForm() {
       <footer className="flex flex-col items-center gap-2 border-t border-black/[0.06] py-8">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto opacity-60" />
-        <p className="text-xs text-[#343233]/50">© {new Date().getFullYear()} Zertoo</p>
+        <p className="text-xs text-[#343233]/50">© {new Date().getFullYear()} Zertoo. Un producto de Certucce Digital LLC.</p>
       </footer>
     </div>
   );

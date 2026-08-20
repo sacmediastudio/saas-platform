@@ -11,7 +11,7 @@ export const dashboardTranslations = {
       billing: "Billing",
       settings: "Settings",
     },
-    footer: { rights: "All rights reserved." },
+    footer: { rights: "A Certucce Digital LLC product. All rights reserved." },
     menu: {
       title: "Your menu",
       subtitle: "What your customers see and choose from your public page.",
@@ -188,7 +188,7 @@ export const dashboardTranslations = {
       billing: "Facturación",
       settings: "Ajustes",
     },
-    footer: { rights: "Todos los derechos reservados." },
+    footer: { rights: "Un producto de Certucce Digital LLC. Todos los derechos reservados." },
     menu: {
       title: "Tu menú",
       subtitle: "Lo que tus clientes ven y eligen en tu página pública.",

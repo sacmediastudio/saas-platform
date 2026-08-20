@@ -103,7 +103,7 @@ export const translations = {
       products: "Products",
       pricing: "Pricing",
       faq: "FAQ",
-      copyright: "All rights reserved.",
+      copyright: "A Certucce Digital LLC product. All rights reserved.",
     },
   },
   es: {
@@ -207,7 +207,7 @@ export const translations = {
       products: "Productos",
       pricing: "Precios",
       faq: "Preguntas",
-      copyright: "Todos los derechos reservados.",
+      copyright: "Un producto de Certucce Digital LLC. Todos los derechos reservados.",
     },
   },
 };

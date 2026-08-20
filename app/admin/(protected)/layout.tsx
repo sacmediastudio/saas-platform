@@ -83,7 +83,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <footer className="bg-white border-t border-black/[0.06] px-5 md:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="Zertoo" className="h-5 w-auto opacity-70" />
-        <p className="text-xs text-[#343233]/50">© {new Date().getFullYear()} Zertoo. Panel de administración.</p>
+        <p className="text-xs text-[#343233]/50">© {new Date().getFullYear()} Zertoo. Un producto de Certucce Digital LLC. Panel de administración.</p>
       </footer>
     </div>
   );
