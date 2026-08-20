@@ -404,6 +404,46 @@ configuración). Flujo:
   sirve para nada del panel todavía) → código de 6 dígitos → recién
   ahí la sesión real
 
+## SEO en las páginas públicas
+
+Auditoría honesta primero: aunque las páginas ya eran renderizadas en
+el servidor (buena base), les faltaba casi todo lo demás — se agregó:
+
+- **`generateMetadata` completo** en las 3 páginas públicas (menú,
+  citas, smartlink) — antes solo ponían el `<title>`; ahora también
+  meta descripción, Open Graph, y Twitter Card, usando la foto de
+  portada o el logo del negocio como imagen de vista previa. Esto es
+  lo que hace que compartir el link por WhatsApp/redes muestre una
+  tarjeta con foto y texto, en vez de un link pelado.
+- **`app/sitemap.ts` y `app/robots.ts`** — Next.js los sirve
+  automáticamente en `/sitemap.xml` y `/robots.txt`. El sitemap se
+  arma dinámicamente con los negocios activos (excluye los
+  suspendidos) y sus módulos habilitados; robots.txt bloquea
+  `/dashboard`, `/admin`, y `/api` de la indexación.
+- **Datos estructurados (JSON-LD)** — `Restaurant` en el menú,
+  `LocalBusiness` en citas, `Organization` en smartlink. Es lo que le
+  da a Google la chance de mostrar resultados enriquecidos
+  (calificación, dirección) en vez de un link simple.
+- **`components/smart-image.tsx`** — envoltorio sobre `next/image`
+  para las fotos de mayor impacto en cada página pública (foto de
+  fondo del hero con `priority`, logos, fotos de platos y servicios).
+  Deja pasar sin tocar las fotos viejas en base64 (de antes de migrar
+  a R2), porque `next/image` no puede optimizar un data URI — y de
+  todos modos no se pueden comprimir más desde ahí. Se aplicó a
+  propósito solo donde de verdad importa (contenido que Google indexa
+  al cargar la página) — no se tocaron íconos muy chicos ni el modal
+  de zoom (interactivo, no forma parte de la carga inicial).
+- Se agregó también `tenant.suspended` como filtro en las 3 páginas
+  públicas y en el sitemap — un negocio suspendido ya no debería
+  aparecer ni ser indexable.
+
+**Nota de alcance**: el contenido bilingüe (EN/ES) del menú público
+sigue sin ser indexable como tal por separado — el selector de idioma
+vive en el navegador (localStorage), así que Google solo ve una
+versión del texto. Resolver esto de verdad requeriría URLs separadas
+por idioma (`/en/menu/slug` vs `/es/menu/slug`) con `hreflang`, que es
+un cambio de arquitectura más grande, no algo para sumar de paso acá.
+
 ## Importar el menú desde Excel
 
 Le ahorra al negocio cargar el menú plato por plato a mano — pensado

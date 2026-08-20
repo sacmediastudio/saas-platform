@@ -5,6 +5,7 @@ import { Star, Mail, Phone, MapPin, ChevronDown, X, Heart, ArrowRight } from "lu
 import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
+import SmartImage from "@/components/smart-image";
 
 interface MenuItemAddOnData {
   id: string;
@@ -226,8 +227,7 @@ export default function PublicMenu({
       {/* Hero */}
       <div className="relative h-[70vh] min-h-[420px] flex items-center justify-center text-center px-6">
         {tenant.heroImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={tenant.heroImageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <SmartImage src={tenant.heroImageUrl} alt="" fill priority className="object-cover" sizes="100vw" />
         ) : (
           <div className="absolute inset-0" style={{ backgroundColor: tenant.themeTextColor, opacity: 0.9 }} />
         )}
@@ -235,10 +235,11 @@ export default function PublicMenu({
 
         <div className="relative z-10 max-w-md flex flex-col items-center">
           {tenant.logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <SmartImage
               src={tenant.logoUrl}
               alt={tenant.name}
+              width={64}
+              height={64}
               className="w-16 h-16 rounded-2xl object-cover mb-4 border-2 border-white/30"
             />
           )}
@@ -274,8 +275,13 @@ export default function PublicMenu({
                   onClick={item.imageUrl ? () => setZoomedItem(item) : undefined}
                 >
                   {item.imageUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                    <SmartImage
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                      sizes="(min-width: 576px) 576px, 100vw"
+                    />
                   ) : (
                     <div
                       className="w-full h-full flex items-center justify-center text-4xl font-bold opacity-20"
@@ -447,10 +453,11 @@ export default function PublicMenu({
                         }`}
                       >
                         {hasPhoto && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={item.imageUrl!}
+                          <SmartImage
+                            src={item.imageUrl}
                             alt={item.name}
+                            width={56}
+                            height={56}
                             className="w-14 h-14 rounded-lg object-cover shrink-0"
                           />
                         )}

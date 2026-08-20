@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import FaqChatWidget from "@/components/faq-chat-widget";
+import SmartImage from "@/components/smart-image";
 
 interface ServiceOption {
   id: string;
@@ -172,8 +173,7 @@ export default function BookingFlow({
       <div className="relative min-h-screen" style={{ backgroundColor: themeBgColor }}>
         {hasBgImage && (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={heroImageUrl!} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            <SmartImage src={heroImageUrl} alt="" fill priority className="object-cover" sizes="100vw" />
             <div className="absolute inset-0 bg-black/45" />
           </>
         )}
@@ -196,10 +196,11 @@ export default function BookingFlow({
             ))}
           </div>
           {logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
+            <SmartImage
               src={logoUrl}
               alt={tenantName}
+              width={96}
+              height={96}
               className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-white/40"
             />
           ) : (
@@ -234,8 +235,13 @@ export default function BookingFlow({
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
                 {s.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={s.imageUrl} alt={s.name} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                  <SmartImage
+                    src={s.imageUrl}
+                    alt={s.name}
+                    width={48}
+                    height={48}
+                    className="w-12 h-12 rounded-lg object-cover shrink-0"
+                  />
                 ) : null}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{s.name}</p>

@@ -15,7 +15,9 @@ import {
 import { db } from "@/lib/db";
 import { recordPageView } from "@/lib/analytics";
 import { getEnabledModules } from "@/lib/modules";
+import { jsonLdScriptProps } from "@/lib/json-ld";
 import FaqChatWidget from "@/components/faq-chat-widget";
+import SmartImage from "@/components/smart-image";
 
 const ICONS: Record<string, any> = {
   WEBSITE: Globe,
@@ -33,13 +35,27 @@ const ICONS: Record<string, any> = {
 };
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const tenant = await db.tenant.findUnique({ where: { slug: params.slug }, select: { name: true } });
-  return { title: tenant ? `Zertoo | ${tenant.name}` : "Zertoo" };
+  const tenant = await db.tenant.findUnique({
+    where: { slug: params.slug },
+    select: { name: true, heroTagline: true, heroImageUrl: true, logoUrl: true },
+  });
+  if (!tenant) return { title: "Zertoo" };
+
+  const title = `${tenant.name} | Todos mis links`;
+  const description = tenant.heroTagline || `Todos los links y redes de ${tenant.name}, en un solo lugar.`;
+  const image = tenant.heroImageUrl || tenant.logoUrl || undefined;
+
+  return {
+    title,
+    description,
+    openGraph: { title, description, type: "profile", images: image ? [{ url: image }] : undefined },
+    twitter: { card: "summary_large_image", title, description, images: image ? [image] : undefined },
+  };
 }
 
 export default async function PublicSmartLinkPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
-  if (!tenant || !getEnabledModules(tenant).includes("SMARTLINK")) notFound();
+  if (!tenant || tenant.suspended || !getEnabledModules(tenant).includes("SMARTLINK")) notFound();
 
   await recordPageView(tenant.id, "LINK");
 
@@ -50,16 +66,20 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
 
   const hasBgImage = Boolean(tenant.heroImageUrl);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: tenant.name,
+    ...(tenant.logoUrl ? { logo: tenant.logoUrl } : {}),
+    ...(tenant.contactPhone ? { telephone: tenant.contactPhone } : {}),
+  };
+
   return (
     <div className="relative min-h-screen" style={{ backgroundColor: tenant.themeBgColor }}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={jsonLdScriptProps(jsonLd)} />
       {hasBgImage && (
         <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={tenant.heroImageUrl!}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <SmartImage src={tenant.heroImageUrl} alt="" fill priority className="object-cover" sizes="100vw" />
           {/* Overlay oscuro para que el texto siga siendo legible sobre
               cualquier foto de fondo, sin importar qué tan clara sea. */}
           <div className="absolute inset-0 bg-black/45" />
@@ -71,10 +91,11 @@ export default async function PublicSmartLinkPage({ params }: { params: { slug: 
         style={{ color: hasBgImage ? "#ffffff" : tenant.themeTextColor }}
       >
         {tenant.logoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <SmartImage
             src={tenant.logoUrl}
             alt={tenant.name}
+            width={96}
+            height={96}
             className="w-24 h-24 rounded-full object-cover mb-4 border-2 border-white/40"
           />
         ) : (
