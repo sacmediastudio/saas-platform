@@ -710,6 +710,7 @@ export default function PublicMenu({
           subtotal={cartSubtotal}
           lineTotal={lineTotal}
           onRemoveLine={removeLine}
+          language={lang}
           onClose={() => setCheckoutOpen(false)}
           onSuccess={() => {
             setCartLines([]);
@@ -854,6 +855,7 @@ function CheckoutModal({
   subtotal,
   lineTotal,
   onRemoveLine,
+  language,
   onClose,
   onSuccess,
 }: {
@@ -870,6 +872,7 @@ function CheckoutModal({
   subtotal: number;
   lineTotal: (line: CartLine) => number;
   onRemoveLine: (lineId: string) => void;
+  language: Lang;
   onClose: () => void;
   onSuccess: () => void;
 }) {
@@ -905,6 +908,7 @@ function CheckoutModal({
           fulfillment,
           deliveryAddress: fulfillment === "DELIVERY" ? address : undefined,
           notes: orderNotes || undefined,
+          language,
           items: cartLines.map((l) => ({
             menuItemId: l.menuItemId,
             quantity: l.quantity,

@@ -10,28 +10,31 @@
 
 const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
 const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+
+// Cada plantilla tiene SU PROPIO par de códigos de idioma — no se
+// comparten entre plantillas a propósito. Cuando armamos los
+// recordatorios de citas, la plantilla en español quedó aprobada por
+// Meta como "es_CO" (no el genérico "es") — no hay garantía de que
+// otra plantilla nueva quede aprobada con el mismo código exacto, así
+// que cada una resuelve su propio idioma de forma independiente.
 const TEMPLATE_NAME = process.env.WHATSAPP_TEMPLATE_NAME || "booking_reminder";
-// El nombre de la plantilla del código de canje (Menú → "Postre gratis"
-// o el premio que sea) — es una plantilla SEPARADA de la de
-// recordatorios, con su propio texto, así que Meta la aprueba aparte.
-const LEAD_TEMPLATE_NAME = process.env.WHATSAPP_LEAD_TEMPLATE_NAME || "menu_lead_reward";
-// Dos plantillas más para pedidos del menú — una para el cliente ("tu
-// pedido fue recibido") y otra para el negocio ("te llegó un pedido
-// nuevo"). Contenido distinto para cada audiencia, así que son
-// plantillas separadas, no la misma reutilizada.
-const ORDER_CONFIRMATION_TEMPLATE_NAME = process.env.WHATSAPP_ORDER_CONFIRMATION_TEMPLATE_NAME || "order_confirmation";
-const NEW_ORDER_ALERT_TEMPLATE_NAME = process.env.WHATSAPP_NEW_ORDER_ALERT_TEMPLATE_NAME || "new_order_alert";
-// WhatsApp permite tener la MISMA plantilla (mismo nombre) aprobada en
-// varios idiomas a la vez — Meta las trata como variantes de idioma de
-// una sola plantilla. Por eso acá hay dos códigos, no uno: el código
-// exacto tiene que coincidir con el que aprobaste en Meta Business
-// Manager para cada versión.
 const TEMPLATE_LANG_ES = process.env.WHATSAPP_TEMPLATE_LANG_ES || "es";
 const TEMPLATE_LANG_EN = process.env.WHATSAPP_TEMPLATE_LANG_EN || "en_US";
 
-function resolveTemplateLang(language: string): string {
-  return language === "en" ? TEMPLATE_LANG_EN : TEMPLATE_LANG_ES;
-}
+const LEAD_TEMPLATE_NAME = process.env.WHATSAPP_LEAD_TEMPLATE_NAME || "menu_lead_reward";
+const LEAD_TEMPLATE_LANG = process.env.WHATSAPP_LEAD_TEMPLATE_LANG || "es";
+
+// Confirmación de pedido al CLIENTE — sí varía según el idioma que el
+// cliente eligió al pedir (mismo criterio que los recordatorios de citas).
+const ORDER_CONFIRMATION_TEMPLATE_NAME = process.env.WHATSAPP_ORDER_CONFIRMATION_TEMPLATE_NAME || "order_confirmation";
+const ORDER_CONFIRMATION_LANG_ES = process.env.WHATSAPP_ORDER_CONFIRMATION_LANG_ES || "es";
+const ORDER_CONFIRMATION_LANG_EN = process.env.WHATSAPP_ORDER_CONFIRMATION_LANG_EN || "en_US";
+
+// Aviso de pedido nuevo al NEGOCIO — a propósito NO varía según el
+// idioma del cliente (el dueño del negocio no necesariamente habla el
+// mismo idioma que su cliente) — un solo idioma fijo, configurable.
+const NEW_ORDER_ALERT_TEMPLATE_NAME = process.env.WHATSAPP_NEW_ORDER_ALERT_TEMPLATE_NAME || "new_order_alert";
+const NEW_ORDER_ALERT_LANG = process.env.WHATSAPP_NEW_ORDER_ALERT_LANG || "es";
 
 export function isWhatsAppConfigured(): boolean {
   return Boolean(ACCESS_TOKEN && PHONE_NUMBER_ID);
@@ -44,13 +47,15 @@ function normalizePhone(phone: string): string {
 
 /**
  * Función base: manda cualquier plantilla aprobada con sus parámetros
- * en orden — ambas funciones de arriba de este archivo la usan por
- * dentro, para no repetir la llamada a la API dos veces.
+ * en orden — recibe el código de idioma YA RESUELTO (cada función de
+ * más abajo decide cuál es el correcto para SU plantilla, no hay una
+ * resolución compartida/global que pueda mezclar el idioma de una
+ * plantilla con el de otra).
  */
 async function sendTemplateMessage(params: {
   toPhone: string;
   templateName: string;
-  language: string;
+  languageCode: string;
   bodyParams: string[];
 }): Promise<void> {
   if (!isWhatsAppConfigured()) return;
@@ -67,7 +72,7 @@ async function sendTemplateMessage(params: {
       type: "template",
       template: {
         name: params.templateName,
-        language: { code: resolveTemplateLang(params.language) },
+        language: { code: params.languageCode },
         components: [
           {
             type: "body",
@@ -101,7 +106,7 @@ export async function sendBookingReminder(params: {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: TEMPLATE_NAME,
-    language: params.language,
+    languageCode: params.language === "en" ? TEMPLATE_LANG_EN : TEMPLATE_LANG_ES,
     bodyParams: [params.customerName, params.serviceName, params.dateLabel, params.timeLabel, params.businessName],
   });
 }
@@ -117,12 +122,11 @@ export async function sendMenuLeadCode(params: {
   businessName: string;
   rewardText: string;
   claimCode: string;
-  language?: string;
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: LEAD_TEMPLATE_NAME,
-    language: params.language ?? "es",
+    languageCode: LEAD_TEMPLATE_LANG,
     bodyParams: [params.customerName, params.businessName, params.rewardText, params.claimCode],
   });
 }
@@ -131,51 +135,59 @@ export async function sendMenuLeadCode(params: {
  * Manda un mensaje de campaña de marketing (admin de Zertoo) — usa una
  * plantilla de categoría "Marketing" que el admin especifica en el
  * momento (distinta de las de recordatorio y código de canje, que son
- * fijas). WhatsApp exige que este tipo de mensaje use plantillas de
- * categoría Marketing específicamente, aprobadas con el consentimiento
- * correspondiente — ver .env.example.
+ * fijas). El código de idioma acá es el que el admin escribe
+ * directamente en el formulario de la campaña — no se resuelve por
+ * "es"/"en", se manda tal cual.
  */
 export async function sendMarketingMessage(params: {
   toPhone: string;
   templateName: string;
-  language: string;
+  languageCode: string;
   bodyParams: string[];
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: params.templateName,
-    language: params.language,
+    languageCode: params.languageCode,
     bodyParams: params.bodyParams,
   });
 }
 
-/** Le confirma al CLIENTE que su pedido llegó — complementa el correo, no lo reemplaza. */
+/**
+ * Le confirma al CLIENTE que su pedido llegó — complementa el correo,
+ * no lo reemplaza. Sí varía según el idioma que el cliente eligió al
+ * pedir (Order.language), igual criterio que los recordatorios de citas.
+ */
 export async function sendOrderConfirmationWhatsApp(params: {
   toPhone: string;
   customerName: string;
   businessName: string;
   total: string;
-  language?: string;
+  language: string;
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: ORDER_CONFIRMATION_TEMPLATE_NAME,
-    language: params.language ?? "es",
+    languageCode: params.language === "en" ? ORDER_CONFIRMATION_LANG_EN : ORDER_CONFIRMATION_LANG_ES,
     bodyParams: [params.customerName, params.businessName, params.total],
   });
 }
 
-/** Le avisa al NEGOCIO que le llegó un pedido nuevo — al número de contacto configurado en Ajustes. */
+/**
+ * Le avisa al NEGOCIO que le llegó un pedido nuevo — al número de
+ * contacto configurado en Ajustes. A propósito en un solo idioma fijo
+ * (no depende de qué idioma eligió el cliente) — no tenemos guardado
+ * en qué idioma prefiere leer sus avisos cada negocio.
+ */
 export async function sendNewOrderAlertWhatsApp(params: {
   toPhone: string;
   customerName: string;
   total: string;
-  language?: string;
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: NEW_ORDER_ALERT_TEMPLATE_NAME,
-    language: params.language ?? "es",
+    languageCode: NEW_ORDER_ALERT_LANG,
     bodyParams: [params.customerName, params.total],
   });
 }

@@ -507,6 +507,23 @@ el día que se quiera agregar cobro real.
   Meta (`order_confirmation` y `new_order_alert`, distintas entre sí
   porque el contenido es para audiencias distintas) — instrucciones
   completas en `.env.example`.
+  - **La confirmación al cliente es bilingüe** — `MenuOrder.language`
+    guarda qué idioma tenía elegido el cliente en el selector del
+    menú público al momento de pedir, y el WhatsApp le llega en ese
+    idioma (mismo criterio que los recordatorios de citas).
+  - **El aviso al negocio, a propósito, NO varía** — queda en un solo
+    idioma fijo y configurable (español por defecto), porque el dueño
+    del negocio no necesariamente habla el mismo idioma que su
+    cliente, y no hay ningún dato guardado de en qué idioma prefiere
+    leer sus propios avisos.
+  - De paso se corrigió un bug real que existía desde antes: la
+    resolución de idioma de las plantillas estaba compartida entre
+    todas (`sendMenuLeadCode` y `sendMarketingMessage` terminaban
+    usando por accidente el código de idioma de `booking_reminder`).
+    Ahora cada plantilla resuelve su propio código de idioma de forma
+    independiente — importa porque, como vimos con `booking_reminder`,
+    Meta puede aprobar el mismo idioma con un código distinto según la
+    plantilla (ej. `es_CO` en vez de `es`).
 - **Dashboard** (`/dashboard/orders`) — pedidos activos vs. historial,
   con botones para avanzar el estado (Confirmar → Marcar listo →
   Completar) o cancelar.

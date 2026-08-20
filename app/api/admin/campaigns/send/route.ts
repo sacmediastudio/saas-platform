@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
         await sendMarketingMessage({
           toPhone: customer.phone,
           templateName: data.whatsappTemplateName!,
-          language: data.whatsappTemplateLang || "es",
+          languageCode: data.whatsappTemplateLang || "es",
           bodyParams: [customer.name || "cliente", data.whatsappCustomParam || ""],
         });
       }

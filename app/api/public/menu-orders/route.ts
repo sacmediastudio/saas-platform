@@ -15,6 +15,7 @@ const schema = z.object({
   fulfillment: z.enum(["PICKUP", "DELIVERY"]),
   deliveryAddress: z.string().max(300).optional(),
   notes: z.string().max(300).optional(),
+  language: z.enum(["es", "en"]).default("es"),
   items: z
     .array(
       z.object({
@@ -113,6 +114,7 @@ export async function POST(req: NextRequest) {
       fulfillment: data.fulfillment,
       deliveryAddress: data.deliveryAddress,
       notes: data.notes,
+      language: data.language,
       subtotal,
       deliveryFee,
       total,
@@ -148,6 +150,7 @@ export async function POST(req: NextRequest) {
     customerName: data.customerName,
     businessName: tenant.name,
     total: totalLabel,
+    language: data.language,
   }).catch((err) => console.error("No se pudo enviar la confirmación de pedido por WhatsApp:", err));
 
   // Aviso al NEGOCIO — al número de contacto configurado en Ajustes, no
