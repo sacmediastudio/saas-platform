@@ -4,6 +4,14 @@ import { getEnabledModules } from "@/lib/modules";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://zertoo.app";
 
+// Fuerza que esto se genere en cada visita (tiempo de ejecución), NO
+// durante `next build` — la base de datos solo es alcanzable en
+// tiempo de ejecución (red privada de Railway), igual motivo por el
+// que `prisma db push` vive en el script de arranque y no en el de
+// build. Sin esto, el build fallaba intentando consultar una base de
+// datos a la que todavía no tiene acceso en ese momento.
+export const dynamic = "force-dynamic";
+
 // app/sitemap.ts — Next.js lo sirve automáticamente en /sitemap.xml.
 // Se regenera en cada visita (no hay caché manual que mantener) con la
 // lista real de negocios activos y sus módulos habilitados.
