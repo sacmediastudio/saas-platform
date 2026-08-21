@@ -74,7 +74,13 @@ export async function PATCH(req: NextRequest) {
           // termine, y recién el próximo ciclo se le cobra el monto
           // nuevo (más bajo). Simple y fácil de explicar.
           await stripe.subscriptionItems.del(existingItem.stripeItemId, { proration_behavior: "none" });
-          await db.subscriptionModuleItem.delete({ where: { id: existingItem.id } });
+          // No se borra SubscriptionModuleItem acá a propósito — el
+          // .del() de arriba dispara el webhook
+          // customer.subscription.updated, que reconstruye esta tabla
+          // completa desde el estado real de Stripe (ver
+          // app/api/webhooks/stripe/route.ts). Borrarla acá también
+          // generaba la misma condición de carrera que en la
+          // aprobación de módulos nuevos.
         }
       } catch (err) {
         console.error("No se pudo sincronizar la baja del módulo con Stripe:", err);

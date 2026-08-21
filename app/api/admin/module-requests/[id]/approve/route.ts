@@ -92,9 +92,14 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
           );
         }
 
-        await db.subscriptionModuleItem.create({
-          data: { subscriptionId: subscription.id, module: target, stripeItemId: subscriptionItemId },
-        });
+        // No se escribe SubscriptionModuleItem acá a propósito — el
+        // stripe.subscriptionItems.create() de arriba dispara un
+        // webhook customer.subscription.updated casi al instante, y
+        // ese webhook reconstruye esta tabla completa desde el estado
+        // real de Stripe (ver app/api/webhooks/stripe/route.ts).
+        // Escribirla acá TAMBIÉN generaba una condición de carrera —
+        // el webhook a veces llegaba primero y esta segunda escritura
+        // chocaba contra la restricción de unicidad.
       } catch (err) {
         console.error("No se pudo cobrar/activar el módulo:", err);
         if (subscriptionItemId) {
