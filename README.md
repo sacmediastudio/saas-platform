@@ -358,6 +358,20 @@ quedarse, solo que con menos.
   desactivar; si alguien intenta activar un módulo nuevo por ahí
   directamente (saltándose la UI), lo rechaza con un 403 explicando
   que tiene que usar el flujo de solicitud.
+- **El cobro es inmediato al aprobar, no "a partir de la próxima
+  factura"** — este fue un hueco real que encontramos después de armar
+  el flujo: por defecto, sumar un módulo a una suscripción de Stripe
+  a mitad de ciclo NO cobra nada en el momento, solo lo anota para
+  la próxima renovación (que puede ser semanas después) — el negocio
+  quedaba con acceso completo desde ya, sin pagar hasta entonces. Ahora,
+  si el negocio ya tiene una suscripción real, aprobar genera y cobra
+  una **factura de una sola vez** en el momento (`stripe.invoices.pay`,
+  sincrónico, se espera la confirmación antes de seguir) — el módulo
+  **solo se activa si ese cobro se confirma**. Si falla (tarjeta
+  rechazada, etc.), no se activa nada, se revierte lo que se había
+  agregado a la suscripción, y la solicitud queda marcada como
+  `payment_failed` — visible en `/admin/module-requests` para hacerle
+  seguimiento, no se pierde silenciosamente.
 
 ## Fix: activar módulos sin pagar (el trial nunca vencía)
 

@@ -27,14 +27,31 @@ export default function ModuleRequestsView({ requests: initialRequests }: { requ
   const pending = requests.filter((r) => r.status === "pending");
   const resolved = requests.filter((r) => r.status !== "pending");
   const shown = tab === "pending" ? pending : resolved;
+  const [error, setError] = useState<string | null>(null);
 
   async function handleAction(request: ModuleRequest, action: "approve" | "reject") {
     setBusyId(request.id);
+    setError(null);
     const res = await fetch(`/api/admin/module-requests/${request.id}/${action}`, { method: "POST" });
+
     if (res.ok) {
       setRequests((prev) =>
         prev.map((r) => (r.id === request.id ? { ...r, status: action === "approve" ? "approved" : "rejected" } : r))
       );
+    } else {
+      // El cobro pudo haber fallado — el servidor ya marcó la
+      // solicitud como "payment_failed" del otro lado, así que acá
+      // solo hay que reflejar eso, no dejarla mostrándose como
+      // pendiente cuando en realidad ya se resolvió (sin activar nada).
+      let message = "No se pudo procesar la solicitud";
+      try {
+        const body = await res.json();
+        if (typeof body.error === "string") message = body.error;
+      } catch {}
+      setError(message);
+      if (action === "approve") {
+        setRequests((prev) => prev.map((r) => (r.id === request.id ? { ...r, status: "payment_failed" } : r)));
+      }
     }
     setBusyId(null);
   }
@@ -65,6 +82,8 @@ export default function ModuleRequestsView({ requests: initialRequests }: { requ
             Resueltas
           </button>
         </div>
+
+        {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
         {shown.length === 0 && (
           <p className="text-sm text-[#343233]/60">
@@ -105,10 +124,14 @@ export default function ModuleRequestsView({ requests: initialRequests }: { requ
               ) : (
                 <span
                   className={`text-xs px-2.5 py-1 rounded-md font-medium ${
-                    r.status === "approved" ? "bg-green-50 text-green-700" : "bg-[#F7F8F4] text-[#343233]/70"
+                    r.status === "approved"
+                      ? "bg-green-50 text-green-700"
+                      : r.status === "payment_failed"
+                        ? "bg-red-50 text-red-700"
+                        : "bg-[#F7F8F4] text-[#343233]/70"
                   }`}
                 >
-                  {r.status === "approved" ? "Activado" : "Rechazado"}
+                  {r.status === "approved" ? "Activado" : r.status === "payment_failed" ? "El cobro falló" : "Rechazado"}
                 </span>
               )}
             </div>
