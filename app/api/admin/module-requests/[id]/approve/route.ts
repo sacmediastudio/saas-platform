@@ -71,10 +71,13 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
           customer: subscription.stripeCustomerId,
           collection_method: "charge_automatically",
         });
+        // finalizeInvoice() con collection_method:"charge_automatically"
+        // YA intenta cobrar como parte de la finalización — no hace
+        // falta (ni se puede) llamar a .pay() después, sobre una
+        // factura que puede haber quedado pagada en este mismo paso.
         const finalized = await stripe.invoices.finalizeInvoice(invoice.id!);
-        const paid = await stripe.invoices.pay(finalized.id!);
 
-        if (paid.status !== "paid") {
+        if (finalized.status !== "paid") {
           // El cobro no se confirmó — se revierte el ítem de la
           // suscripción para no dejar algo "medio activado" cobrando
           // sin haber cobrado, y se marca la solicitud para seguimiento.

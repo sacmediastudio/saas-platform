@@ -5,6 +5,27 @@ import { getStripe, mapStripeStatus, moduleForPriceId } from "@/lib/stripe";
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
+// Desde la versión "Basil" de la API de Stripe (marzo 2025),
+// current_period_end ya NO vive en la suscripción — se movió a cada
+// ítem de la suscripción (para soportar módulos con distinto ciclo de
+// facturación cada uno). Los webhooks nos llegan con la versión de API
+// configurada en la cuenta de Stripe (no con la que fijamos nosotros
+// al llamar a la API), así que hay que leerlo del lugar nuevo primero.
+// Todos nuestros módulos comparten el mismo ciclo mensual, así que
+// tomar el del primer ítem es seguro para nuestro caso.
+function getCurrentPeriodEndSeconds(subscription: Stripe.Subscription): number | null {
+  // "as any" a propósito: el paquete "stripe" instalado trae
+  // definiciones de tipos de una versión de la API anterior a este
+  // cambio — el campo SÍ viene en la respuesta real (la cuenta usa una
+  // versión de API más nueva), pero TypeScript todavía no lo conoce en
+  // el tipo SubscriptionItem. Mismo criterio que con exceljs/Buffer.
+  const fromItem = (subscription.items?.data?.[0] as any)?.current_period_end;
+  if (typeof fromItem === "number") return fromItem;
+  const legacy = (subscription as unknown as { current_period_end?: number }).current_period_end;
+  if (typeof legacy === "number") return legacy;
+  return null;
+}
+
 // Sincroniza nuestra tabla Subscription (y sus SubscriptionModuleItem)
 // con el estado real de una suscripción de Stripe — se llama tanto en
 // checkout.session.completed (primera vez) como en
@@ -17,20 +38,23 @@ async function syncSubscriptionFromStripe(stripeSubscription: Stripe.Subscriptio
     return;
   }
 
+  const periodEndSeconds = getCurrentPeriodEndSeconds(stripeSubscription);
+  const currentPeriodEnd = periodEndSeconds !== null ? new Date(periodEndSeconds * 1000) : null;
+
   const subscription = await db.subscription.upsert({
     where: { tenantId },
     update: {
       stripeCustomerId: stripeSubscription.customer as string,
       stripeSubscriptionId: stripeSubscription.id,
       status: mapStripeStatus(stripeSubscription.status),
-      currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+      currentPeriodEnd,
     },
     create: {
       tenantId,
       stripeCustomerId: stripeSubscription.customer as string,
       stripeSubscriptionId: stripeSubscription.id,
       status: mapStripeStatus(stripeSubscription.status),
-      currentPeriodEnd: new Date(stripeSubscription.current_period_end * 1000),
+      currentPeriodEnd,
     },
   });
 
