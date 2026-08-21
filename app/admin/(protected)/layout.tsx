@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { LayoutDashboard, Building2, History, Users, Megaphone, Shield } from "lucide-react";
+import { LayoutDashboard, Building2, History, Users, Megaphone, Shield, Send } from "lucide-react";
 import { getAdminSession } from "@/lib/admin-auth";
 import { db } from "@/lib/db";
 import AdminLogoutButton from "@/components/admin-logout-button";
@@ -14,6 +14,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   const admin = await db.adminUser.findUnique({ where: { id: session.adminId } });
   if (!admin) redirect("/admin/login");
+
+  const pendingRequestsCount = await db.moduleActivationRequest.count({ where: { status: "pending" } });
 
   return (
     <div className="min-h-screen bg-[#F5F5F5] text-[#002D09] flex flex-col">
@@ -60,6 +62,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             >
               <Megaphone size={16} aria-hidden />
               Campañas
+            </Link>
+            <Link
+              href="/admin/module-requests"
+              className="flex items-center justify-between gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#343233] hover:bg-[#F7F8F4] hover:text-[#002D09]"
+            >
+              <span className="flex items-center gap-2.5">
+                <Send size={16} aria-hidden />
+                Solicitudes
+              </span>
+              {pendingRequestsCount > 0 && (
+                <span className="text-[10px] font-bold bg-[#E7FF00] text-[#002D09] rounded-full w-5 h-5 flex items-center justify-center shrink-0">
+                  {pendingRequestsCount}
+                </span>
+              )}
             </Link>
             <Link
               href="/admin/security"

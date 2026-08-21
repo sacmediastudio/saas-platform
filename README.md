@@ -332,6 +332,33 @@ plataforma seria para esto):
   sistema que ya usaba el login — el idioma se hereda de lo que la
   persona eligió en la landing, no hay un selector nuevo.
 
+## Activar módulos ya no es self-service (solo desactivar)
+
+Decisión de modelo de negocio, no solo técnica: dejar que cualquiera
+active un módulo pagado con un clic hace fácil que alguien se
+suscriba impulsivamente a 2-3 módulos y, después, cuando solo quiere
+bajar a uno, esa "baja parcial" se sienta complicada — y ahí se
+arriesga perder por completo a un cliente que en realidad quería
+quedarse, solo que con menos.
+
+- **`/dashboard/modules`** — activar un módulo nuevo ya no es un
+  toggle: el negocio ve el precio y un botón **"Solicitar
+  activación"**, que crea un `ModuleActivationRequest` en vez de
+  prender el módulo directo. **Desactivar sigue siendo self-service**,
+  sin cambios (con el fix de `proration_behavior: "none"` de la
+  sección de arriba).
+- **`/admin/module-requests`** — el admin ve cada solicitud (con el
+  nombre del negocio y qué módulo quiere), y decide: **Activar**
+  (prende el módulo de verdad, y si el negocio ya tiene una
+  suscripción real de Stripe, agrega ese módulo a lo que se le cobra)
+  o **Rechazar** (queda resuelta sin activar nada, para cuando
+  preferís primero tener la conversación). El nav del admin muestra un
+  contador con las pendientes, para que no se pierdan de vista.
+- **`/api/tenant/modules` quedó recortado** — ya solo acepta
+  desactivar; si alguien intenta activar un módulo nuevo por ahí
+  directamente (saltándose la UI), lo rechaza con un 403 explicando
+  que tiene que usar el flujo de solicitud.
+
 ## Fix: activar módulos sin pagar (el trial nunca vencía)
 
 Bug real encontrado en producción: un negocio podía activar cualquier

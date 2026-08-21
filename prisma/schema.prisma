@@ -118,6 +118,7 @@ model Tenant {
   menuLeadRewardText  String  @default("un postre gratis en tu próxima visita")
   menuLeads           MenuLead[]
   customers           Customer[]
+  moduleActivationRequests ModuleActivationRequest[]
 
   // Pedidos desde el menú (pickup / delivery) — se paga al retirar o
   // recibir, sin pasarela de pago online por ahora. Pickup y delivery
@@ -602,6 +603,25 @@ model MenuOrderItem {
   order MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("menu_order_items")
+}
+
+// Un negocio ya no puede activar un módulo nuevo con un clic — deja
+// una solicitud acá, y un admin de Zertoo la revisa y activa a mano
+// (conversación real antes de sumar un módulo pagado, en vez de un
+// alta impulsiva que después complica una baja parcial).
+model ModuleActivationRequest {
+  id          String    @id @default(cuid())
+  tenantId    String
+  module      String // RESTAURANT | SMALL_BUSINESS | SMARTLINK
+  status      String    @default("pending") // pending | approved | rejected
+  requestedAt DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("module_activation_requests")
 }
 
 enum PageViewKind {

@@ -9,5 +9,14 @@ export default async function ModulesPage() {
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
 
-  return <ModulesManager initialEnabled={getEnabledModules(tenant)} />;
+  const pendingRequests = await db.moduleActivationRequest.findMany({
+    where: { tenantId: session.tenantId, status: "pending" },
+  });
+
+  return (
+    <ModulesManager
+      initialEnabled={getEnabledModules(tenant)}
+      initialPending={pendingRequests.map((r) => r.module) as any}
+    />
+  );
 }
