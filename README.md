@@ -332,6 +332,49 @@ plataforma seria para esto):
   sistema que ya usaba el login — el idioma se hereda de lo que la
   persona eligió en la landing, no hay un selector nuevo.
 
+## Fix: activar módulos sin pagar (el trial nunca vencía)
+
+Bug real encontrado en producción: un negocio podía activar cualquier
+módulo nuevo sin pagar nunca — no porque el código de cobro estuviera
+mal, sino porque **nada hacía vencer el "7 días gratis" de la landing**.
+Todo negocio sin una suscripción real de Stripe quedaba marcado como
+`trialing` para siempre, y el endpoint de activar módulos solo
+intentaba cobrar SI ya existía una suscripción activa — si no existía
+(el estado normal durante ese trial infinito), activaba gratis sin
+avisar nada.
+
+- **`Tenant.trialEndsAt`** — se fija una sola vez, al crear la cuenta
+  (`createdAt + 7 días`), nunca se recalcula.
+- **`lib/billing-status.ts`** — un solo lugar del que depende todo lo
+  demás, para no tener esta lógica duplicada en varios archivos:
+  - `getBillingStatus()` calcula el estado real (`trialing` /
+    `trial_expired` / `active` / `past_due` / `canceled`)
+  - `ensureTrialEndsAt()` — backfill automático y silencioso para
+    negocios creados ANTES de este cambio (no tienen `trialEndsAt`
+    guardado): les calcula una fecha justa basada en cuándo se
+    registraron de verdad (no "7 días desde hoy"), la primera vez que
+    pasan por acá. No hizo falta pedir correr una migración aparte
+    (este proyecto usa `prisma db push`, no migraciones tradicionales).
+- **El bloqueo real** vive en `/api/tenant/modules` — activar un
+  módulo NUEVO (no reactivar uno que ya estaba prendido) ahora se
+  valida ANTES de tocar la base de datos, no después: si el trial ya
+  venció y no hay una suscripción activa/al día, se rechaza con un 402
+  y un mensaje claro. Desactivar un módulo, o reactivar uno que ya se
+  había pagado antes, sigue funcionando siempre sin restricción.
+- **Decisión de diseño** — no se bloqueó la navegación a todo
+  `/dashboard` cuando el trial vence (a propósito, para no encerrar al
+  negocio sin poder llegar a `/dashboard/billing` a pagar). Se evaluó
+  usar `middleware.ts` para diferenciar rutas, pero `jsonwebtoken` (la
+  librería que usamos para las sesiones) no es compatible con el
+  entorno en que corren los middlewares de Next.js — en vez de eso, se
+  agregó un aviso permanente y visible en todo el dashboard cuando el
+  trial venció o hay un pago pendiente, con link directo a Facturación.
+- **Alcance conocido que queda pendiente**: las páginas públicas
+  (menú, citas, smartlink) de un negocio con el trial vencido siguen
+  visibles igual que antes — este fix se enfocó en cerrar la vía
+  específica de "activar módulos nuevos gratis", no en revisar todo el
+  ciclo de vida completo de un trial vencido.
+
 ## Revisión de seguridad (auditoría + límite de frecuencia + 2FA de admin)
 
 Cuatro mejoras hechas a partir de una revisión honesta de qué tan

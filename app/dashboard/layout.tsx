@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getSession } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getEnabledModules } from "@/lib/modules";
+import { ensureTrialEndsAt, getBillingStatus } from "@/lib/billing-status";
 import DashboardShell from "@/components/dashboard-shell";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -16,9 +17,10 @@ export default async function DashboardLayout({ children }: { children: React.Re
   const session = await getSession();
   if (!session) redirect("/login");
 
-  const [tenant, user] = await Promise.all([
+  const [tenant, user, subscription] = await Promise.all([
     db.tenant.findUnique({ where: { id: session.tenantId } }),
     db.user.findUnique({ where: { id: session.userId }, select: { emailVerified: true } }),
+    db.subscription.findUnique({ where: { tenantId: session.tenantId } }),
   ]);
   if (!tenant) redirect("/login");
   // Sin correo verificado, no se puede usar el dashboard — evita cuentas
@@ -27,10 +29,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
   // Una cuenta suspendida desde el panel de admin no puede usar el dashboard.
   if (tenant.suspended) redirect("/suspended");
 
+  const trialEndsAt = await ensureTrialEndsAt(db, tenant);
+  const billingStatus = getBillingStatus({ trialEndsAt }, subscription);
+
   return (
     <DashboardShell
       tenant={{ name: tenant.name, logoUrl: tenant.logoUrl }}
       enabledModules={getEnabledModules(tenant)}
+      billingStatus={billingStatus}
     >
       {children}
     </DashboardShell>

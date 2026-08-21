@@ -14,10 +14,12 @@ type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
 export default function DashboardShell({
   tenant,
   enabledModules,
+  billingStatus,
   children,
 }: {
   tenant: { name: string; logoUrl: string | null };
   enabledModules: ModuleType[];
+  billingStatus?: "trialing" | "trial_expired" | "active" | "past_due" | "canceled";
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -161,7 +163,20 @@ export default function DashboardShell({
           </aside>
 
           <main className="p-4 sm:p-6 md:p-9 min-w-0">
-            <div className="max-w-5xl flex flex-col gap-5">{children}</div>
+            <div className="max-w-5xl flex flex-col gap-5">
+              {(billingStatus === "trial_expired" || billingStatus === "past_due") && (
+                <a
+                  href="/dashboard/billing"
+                  className="block rounded-xl px-4 py-3 text-sm font-medium bg-amber-50 text-amber-800 border border-amber-200 hover:bg-amber-100"
+                >
+                  {billingStatus === "trial_expired"
+                    ? "Tu período de prueba terminó — puedes seguir usando lo que ya tenías activo, pero no activar módulos nuevos hasta suscribirte."
+                    : "Tu suscripción tiene un pago pendiente — actualiza tu método de pago para no perder acceso."}{" "}
+                  <span className="underline">Ir a Facturación →</span>
+                </a>
+              )}
+              {children}
+            </div>
           </main>
         </div>
 

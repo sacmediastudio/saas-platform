@@ -52,6 +52,12 @@ model Tenant {
   name             String
   slug             String       @unique
   businessType     BusinessType
+  // Se fija una sola vez, al crear la cuenta ("7 días gratis" de la
+  // landing) — nunca se recalcula. Un negocio sin suscripción real de
+  // Stripe y con esta fecha ya pasada está "fuera de prueba": puede
+  // seguir viendo su dashboard (no lo dejamos encerrado sin poder
+  // llegar a pagar), pero no puede activar módulos nuevos gratis.
+  trialEndsAt      DateTime?
   // Módulos activos de verdad. businessType queda como el "módulo con
   // el que empezó" (se sigue usando para el signup y como valor por
   // defecto), pero el acceso real a cada dashboard/página pública se
