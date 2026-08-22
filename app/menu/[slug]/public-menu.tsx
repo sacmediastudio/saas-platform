@@ -366,8 +366,8 @@ export default function PublicMenu({
       {/* Nav de categorías, pegajosa */}
       <div
         ref={navRef}
-        className="sticky top-0 z-20 backdrop-blur border-b"
-        style={{ backgroundColor: tenant.themeBgColor + "e6", borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
+        className="sticky top-0 z-20 backdrop-blur"
+        style={{ backgroundColor: tenant.themeBgColor + "e6" }}
       >
         <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2">
           <div className="relative flex-1 min-w-0 flex items-center">
