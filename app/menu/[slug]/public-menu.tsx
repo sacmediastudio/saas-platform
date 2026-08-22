@@ -51,6 +51,7 @@ interface TenantData {
   themeTextColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  menuCardColor: string;
   menuShowPhotos: boolean;
   menuLeadEnabled: boolean;
   menuLeadButtonLabel: string;
@@ -345,7 +346,7 @@ export default function PublicMenu({
                     />
                   </button>
                 </div>
-                <div className="px-5 py-4" style={{ backgroundColor: tenant.themeBgColor }}>
+                <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-xl font-bold leading-tight">{item.name}</p>
                     <span className="text-xl font-bold text-red-600 shrink-0">
@@ -476,8 +477,8 @@ export default function PublicMenu({
                 sectionRefs.current[cat.id] = el;
               }}
               data-category-id={cat.id}
-              className="py-8 border-b"
-              style={{ borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
+              className="rounded-2xl px-5 py-6 mb-6 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
+              style={{ backgroundColor: tenant.menuCardColor }}
             >
               <h2 className="text-xl font-bold mb-5">{categoryLabel(cat)}</h2>
               <div

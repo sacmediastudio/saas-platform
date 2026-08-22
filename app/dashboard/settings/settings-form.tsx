@@ -42,6 +42,7 @@ interface TenantData {
   themeTextColor: string;
   buttonColor: string;
   buttonTextColor: string;
+  menuCardColor: string;
   menuShowPhotos: boolean;
 }
 
@@ -262,6 +263,11 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
             value={form.buttonTextColor}
             onChange={(v) => setForm({ ...form, buttonTextColor: v })}
           />
+          <ColorField
+            label="Tarjetas del menú"
+            value={form.menuCardColor}
+            onChange={(v) => setForm({ ...form, menuCardColor: v })}
+          />
         </div>
 
         <div
@@ -275,6 +281,13 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
           >
             Botón
           </span>
+        </div>
+
+        <div
+          className="rounded-2xl px-4 py-4 mt-3 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
+          style={{ backgroundColor: form.menuCardColor, color: form.themeTextColor }}
+        >
+          <span className="text-sm">Así se ve una tarjeta del menú (categoría o destacado)</span>
         </div>
       </Section>
 

@@ -528,6 +528,20 @@ versión del texto. Resolver esto de verdad requeriría URLs separadas
 por idioma (`/en/menu/slug` vs `/es/menu/slug`) con `hreflang`, que es
 un cambio de arquitectura más grande, no algo para sumar de paso acá.
 
+## Tarjetas por categoría en el menú público
+
+Cambio de diseño — cada categoría del menú (y también la sección de
+Destacados) ahora es su propia tarjeta con puntas redondeadas y una
+sombra suave, en vez de secciones separadas solo por una línea
+delgada.
+
+- **`Tenant.menuCardColor`** — nuevo color configurable en
+  `/dashboard/settings` (junto a los otros 4 colores del tema), con
+  vista previa en vivo. Por defecto blanco.
+- Se usa en **los dos lugares** a la vez: cada tarjeta de categoría, y
+  también la tarjeta de cada plato en Destacados (que antes usaba el
+  mismo color de fondo de toda la página, sin poder distinguirse).
+
 ## Precio variable ("Preguntar" / "Ask")
 
 Para platos que se venden por peso o tamaño (ej. pescado entero,
