@@ -25,6 +25,34 @@ function cellToString(value: ExcelJS.CellValue): string {
   return String(value).trim();
 }
 
+// La plataforma es bilingüe, así que el importador también acepta el
+// encabezado en inglés, no solo el español exacto de la plantilla —
+// alguien puede armar su propio Excel a mano, en el idioma que use su
+// negocio. Comparación sin importar mayúsculas ni espacios extra.
+function normalizeHeader(s: string): string {
+  return s.trim().toLowerCase();
+}
+
+function pickByAliases(normalizedRow: Map<string, string>, aliases: string[]): string {
+  for (const alias of aliases) {
+    const value = normalizedRow.get(normalizeHeader(alias));
+    if (value !== undefined) return value;
+  }
+  return "";
+}
+
+const CATEGORIA_ALIASES = ["Categoría", "Categoria", "Category"];
+const NOMBRE_ALIASES = ["Nombre del plato", "Dish Name", "Name", "Item Name", "Item"];
+const DESCRIPCION_ALIASES = ["Descripción", "Descripcion", "Description"];
+const DESCRIPCION_EN_ALIASES = [
+  "Descripción (inglés)",
+  "Descripcion (ingles)",
+  "Description (English)",
+  "English Description",
+];
+const PRECIO_ALIASES = ["Precio", "Price"];
+const DESTACADO_ALIASES = ["Destacado (Sí/No)", "Destacado (Si/No)", "Featured (Yes/No)", "Featured"];
+
 // POST /api/menu-items/import/preview — recibe el archivo, lo valida
 // fila por fila, y devuelve el resultado para que el negocio lo revise
 // ANTES de que se guarde nada de verdad.
@@ -84,14 +112,15 @@ export async function POST(req: NextRequest) {
       const header = headerByColumn[colNumber];
       if (header) byHeader[header] = cellToString(cell.value);
     });
+    const normalizedRow = new Map(Object.entries(byHeader).map(([k, v]) => [normalizeHeader(k), v]));
 
-    const categoria = (byHeader["Categoría"] ?? "").trim();
-    const nombre = (byHeader["Nombre del plato"] ?? "").trim();
-    const descripcion = (byHeader["Descripción"] ?? "").trim();
-    const descripcionEn = (byHeader["Descripción (inglés)"] ?? "").trim();
-    const precioRaw = byHeader["Precio"] ?? "";
+    const categoria = pickByAliases(normalizedRow, CATEGORIA_ALIASES).trim();
+    const nombre = pickByAliases(normalizedRow, NOMBRE_ALIASES).trim();
+    const descripcion = pickByAliases(normalizedRow, DESCRIPCION_ALIASES).trim();
+    const descripcionEn = pickByAliases(normalizedRow, DESCRIPCION_EN_ALIASES).trim();
+    const precioRaw = pickByAliases(normalizedRow, PRECIO_ALIASES);
     const precio = Number(precioRaw.replace(",", "."));
-    const destacado = parseBoolean(byHeader["Destacado (Sí/No)"]);
+    const destacado = parseBoolean(pickByAliases(normalizedRow, DESTACADO_ALIASES));
 
     // Ignora filas totalmente vacías (ej. al final del archivo) sin marcarlas como error.
     if (!categoria && !nombre && !precioRaw) return;
