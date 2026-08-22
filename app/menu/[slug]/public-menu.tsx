@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Star, Mail, Phone, MapPin, ChevronDown, X, Heart, ArrowRight } from "lucide-react";
+import { Star, Mail, Phone, MapPin, ChevronDown, ChevronLeft, ChevronRight, X, Heart, ArrowRight } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
@@ -186,6 +186,36 @@ export default function PublicMenu({
 
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
+  const categoryScrollRef = useRef<HTMLDivElement | null>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
+  // Con el scrollbar escondido (por estética), en computadora no había
+  // ninguna pista de que hubiera más categorías para el lado — estas
+  // flechas son la forma confiable de llegar a ellas sin depender de
+  // que alguien sepa "arrastrar" con el mouse.
+  function updateCategoryArrows() {
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    setShowLeftArrow(el.scrollLeft > 4);
+    setShowRightArrow(el.scrollLeft < el.scrollWidth - el.clientWidth - 4);
+  }
+
+  useEffect(() => {
+    updateCategoryArrows();
+    const el = categoryScrollRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateCategoryArrows);
+    window.addEventListener("resize", updateCategoryArrows);
+    return () => {
+      el.removeEventListener("scroll", updateCategoryArrows);
+      window.removeEventListener("resize", updateCategoryArrows);
+    };
+  }, [categoriesWithItems.length]);
+
+  function scrollCategoryNav(direction: "left" | "right") {
+    categoryScrollRef.current?.scrollBy({ left: direction === "left" ? -160 : 160, behavior: "smooth" });
+  }
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -333,30 +363,52 @@ export default function PublicMenu({
         style={{ backgroundColor: tenant.themeBgColor + "e6", borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
       >
         <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar flex-1 min-w-0">
-            {tenant.logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={tenant.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover shrink-0 mr-1" />
-            )}
-            {categoriesWithItems.map((cat) => (
+          <div className="relative flex-1 min-w-0 flex items-center">
+            {showLeftArrow && (
               <button
-                key={cat.id}
-                onClick={() => scrollToCategory(cat.id)}
-                className="text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-opacity"
-                style={{
-                  backgroundColor: activeCategory === cat.id ? tenant.buttonColor : "transparent",
-                  opacity: activeCategory === cat.id ? 1 : 0.6,
-                }}
+                onClick={() => scrollCategoryNav("left")}
+                aria-label="Ver categorías anteriores"
+                className="absolute left-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
               >
-                <span
+                <ChevronLeft size={16} aria-hidden />
+              </button>
+            )}
+            <div ref={categoryScrollRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
+              {tenant.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={tenant.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover shrink-0 mr-1" />
+              )}
+              {categoriesWithItems.map((cat) => (
+                <button
+                  key={cat.id}
+                  onClick={() => scrollToCategory(cat.id)}
+                  className="text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-opacity"
                   style={{
-                    color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
+                    backgroundColor: activeCategory === cat.id ? tenant.buttonColor : "transparent",
+                    opacity: activeCategory === cat.id ? 1 : 0.6,
                   }}
                 >
-                  {categoryLabel(cat)}
-                </span>
+                  <span
+                    style={{
+                      color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
+                    }}
+                  >
+                    {categoryLabel(cat)}
+                  </span>
+                </button>
+              ))}
+            </div>
+            {showRightArrow && (
+              <button
+                onClick={() => scrollCategoryNav("right")}
+                aria-label="Ver más categorías"
+                className="absolute right-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
+              >
+                <ChevronRight size={16} aria-hidden />
               </button>
-            ))}
+            )}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
