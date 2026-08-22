@@ -5,17 +5,24 @@ import { requireTenant } from "@/lib/auth";
 
 const addOnSchema = z.object({ name: z.string().min(1).max(60), price: z.number().min(0).max(10000) });
 
-const createSchema = z.object({
-  categoryId: z.string(),
-  name: z.string().min(1),
-  description: z.string().optional(),
-  descriptionEn: z.string().nullable().optional(),
-  price: z.number().positive(),
-  imageUrl: z.string().min(1).nullable().optional(), // acepta URL http(s), data URI, null (sin foto), o ausente
-  featured: z.boolean().default(false),
-  allergens: z.array(z.string()).default([]),
-  addOns: z.array(addOnSchema).max(30).default([]),
-});
+const createSchema = z
+  .object({
+    categoryId: z.string(),
+    name: z.string().min(1),
+    description: z.string().optional(),
+    descriptionEn: z.string().nullable().optional(),
+    price: z.number().min(0),
+    // Para platos por peso/tamaño — ver comentario en el schema de Prisma.
+    variablePrice: z.boolean().default(false),
+    imageUrl: z.string().min(1).nullable().optional(), // acepta URL http(s), data URI, null (sin foto), o ausente
+    featured: z.boolean().default(false),
+    allergens: z.array(z.string()).default([]),
+    addOns: z.array(addOnSchema).max(30).default([]),
+  })
+  .refine((data) => data.variablePrice || data.price > 0, {
+    message: "El precio debe ser mayor a 0 (o marca 'Precio variable')",
+    path: ["price"],
+  });
 
 // GET /api/menu-items — lista los platos del tenant autenticado, agrupados
 // implícitamente por categoría (el frontend agrupa por categoryId).

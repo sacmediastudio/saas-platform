@@ -75,6 +75,17 @@ export async function POST(req: NextRequest) {
   if (menuItems.length !== data.items.length) {
     return NextResponse.json({ error: "Algún plato ya no está disponible." }, { status: 400 });
   }
+  // Un plato de precio variable no tiene un número real para cobrar —
+  // no debería llegar hasta acá (el botón de agregar no aparece para
+  // esos platos), pero por las dudas se rechaza explícitamente en vez
+  // de dejarlo pasar con precio 0.
+  const variablePriceItem = menuItems.find((m) => m.variablePrice);
+  if (variablePriceItem) {
+    return NextResponse.json(
+      { error: `"${variablePriceItem.name}" tiene precio variable — hay que consultarlo directo en el local.` },
+      { status: 400 }
+    );
+  }
 
   const orderItems = data.items.map((i) => {
     const menuItem = menuItems.find((m) => m.id === i.menuItemId)!;

@@ -93,6 +93,7 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
           description: i.description,
           descriptionEn: i.descriptionEn,
           price: Number(i.price),
+          variablePrice: i.variablePrice,
           status: i.status,
           featured: i.featured,
           imageUrl: i.imageUrl,

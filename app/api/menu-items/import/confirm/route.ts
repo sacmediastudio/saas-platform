@@ -3,14 +3,20 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 
-const rowSchema = z.object({
-  categoria: z.string().min(1),
-  nombre: z.string().min(1),
-  descripcion: z.string().optional(),
-  descripcionEn: z.string().optional(),
-  precio: z.number().positive(),
-  destacado: z.boolean().default(false),
-});
+const rowSchema = z
+  .object({
+    categoria: z.string().min(1),
+    nombre: z.string().min(1),
+    descripcion: z.string().optional(),
+    descripcionEn: z.string().optional(),
+    precio: z.number().min(0),
+    variablePrice: z.boolean().default(false),
+    destacado: z.boolean().default(false),
+  })
+  .refine((data) => data.variablePrice || data.precio > 0, {
+    message: "El precio debe ser mayor a 0 (o marcarse como variable)",
+    path: ["precio"],
+  });
 
 const schema = z.object({ rows: z.array(rowSchema).min(1).max(500) });
 
@@ -57,6 +63,7 @@ export async function POST(req: NextRequest) {
           description: row.descripcion || null,
           descriptionEn: row.descripcionEn || null,
           price: row.precio,
+          variablePrice: row.variablePrice,
           featured: row.destacado,
         },
       });

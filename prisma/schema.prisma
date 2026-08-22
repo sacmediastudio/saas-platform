@@ -214,6 +214,13 @@ model MenuItem {
   // ser cualquier cosa: una marca, un plato regional, etc.).
   descriptionEn String?
   price       Decimal        @db.Decimal(10, 2)
+  // Para platos que se venden por peso/tamaño (ej. pescado entero) —
+  // cuando está activo, el menú público muestra "Preguntar"/"Ask" en
+  // vez de un precio, y el plato queda afuera del carrito de pedidos
+  // (no hay forma de calcular un total automático sin un precio real).
+  // "price" sigue guardando algo (0 por defecto) pero no se usa/muestra
+  // mientras esto esté activo.
+  variablePrice Boolean      @default(false)
   imageUrl    String?
   status      MenuItemStatus @default(AVAILABLE)
   featured    Boolean        @default(false)

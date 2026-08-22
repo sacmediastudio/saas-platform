@@ -20,6 +20,7 @@ interface MenuItem {
   description: string | null;
   descriptionEn: string | null;
   price: number;
+  variablePrice: boolean;
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   imageUrl: string | null;
   featured: boolean;
@@ -320,6 +321,7 @@ function DishModal({
     description: item?.description ?? "",
     descriptionEn: item?.descriptionEn ?? "",
     price: item ? String(item.price) : "",
+    variablePrice: item?.variablePrice ?? false,
     categoryId: item?.categoryId ?? categories[0]?.id ?? "",
     imageUrl: (item?.imageUrl ?? null) as string | null,
     featured: item?.featured ?? false,
@@ -352,8 +354,8 @@ function DishModal({
       setError("Elige una categoría");
       return;
     }
-    if (!Number.isFinite(price) || price <= 0) {
-      setError("Ingresa un precio válido");
+    if (!form.variablePrice && (!Number.isFinite(price) || price <= 0)) {
+      setError("Ingresa un precio válido (o marca 'Precio variable')");
       return;
     }
 
@@ -369,7 +371,8 @@ function DishModal({
           name: form.name,
           description: form.description || undefined,
           descriptionEn: form.descriptionEn || null,
-          price,
+          price: form.variablePrice ? 0 : price,
+          variablePrice: form.variablePrice,
           imageUrl: form.imageUrl,
           featured: form.featured,
           addOns: addOns.filter((a) => a.name.trim()).map((a) => ({ name: a.name.trim(), price: a.price || 0 })),
@@ -462,11 +465,31 @@ function DishModal({
             min="0"
             value={form.price}
             onChange={(e) => setForm({ ...form, price: e.target.value })}
-            required
+            required={!form.variablePrice}
+            disabled={form.variablePrice}
             placeholder="6.50"
-            className={inputClass}
+            className={`${inputClass} disabled:opacity-40 disabled:cursor-not-allowed`}
           />
         </Field>
+
+        <label className="flex items-center gap-2 text-sm cursor-pointer -mt-1">
+          <input
+            type="checkbox"
+            checked={form.variablePrice}
+            onChange={(e) => setForm({ ...form, variablePrice: e.target.checked })}
+            className="w-4 h-4 accent-[#E7FF00]"
+          />
+          <span>
+            Precio variable (ej. por peso) — en el menú público se muestra{" "}
+            <strong>&ldquo;Preguntar&rdquo; / &ldquo;Ask&rdquo;</strong> en vez de un precio
+          </span>
+        </label>
+        {form.variablePrice && (
+          <p className="text-xs text-[#343233]/60 -mt-3">
+            Este plato no se va a poder agregar al carrito de pedidos online — el cliente tiene que
+            preguntar el precio en el local, como con cualquier plato de precio variable.
+          </p>
+        )}
 
         <label className="flex items-center gap-2 text-sm cursor-pointer">
           <input
@@ -712,6 +735,7 @@ interface ImportRow {
   descripcion: string;
   descripcionEn: string;
   precio: number | null;
+  variablePrice: boolean;
   destacado: boolean;
   errors: string[];
 }
@@ -764,6 +788,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
             descripcion: r.descripcion || undefined,
             descripcionEn: r.descripcionEn || undefined,
             precio: r.precio,
+            variablePrice: r.variablePrice,
             destacado: r.destacado,
           })),
         }),
@@ -818,7 +843,10 @@ function ImportModal({ onClose }: { onClose: () => void }) {
               {validRows.map((r) => (
                 <div key={r.rowNumber} className="px-3 py-2 text-sm">
                   <span className="font-medium">{r.nombre}</span>
-                  <span className="text-[#343233]/60"> — {r.categoria} — ${r.precio?.toFixed(2)}</span>
+                  <span className="text-[#343233]/60">
+                    {" "}
+                    — {r.categoria} — {r.variablePrice ? "Precio variable (Preguntar)" : `$${r.precio?.toFixed(2)}`}
+                  </span>
                 </div>
               ))}
             </div>

@@ -528,6 +528,29 @@ versión del texto. Resolver esto de verdad requeriría URLs separadas
 por idioma (`/en/menu/slug` vs `/es/menu/slug`) con `hreflang`, que es
 un cambio de arquitectura más grande, no algo para sumar de paso acá.
 
+## Precio variable ("Preguntar" / "Ask")
+
+Para platos que se venden por peso o tamaño (ej. pescado entero,
+langosta) — el negocio marca un checkbox al crear/editar el plato, y
+en vez de un precio, el menú público muestra **"Preguntar"** o
+**"Ask"** según el idioma que el cliente tenga elegido.
+
+- **`MenuItem.variablePrice`** — el campo `price` se sigue guardando
+  (queda en 0), pero no se muestra ni se usa mientras esto esté activo.
+- **No se puede pedir online** — no hay forma de calcular un total
+  automático sin un precio real, así que estos platos no muestran el
+  botón de agregar al carrito (siguen viéndose en el menú, con foto y
+  descripción, solo sin esa opción). El endpoint de crear pedidos
+  también lo rechaza explícitamente por las dudas, no solo confía en
+  que el botón esté escondido.
+- **El importador de Excel lo detecta solo** — si la celda de precio
+  tiene texto que no es un número (ej. "Ask server", "Consultar",
+  "Precio de mercado"), se toma como precio variable en vez de
+  marcarse como error. Si la celda está totalmente vacía, sigue siendo
+  un error real — la diferencia importa: texto no vacío es una señal
+  clara de que fue intencional, una celda vacía podría ser solo una
+  fila incompleta.
+
 ## Importar el menú desde Excel
 
 Le ahorra al negocio cargar el menú plato por plato a mano — pensado

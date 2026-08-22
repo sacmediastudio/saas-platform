@@ -26,6 +26,7 @@ interface MenuItemData {
   description: string | null;
   descriptionEn: string | null;
   price: number;
+  variablePrice: boolean;
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   featured: boolean;
   imageUrl: string | null;
@@ -95,6 +96,11 @@ export default function PublicMenu({
   }
   function itemDescription(item: MenuItemData) {
     return lang === "en" && item.descriptionEn ? item.descriptionEn : item.description;
+  }
+
+  function priceLabel(item: MenuItemData) {
+    if (item.variablePrice) return lang === "en" ? "Ask" : "Preguntar";
+    return formatCurrency(item.price, tenant.currency);
   }
 
   // Wishlist del cliente: solo vive en su navegador (no requiere cuenta
@@ -343,7 +349,7 @@ export default function PublicMenu({
                   <div className="flex items-start justify-between gap-3">
                     <p className="text-xl font-bold leading-tight">{item.name}</p>
                     <span className="text-xl font-bold text-red-600 shrink-0">
-                      {formatCurrency(item.price, tenant.currency)}
+                      {priceLabel(item)}
                     </span>
                   </div>
                   {itemDescription(item) && (
@@ -522,7 +528,7 @@ export default function PublicMenu({
                               </span>
                             ) : (
                               <span className="text-base font-semibold shrink-0">
-                                {formatCurrency(item.price, tenant.currency)}
+                                {priceLabel(item)}
                               </span>
                             )}
                           </div>
@@ -531,7 +537,7 @@ export default function PublicMenu({
                           )}
                         </div>
                       </div>
-                      {tenant.orderingEnabled && item.status !== "SOLD_OUT" && (
+                      {tenant.orderingEnabled && item.status !== "SOLD_OUT" && !item.variablePrice && (
                         <div className="flex items-center gap-2 shrink-0">
                           {item.addOns.length > 0 ? (
                             <button
@@ -695,7 +701,7 @@ export default function PublicMenu({
                   <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">Agotado</span>
                 ) : (
                   <span className="text-lg font-bold shrink-0">
-                    {formatCurrency(zoomedItem.price, tenant.currency)}
+                    {priceLabel(zoomedItem)}
                   </span>
                 )}
               </div>

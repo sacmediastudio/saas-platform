@@ -9,6 +9,7 @@ interface ParsedRow {
   descripcion: string;
   descripcionEn: string;
   precio: number | null;
+  variablePrice: boolean;
   destacado: boolean;
   errors: string[];
 }
@@ -118,8 +119,15 @@ export async function POST(req: NextRequest) {
     const nombre = pickByAliases(normalizedRow, NOMBRE_ALIASES).trim();
     const descripcion = pickByAliases(normalizedRow, DESCRIPCION_ALIASES).trim();
     const descripcionEn = pickByAliases(normalizedRow, DESCRIPCION_EN_ALIASES).trim();
-    const precioRaw = pickByAliases(normalizedRow, PRECIO_ALIASES);
+    const precioRaw = pickByAliases(normalizedRow, PRECIO_ALIASES).trim();
     const precio = Number(precioRaw.replace(",", "."));
+    // Si la celda de precio tiene texto pero NO es un número (ej. "Ask
+    // server", "Consultar", "Precio de mercado") se toma como plato de
+    // precio variable, no como un error — es justo el caso real que
+    // motivó esto: pescados/mariscos que se venden por peso o según el
+    // día. Si la celda está totalmente vacía, sigue siendo un error
+    // (evita que una fila incompleta pase desapercibida).
+    const variablePrice = precioRaw !== "" && (Number.isNaN(precio) || precio <= 0);
     const destacado = parseBoolean(pickByAliases(normalizedRow, DESTACADO_ALIASES));
 
     // Ignora filas totalmente vacías (ej. al final del archivo) sin marcarlas como error.
@@ -128,7 +136,7 @@ export async function POST(req: NextRequest) {
     const errors: string[] = [];
     if (!categoria) errors.push("Falta la categoría");
     if (!nombre) errors.push("Falta el nombre del plato");
-    if (!precioRaw || Number.isNaN(precio) || precio <= 0) errors.push("El precio no es válido");
+    if (!precioRaw) errors.push("Falta el precio (o escribe algo como 'Ask'/'Preguntar' para precio variable)");
 
     rows.push({
       rowNumber,
@@ -136,7 +144,8 @@ export async function POST(req: NextRequest) {
       nombre,
       descripcion,
       descripcionEn,
-      precio: Number.isNaN(precio) ? null : precio,
+      precio: variablePrice ? 0 : Number.isNaN(precio) ? null : precio,
+      variablePrice,
       destacado,
       errors,
     });

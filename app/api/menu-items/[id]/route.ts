@@ -9,7 +9,8 @@ const updateSchema = z.object({
   name: z.string().min(1).optional(),
   description: z.string().optional(),
   descriptionEn: z.string().nullable().optional(),
-  price: z.number().positive().optional(),
+  price: z.number().min(0).optional(),
+  variablePrice: z.boolean().optional(),
   status: z.enum(["AVAILABLE", "SOLD_OUT", "SEASONAL"]).optional(),
   categoryId: z.string().optional(),
   imageUrl: z.string().min(1).nullable().optional(),
@@ -35,6 +36,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const parsed = updateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+  }
+
+  // El precio solo es obligatorio (> 0) si el plato NO tiene precio
+  // variable — se valida acá, no en el schema de zod, porque en una
+  // edición parcial cualquiera de los dos campos puede venir ausente
+  // (significa "no cambia"), así que hace falta mirar el valor
+  // efectivo combinando lo nuevo con lo que ya había guardado.
+  const effectiveVariablePrice = parsed.data.variablePrice ?? existing.variablePrice;
+  const effectivePrice = parsed.data.price ?? Number(existing.price);
+  if (!effectiveVariablePrice && effectivePrice <= 0) {
+    return NextResponse.json(
+      { error: "El precio debe ser mayor a 0 (o marca 'Precio variable')" },
+      { status: 400 }
+    );
   }
 
   if (parsed.data.categoryId) {
