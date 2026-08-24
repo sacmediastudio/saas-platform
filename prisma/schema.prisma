@@ -90,6 +90,13 @@ model Tenant {
   // para que se note contra el fondo si el negocio eligió un fondo
   // de otro color.
   menuCardColor String @default("#ffffff")
+  // Color de texto para lo que va DIRECTO sobre el fondo de la página
+  // (el título "Destacados", el nav de categorías) — separado de
+  // themeTextColor, que además se usa para el texto DENTRO de las
+  // tarjetas del menú (nombre y descripción de cada plato). Si el
+  // negocio elige un fondo de color fuerte, puede necesitar un color
+  // de texto distinto ahí que adentro de las tarjetas blancas.
+  menuPageTextColor String @default("#002D09")
 
   // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
   // libres después de cada cita antes de que se pueda reservar la

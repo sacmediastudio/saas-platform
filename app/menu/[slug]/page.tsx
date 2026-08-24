@@ -77,6 +77,7 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
           buttonColor: tenant.buttonColor,
           buttonTextColor: tenant.buttonTextColor,
           menuCardColor: tenant.menuCardColor,
+          menuPageTextColor: tenant.menuPageTextColor,
           menuShowPhotos: tenant.menuShowPhotos,
           menuLeadEnabled: tenant.menuLeadEnabled,
           menuLeadButtonLabel: tenant.menuLeadButtonLabel,

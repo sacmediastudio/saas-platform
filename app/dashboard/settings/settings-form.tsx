@@ -43,6 +43,7 @@ interface TenantData {
   buttonColor: string;
   buttonTextColor: string;
   menuCardColor: string;
+  menuPageTextColor: string;
   menuShowPhotos: boolean;
 }
 
@@ -268,6 +269,11 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
             value={form.menuCardColor}
             onChange={(v) => setForm({ ...form, menuCardColor: v })}
           />
+          <ColorField
+            label="Texto sobre el fondo"
+            value={form.menuPageTextColor}
+            onChange={(v) => setForm({ ...form, menuPageTextColor: v })}
+          />
         </div>
 
         <div
@@ -280,6 +286,15 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
             style={{ backgroundColor: form.buttonColor, color: form.buttonTextColor }}
           >
             Botón
+          </span>
+        </div>
+
+        <div
+          className="rounded-xl px-4 py-3 mt-3"
+          style={{ backgroundColor: form.themeBgColor, color: form.menuPageTextColor }}
+        >
+          <span className="text-xs font-semibold tracking-[0.15em] uppercase opacity-70">
+            Así se ve "Destacados" y el menú de categorías, directo sobre el fondo
           </span>
         </div>
 

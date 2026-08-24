@@ -536,11 +536,20 @@ sombra suave, en vez de secciones separadas solo por una línea
 delgada.
 
 - **`Tenant.menuCardColor`** — nuevo color configurable en
-  `/dashboard/settings` (junto a los otros 4 colores del tema), con
+  `/dashboard/settings` (junto a los otros colores del tema), con
   vista previa en vivo. Por defecto blanco.
 - Se usa en **los dos lugares** a la vez: cada tarjeta de categoría, y
   también la tarjeta de cada plato en Destacados (que antes usaba el
   mismo color de fondo de toda la página, sin poder distinguirse).
+- **`Tenant.menuPageTextColor`** — color de texto separado, solo para
+  lo que va DIRECTO sobre el fondo de la página (el título
+  "Destacados", el nav de categorías, las flechas de scroll) —
+  independiente de `themeTextColor`, que sigue usándose para el texto
+  DENTRO de las tarjetas (nombre y descripción de cada plato). Hacía
+  falta separarlos porque un solo color compartido no siempre
+  contrasta bien contra dos fondos distintos a la vez (el fondo de la
+  página, que puede ser cualquier color, y el fondo de las tarjetas,
+  blanco por defecto).
 
 ## Precio variable ("Preguntar" / "Ask")
 

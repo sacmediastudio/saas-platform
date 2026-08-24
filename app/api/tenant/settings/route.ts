@@ -37,6 +37,10 @@ const updateSchema = z.object({
     .string()
     .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
     .optional(),
+  menuPageTextColor: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+    .optional(),
 });
 
 export async function GET() {

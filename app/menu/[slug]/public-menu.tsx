@@ -52,6 +52,7 @@ interface TenantData {
   buttonColor: string;
   buttonTextColor: string;
   menuCardColor: string;
+  menuPageTextColor: string;
   menuShowPhotos: boolean;
   menuLeadEnabled: boolean;
   menuLeadButtonLabel: string;
@@ -299,7 +300,12 @@ export default function PublicMenu({
       {/* Destacados */}
       {featuredItems.length > 0 && (
         <div className="px-5 py-8 max-w-xl mx-auto">
-          <h2 className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4">Destacados</h2>
+          <h2
+            className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4"
+            style={{ color: tenant.menuPageTextColor }}
+          >
+            Destacados
+          </h2>
           <div className="flex flex-col gap-5">
             {featuredItems.map((item) => (
               <div
@@ -376,7 +382,7 @@ export default function PublicMenu({
                 onClick={() => scrollCategoryNav("left")}
                 aria-label="Ver categorías anteriores"
                 className="absolute left-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
+                style={{ backgroundColor: tenant.themeBgColor, color: tenant.menuPageTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
               >
                 <ChevronLeft size={16} aria-hidden />
               </button>
@@ -398,7 +404,7 @@ export default function PublicMenu({
                 >
                   <span
                     style={{
-                      color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.themeTextColor,
+                      color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.menuPageTextColor,
                     }}
                   >
                     {categoryLabel(cat)}
@@ -411,7 +417,7 @@ export default function PublicMenu({
                 onClick={() => scrollCategoryNav("right")}
                 aria-label="Ver más categorías"
                 className="absolute right-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
+                style={{ backgroundColor: tenant.themeBgColor, color: tenant.menuPageTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
               >
                 <ChevronRight size={16} aria-hidden />
               </button>
