@@ -425,21 +425,19 @@ export default function PublicMenu({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            {wishlist.length > 0 && (
-              <button
-                onClick={() => setShowWishlistOnly((v) => !v)}
-                aria-label="Ver favoritos"
-                className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
-                style={{
-                  backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
-                  color: showWishlistOnly ? tenant.buttonTextColor : tenant.themeTextColor,
-                  border: showWishlistOnly ? "none" : "1px solid color-mix(in srgb, currentColor 20%, transparent)",
-                }}
-              >
-                <Heart size={13} className="fill-current" aria-hidden />
-                {wishlist.length}
-              </button>
-            )}
+            <button
+              onClick={() => setShowWishlistOnly((v) => !v)}
+              aria-label="Ver favoritos"
+              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
+              style={{
+                backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
+                color: showWishlistOnly ? tenant.buttonTextColor : tenant.themeTextColor,
+                border: showWishlistOnly ? "none" : "1px solid color-mix(in srgb, currentColor 20%, transparent)",
+              }}
+            >
+              <Heart size={13} className={wishlist.length > 0 ? "fill-current" : ""} aria-hidden />
+              {wishlist.length}
+            </button>
             <div
               className="flex items-center rounded-full p-0.5 text-xs font-bold"
               style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
