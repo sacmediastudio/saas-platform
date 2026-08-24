@@ -619,7 +619,7 @@ export default function PublicMenu({
         {hasContact && (
           <div
             className="pb-10 pt-4 border-t text-xs opacity-60 flex flex-col gap-1.5"
-            style={{ borderColor: "color-mix(in srgb, currentColor 10%, transparent)" }}
+            style={{ borderColor: "color-mix(in srgb, currentColor 10%, transparent)", color: tenant.menuPageTextColor }}
           >
             {tenant.address && (
               <span className="flex items-center gap-1.5">
