@@ -364,14 +364,50 @@ quedarse, solo que con menos.
   a mitad de ciclo NO cobra nada en el momento, solo lo anota para
   la próxima renovación (que puede ser semanas después) — el negocio
   quedaba con acceso completo desde ya, sin pagar hasta entonces. Ahora,
-  si el negocio ya tiene una suscripción real, aprobar genera y cobra
-  una **factura de una sola vez** en el momento (`stripe.invoices.pay`,
-  sincrónico, se espera la confirmación antes de seguir) — el módulo
-  **solo se activa si ese cobro se confirma**. Si falla (tarjeta
-  rechazada, etc.), no se activa nada, se revierte lo que se había
-  agregado a la suscripción, y la solicitud queda marcada como
-  `payment_failed` — visible en `/admin/module-requests` para hacerle
-  seguimiento, no se pierde silenciosamente.
+  si el negocio ya tiene una suscripción real, aprobar genera una
+  **factura de una sola vez** y la **finaliza** con
+  `collection_method: "charge_automatically"` — eso ya cobra en el
+  momento como parte de la finalización, así que se revisa el estado
+  resultante en vez de llamar a `.pay()` aparte (esa llamada extra la
+  tuvimos al principio y generaba un error real, "Invoice is already
+  paid", porque la factura ya había quedado pagada durante la
+  finalización). El módulo **solo se activa si ese cobro se
+  confirma**. Si falla (tarjeta rechazada, etc.), no se activa nada, se
+  revierte lo que se había agregado a la suscripción, y la solicitud
+  queda marcada como `payment_failed` — visible en
+  `/admin/module-requests` para hacerle seguimiento, no se pierde
+  silenciosamente.
+- **Condición de carrera con el webhook de Stripe** — otro bug real que
+  apareció al probar esto: `stripe.subscriptionItems.create()` (al
+  aprobar) y `.del()` (al desactivar) disparan casi al instante un
+  webhook `customer.subscription.updated`, y ese webhook **reconstruye
+  toda la tabla `SubscriptionModuleItem` desde cero** (borra todo y
+  recrea según lo que diga Stripe en ese momento — ver la sección de
+  Stripe más abajo). El código de estos dos endpoints TAMBIÉN
+  intentaba escribir esa misma tabla al final, y como el webhook casi
+  siempre llegaba primero, la segunda escritura chocaba contra la
+  restricción de unicidad (`Unique constraint failed`). Se resolvió
+  dejando que **solo el webhook** sea la fuente de verdad de esa
+  tabla — ninguno de los dos endpoints la toca directamente, ya que el
+  webhook la sincroniza sola apenas Stripe confirma el cambio.
+- **Desajuste de versión de la API de Stripe** — un tercer bug
+  encadenado: el webhook fallaba con
+  `Invalid value for argument currentPeriodEnd: Provided Date object
+  is invalid` apenas empezamos a disparar `customer.subscription.updated`
+  de verdad (antes nunca se había probado este camino). La causa: desde
+  la versión "Basil" de la API de Stripe (marzo 2025), `current_period_end`
+  se movió de la suscripción a cada ítem de la suscripción por
+  separado, para soportar módulos con distinto ciclo de facturación
+  cada uno. Los webhooks llegan con la versión de API configurada en
+  la cuenta de Stripe (más nueva), no con la que fijamos nosotros al
+  llamar a la API (`2024-06-20`, en `lib/stripe.ts`) — por eso el
+  campo venía vacío. El fix vive en `app/api/webhooks/stripe/route.ts`:
+  ahora se lee primero del ítem
+  (con un `as any` a propósito, porque el paquete `stripe` instalado
+  trae definiciones de tipos de una versión anterior a este cambio,
+  mismo criterio que con exceljs/Buffer), con respaldo al campo viejo
+  de la suscripción por si algún día se vuelve a fijar una versión de
+  API más vieja.
 
 ## Fix: activar módulos sin pagar (el trial nunca vencía)
 
@@ -533,23 +569,31 @@ un cambio de arquitectura más grande, no algo para sumar de paso acá.
 Cambio de diseño — cada categoría del menú (y también la sección de
 Destacados) ahora es su propia tarjeta con puntas redondeadas y una
 sombra suave, en vez de secciones separadas solo por una línea
-delgada.
+delgada. Como parte del mismo rediseño, también se quitó la línea que
+quedaba bajo el nav de categorías pegajoso — con las tarjetas ya
+haciendo la separación visual, esa línea sobraba.
 
 - **`Tenant.menuCardColor`** — nuevo color configurable en
   `/dashboard/settings` (junto a los otros colores del tema), con
   vista previa en vivo. Por defecto blanco.
-- Se usa en **los dos lugares** a la vez: cada tarjeta de categoría, y
-  también la tarjeta de cada plato en Destacados (que antes usaba el
-  mismo color de fondo de toda la página, sin poder distinguirse).
+- Se usa en el menú (cada tarjeta de categoría, y la tarjeta de cada
+  plato en Destacados) **y también se reutilizó en el formulario de
+  reseñas** (`/review/[slug]`) — el logo se queda arriba y afuera,
+  sobre el color de fondo, y todo desde "Deja tu reseña" para abajo
+  (título, estrellas, campos, botón, y la pantalla de "¡Gracias!"
+  después de enviar) vive dentro de esa misma tarjeta.
 - **`Tenant.menuPageTextColor`** — color de texto separado, solo para
-  lo que va DIRECTO sobre el fondo de la página (el título
-  "Destacados", el nav de categorías, las flechas de scroll) —
-  independiente de `themeTextColor`, que sigue usándose para el texto
-  DENTRO de las tarjetas (nombre y descripción de cada plato). Hacía
-  falta separarlos porque un solo color compartido no siempre
-  contrasta bien contra dos fondos distintos a la vez (el fondo de la
-  página, que puede ser cualquier color, y el fondo de las tarjetas,
-  blanco por defecto).
+  lo que va DIRECTO sobre el fondo de la página — independiente de
+  `themeTextColor`, que sigue usándose para el texto DENTRO de las
+  tarjetas (nombre y descripción de cada plato). Hacía falta
+  separarlos porque un solo color compartido no siempre contrasta
+  bien contra dos fondos distintos a la vez (el fondo de la página,
+  que puede ser cualquier color, y el fondo de las tarjetas, blanco
+  por defecto). Se terminó aplicando en varios lugares a medida que
+  se fueron encontrando, no todos de una — el título "Destacados", el
+  nav de categorías, las flechas de scroll, la información de
+  contacto (dirección/teléfono/correo) al pie del menú, y el logo +
+  pantalla de "¡Gracias!" del formulario de reseñas.
 
 ## Precio variable ("Preguntar" / "Ask")
 
@@ -1092,8 +1136,84 @@ páginas públicas. Enlazada desde:
 - `/book/[slug]` — link en la pantalla de "Reserva enviada"
 - `/link/[slug]` — link debajo de la lista de enlaces
 
+## Zertoo Now! — directorio público de descubrimiento
+
+Producto **separado** del Zertoo principal — no vive en este
+repositorio. Pensado para gente buscando dónde comer/ir, no para
+negocios administrando su cuenta (esa distinción de audiencia es la
+razón de fondo por la que está separado del todo, no es solo una
+preferencia técnica).
+
+### Por qué es un repositorio y un despliegue aparte, no una carpeta más acá
+
+- **Audiencia completamente distinta** — consumidores descubriendo
+  negocios, no dueños de negocio administrando el suyo.
+- **Comparte la misma base de datos** que este proyecto (mismo
+  `DATABASE_URL`), pero vive en su propio repositorio
+  (`sacmediastudio/zertoo.now`), su propio servicio de Railway, y su
+  propio subdominio (`now.zertoo.app`) — así, si algo sale mal ahí o
+  necesita mucho tráfico de golpe, no arriesga la plataforma que ya
+  están pagando los negocios.
+- **Su `prisma/schema.prisma` es un subconjunto a propósito** —
+  declara solo los campos que ese proyecto necesita leer/escribir
+  (`Tenant`, `Review`, `Moment`), no la tabla real completa. Por eso
+  **ese proyecto nunca debe correr `prisma db push` ni `prisma
+  migrate`** — sincronizaría la base de datos real para que coincida
+  con ese esquema recortado, y podría borrar columnas que este
+  proyecto sí necesita. El único lugar donde corresponde correr eso
+  es acá, en `saas-platform`. Ver la advertencia igual de explícita
+  en el propio `schema.prisma` de ese proyecto.
+- Si acá se le agrega un campo nuevo a `Tenant` o `Review` que Zertoo
+  Now también necesite, hay que copiarlo a mano en el esquema de ese
+  otro proyecto — no se entera solo.
+
+### Lo que vive ACÁ, en saas-platform (lo que sí es parte de este repositorio)
+
+- **Esquema** — `Tenant.nowEnabled` (el negocio decide aparecer o no,
+  apagado por defecto), `Tenant.nowCategory` (una de 18 categorías
+  fijas del enum `NowCategory` — 13 de restaurante + 5 de servicios
+  como peluquería/uñas/spa, para que Citas y Smartlink también puedan
+  aparecer, no solo Restaurantes), `Tenant.nowFeatured` (destacado,
+  lo cura el admin a mano, el negocio no puede activárselo solo),
+  `Tenant.latitude`/`longitude` (reservados para la etapa de "cerca de
+  mí", todavía sin geocodificación armada), y el modelo `Moment`
+  (fotos de "Share this moment", con estado pending/approved/rejected
+  — reservado para una etapa futura, la funcionalidad de subir/aprobar
+  fotos en sí todavía no está construida).
+- **`/dashboard/settings`** — sección "Zertoo Now" con el interruptor
+  "Aparecer en Zertoo Now" + el selector de categoría (obligatorio si
+  el interruptor está activo, validado en el navegador y en el
+  servidor).
+- **`/admin/now`** — lista de todos los negocios con `nowEnabled`
+  activo, con un botón para marcarlos como "Destacado" o no
+  (`PATCH /api/admin/tenants/[id]/now-featured`).
+- **Landing principal** — link a `now.zertoo.app` en el nav de
+  escritorio y en el menú móvil (se abre en pestaña nueva).
+
+### Lo que falta (próximas etapas, en el orden que tiene más sentido seguir)
+
+1. Buscador por categoría y ubicación ("cerca de mí" — necesita
+   geocodificar la dirección de cada negocio, un servicio externo
+   nuevo; ver la conversación sobre esto para el análisis de costo)
+2. Botones de "Cómo llegar" (abre la app de mapas del visitante) y
+   "Compartir" (WhatsApp directo + el share nativo del teléfono) en
+   cada negocio
+3. El botón "Share this moment" en el menú/perfil público, y la
+   bandeja de aprobación de fotos en el dashboard de cada negocio
+   (el modelo `Moment` ya existe, falta toda la UI de subir/aprobar)
+
+## Atribución en los footers
+
+"© {año} Zertoo. Un producto de Certucce Digital LLC." (y su
+equivalente en inglés) — aparece en los 7 lugares donde hay un pie de
+página con copyright: landing, dashboard de negocios, panel de admin,
+y las 4 páginas de auth (login, signup, olvidé mi contraseña, nueva
+contraseña).
+
 ## Stack
 
-Next.js 14 · TypeScript · Prisma · PostgreSQL · Zod (validación) · bcryptjs +
-JWT (auth propia, sin dependencias externas de auth) · Stripe (pendiente de
-cablear) · Tailwind (para las páginas de UI que faltan)
+Next.js 14 (App Router) · TypeScript · Prisma · PostgreSQL · Tailwind ·
+Zod (validación) · bcryptjs + JWT (auth propia, sin dependencias
+externas de auth) · Stripe (facturación real por módulo, ver la
+sección de arriba) · exceljs (import/export de menú) · Railway
+(deploy) · Cloudflare R2/S3 (fotos).
