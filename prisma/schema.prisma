@@ -98,6 +98,22 @@ model Tenant {
   // de texto distinto ahí que adentro de las tarjetas blancas.
   menuPageTextColor String @default("#002D09")
 
+  // ---------- Zertoo Now (directorio público, ese es otro proyecto/
+  // despliegue aparte, pero comparte esta misma base de datos) ----------
+  // El negocio decide si quiere aparecer ahí — apagado por defecto, no
+  // es algo que se activa solo.
+  nowEnabled   Boolean      @default(false)
+  nowCategory  NowCategory?
+  // Destacado en Zertoo Now — lo cura el admin de Zertoo a mano, el
+  // negocio no puede activarse esto solo (ver /admin, mismo patrón que
+  // las solicitudes de módulo).
+  nowFeatured  Boolean      @default(false)
+  // Coordenadas reales del negocio, para "cerca de mí" — se completan
+  // una sola vez (geocodificando la dirección), no en cada visita.
+  latitude     Float?
+  longitude    Float?
+  moments      Moment[]
+
   // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
   // libres después de cada cita antes de que se pueda reservar la
   // siguiente (limpieza, preparación, etc).
@@ -641,6 +657,55 @@ model ModuleActivationRequest {
   @@index([tenantId])
   @@index([status])
   @@map("module_activation_requests")
+}
+
+// Lista fija, la arma Zertoo — el negocio elige UNA de acá, no escribe
+// la suya propia (evita "italiana"/"Italian food"/"comida italiana"
+// como 3 valores distintos para lo mismo). Lista de arranque, se puede
+// ampliar con el tiempo sin romper nada de lo que ya existe.
+enum NowCategory {
+  // Restaurantes
+  ITALIAN
+  FRENCH
+  INTERNATIONAL
+  ASIAN
+  CRIOLLA
+  STEAKHOUSE
+  SEAFOOD
+  FAST_FOOD
+  CAFE_DESSERTS
+  PIZZERIA
+  SUSHI
+  BAR_PUB
+  VEGETARIAN
+  // Citas / servicios
+  HAIR_SALON
+  NAIL_SALON
+  SPA_WELLNESS
+  BARBERSHOP
+  OTHER_SERVICES
+}
+
+// Una foto que alguien (sin cuenta, cualquiera) subió desde el momento
+// "Share this moment" del menú/perfil público — no se muestra en
+// Zertoo Now hasta que el negocio la aprueba desde su dashboard. El
+// admin de Zertoo puede borrar cualquiera después, como red de
+// contención extra (esto termina en LA página de Zertoo, no solo en
+// la del negocio).
+model Moment {
+  id             String    @id @default(cuid())
+  tenantId       String
+  imageUrl       String
+  submitterName  String? // quien sube la foto no tiene cuenta ni login
+  status         String    @default("pending") // pending | approved | rejected
+  createdAt      DateTime  @default(now())
+  approvedAt     DateTime?
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("moments")
 }
 
 enum PageViewKind {

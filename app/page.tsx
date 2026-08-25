@@ -90,6 +90,14 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
         </nav>
         <div className="hidden items-center gap-4 md:flex">
           <LangSwitch lang={lang} setLang={setLang} />
+          <a
+            href="https://now.zertoo.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm font-semibold text-graphite hover:opacity-70"
+          >
+            Zertoo <span className="text-[#8a9c00]">Now!</span>
+          </a>
           <a href="#precios" className="text-sm font-semibold text-forest hover:opacity-70">{t.nav.viewPlans}</a>
           <a href="/login" className="text-sm font-semibold text-forest hover:opacity-70">{t.nav.login}</a>
           <Btn href="/signup" className="px-5 min-h-[44px]">{t.nav.start}</Btn>
@@ -116,6 +124,15 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
                   {n.label}
                 </a>
               ))}
+              <a
+                href="https://now.zertoo.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => setOpen(false)}
+                className="py-3 text-base font-medium text-forest"
+              >
+                Zertoo <span className="text-[#8a9c00]">Now!</span>
+              </a>
               <a href="/login" onClick={() => setOpen(false)} className="py-3 text-base font-medium text-forest">
                 {t.nav.login}
               </a>
