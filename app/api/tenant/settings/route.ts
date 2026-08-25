@@ -6,42 +6,72 @@ import { TIMEZONES } from "@/lib/timezone";
 
 const CURRENCIES = ["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN", "BRL", "AWG"] as const;
 
-const updateSchema = z.object({
-  name: z.string().min(1).optional(),
-  logoUrl: z.string().min(1).nullable().optional(),
-  heroImageUrl: z.string().min(1).nullable().optional(),
-  heroTagline: z.string().max(200).nullable().optional(),
-  menuShowPhotos: z.boolean().optional(),
-  contactEmail: z.string().email().nullable().optional().or(z.literal("")),
-  contactPhone: z.string().nullable().optional(),
-  address: z.string().nullable().optional(),
-  currency: z.enum(CURRENCIES).optional(),
-  timezone: z.enum(TIMEZONES).optional(),
-  themeBgColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
-    .optional(),
-  themeTextColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
-    .optional(),
-  buttonColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
-    .optional(),
-  buttonTextColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
-    .optional(),
-  menuCardColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
-    .optional(),
-  menuPageTextColor: z
-    .string()
-    .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
-    .optional(),
-});
+// Mismos 18 valores que el enum NowCategory de Prisma — tienen que
+// coincidir exacto.
+const NOW_CATEGORIES = [
+  "ITALIAN",
+  "FRENCH",
+  "INTERNATIONAL",
+  "ASIAN",
+  "CRIOLLA",
+  "STEAKHOUSE",
+  "SEAFOOD",
+  "FAST_FOOD",
+  "CAFE_DESSERTS",
+  "PIZZERIA",
+  "SUSHI",
+  "BAR_PUB",
+  "VEGETARIAN",
+  "HAIR_SALON",
+  "NAIL_SALON",
+  "SPA_WELLNESS",
+  "BARBERSHOP",
+  "OTHER_SERVICES",
+] as const;
+
+const updateSchema = z
+  .object({
+    name: z.string().min(1).optional(),
+    logoUrl: z.string().min(1).nullable().optional(),
+    heroImageUrl: z.string().min(1).nullable().optional(),
+    heroTagline: z.string().max(200).nullable().optional(),
+    menuShowPhotos: z.boolean().optional(),
+    contactEmail: z.string().email().nullable().optional().or(z.literal("")),
+    contactPhone: z.string().nullable().optional(),
+    address: z.string().nullable().optional(),
+    currency: z.enum(CURRENCIES).optional(),
+    timezone: z.enum(TIMEZONES).optional(),
+    themeBgColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+      .optional(),
+    themeTextColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+      .optional(),
+    buttonColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+      .optional(),
+    buttonTextColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+      .optional(),
+    menuCardColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+      .optional(),
+    menuPageTextColor: z
+      .string()
+      .regex(/^#[0-9a-fA-F]{6}$/, "Color inválido")
+      .optional(),
+    nowEnabled: z.boolean().optional(),
+    nowCategory: z.enum(NOW_CATEGORIES).nullable().optional(),
+  })
+  .refine((data) => !data.nowEnabled || data.nowCategory, {
+    message: "Elegí una categoría para aparecer en Zertoo Now.",
+    path: ["nowCategory"],
+  });
 
 export async function GET() {
   const session = await requireTenant();

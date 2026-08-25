@@ -45,7 +45,33 @@ interface TenantData {
   menuCardColor: string;
   menuPageTextColor: string;
   menuShowPhotos: boolean;
+  nowEnabled: boolean;
+  nowCategory: string | null;
 }
+
+// Misma lista que usa Zertoo Now — lista fija armada por Zertoo, el
+// negocio elige UNA de acá (evita "italiana"/"Italian food"/"comida
+// italiana" como 3 valores distintos para lo mismo).
+const NOW_CATEGORY_LABELS: Record<string, string> = {
+  ITALIAN: "Italiana",
+  FRENCH: "Francesa",
+  INTERNATIONAL: "Internacional",
+  ASIAN: "Asiática",
+  CRIOLLA: "Criolla",
+  STEAKHOUSE: "Steakhouse",
+  SEAFOOD: "Mariscos",
+  FAST_FOOD: "Comida rápida",
+  CAFE_DESSERTS: "Café y postres",
+  PIZZERIA: "Pizzería",
+  SUSHI: "Sushi",
+  BAR_PUB: "Bar",
+  VEGETARIAN: "Vegetariana",
+  HAIR_SALON: "Peluquería",
+  NAIL_SALON: "Salón de uñas",
+  SPA_WELLNESS: "Spa y bienestar",
+  BARBERSHOP: "Barbería",
+  OTHER_SERVICES: "Otros servicios",
+};
 
 
 export default function SettingsForm({ tenant }: { tenant: TenantData }) {
@@ -70,8 +96,12 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
   }
 
   async function handleSave() {
-    setSaving(true);
     setError(null);
+    if (form.nowEnabled && !form.nowCategory) {
+      setError("Elegí una categoría para aparecer en Zertoo Now.");
+      return;
+    }
+    setSaving(true);
     setSaved(false);
     try {
       const res = await fetch("/api/tenant/settings", {
@@ -304,6 +334,43 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
         >
           <span className="text-sm">Así se ve una tarjeta del menú (categoría o destacado)</span>
         </div>
+      </Section>
+
+      <Section title="Zertoo Now">
+        <p className="text-sm text-[#343233]/60 -mt-2 mb-4">
+          El directorio público de Zertoo — si activás esto, tu negocio aparece ahí para que la
+          gente te descubra.
+        </p>
+        <label className="flex items-center gap-3 mb-4">
+          <input
+            type="checkbox"
+            checked={form.nowEnabled}
+            onChange={(e) => setForm({ ...form, nowEnabled: e.target.checked })}
+            className="w-4 h-4 accent-[#E7FF00]"
+          />
+          <span className="text-sm font-medium">Aparecer en Zertoo Now</span>
+        </label>
+
+        {form.nowEnabled && (
+          <label className="flex flex-col gap-1.5 max-w-xs">
+            <span className="text-xs text-[#343233]/70">Categoría</span>
+            <select
+              value={form.nowCategory ?? ""}
+              onChange={(e) => setForm({ ...form, nowCategory: e.target.value || null })}
+              required
+              className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
+            >
+              <option value="" disabled>
+                Elegí una categoría
+              </option>
+              {Object.entries(NOW_CATEGORY_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </Section>
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}

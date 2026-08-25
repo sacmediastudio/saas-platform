@@ -29,6 +29,8 @@ export default async function SettingsPage() {
         buttonTextColor: tenant.buttonTextColor,
         menuCardColor: tenant.menuCardColor,
         menuPageTextColor: tenant.menuPageTextColor,
+        nowEnabled: tenant.nowEnabled,
+        nowCategory: tenant.nowCategory,
       }}
     />
   );
