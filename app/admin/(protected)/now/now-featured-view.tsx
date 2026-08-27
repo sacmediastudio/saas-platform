@@ -13,7 +13,7 @@ interface Tenant {
   nowFeatured: boolean;
 }
 
-// Misma lista que en /dashboard/settings y en el proyecto de Zertoo Now.
+// Misma lista que en /dashboard/settings y en el proyecto de Zertoo Eats.
 const NOW_CATEGORY_LABELS: Record<string, string> = {
   ITALIAN: "Italiana",
   FRENCH: "Francesa",
@@ -28,11 +28,6 @@ const NOW_CATEGORY_LABELS: Record<string, string> = {
   SUSHI: "Sushi",
   BAR_PUB: "Bar",
   VEGETARIAN: "Vegetariana",
-  HAIR_SALON: "Peluquería",
-  NAIL_SALON: "Salón de uñas",
-  SPA_WELLNESS: "Spa y bienestar",
-  BARBERSHOP: "Barbería",
-  OTHER_SERVICES: "Otros servicios",
 };
 
 export default function NowFeaturedView({ tenants: initialTenants }: { tenants: Tenant[] }) {
@@ -70,10 +65,10 @@ export default function NowFeaturedView({ tenants: initialTenants }: { tenants: 
       <DashboardCard>
         <h1 className="text-xl font-semibold mb-1 flex items-center gap-2">
           <Sparkles size={20} aria-hidden />
-          Zertoo Now — Destacados
+          Zertoo Eats — Destacados
         </h1>
         <p className="text-sm text-[#343233]/70 mb-6">
-          Negocios que activaron su aparición en Zertoo Now — marcá cuáles querés que salgan en
+          Negocios que activaron su aparición en Zertoo Eats — marcá cuáles querés que salgan en
           "Destacados" ({featuredCount} destacados de {tenants.length}).
         </p>
 
@@ -81,7 +76,7 @@ export default function NowFeaturedView({ tenants: initialTenants }: { tenants: 
 
         {tenants.length === 0 && (
           <p className="text-sm text-[#343233]/60">
-            Todavía ningún negocio activó su aparición en Zertoo Now desde su dashboard.
+            Todavía ningún negocio activó su aparición en Zertoo Eats desde su dashboard.
           </p>
         )}
 

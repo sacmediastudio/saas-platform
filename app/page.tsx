@@ -96,7 +96,7 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
             rel="noopener noreferrer"
             className="text-sm font-semibold text-graphite hover:opacity-70"
           >
-            Zertoo <span className="text-[#8a9c00]">Now!</span>
+            Zertoo <span className="text-[#8a9c00]">Eats!</span>
           </a>
           <a href="#precios" className="text-sm font-semibold text-forest hover:opacity-70">{t.nav.viewPlans}</a>
           <a href="/login" className="text-sm font-semibold text-forest hover:opacity-70">{t.nav.login}</a>
@@ -131,7 +131,7 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
                 onClick={() => setOpen(false)}
                 className="py-3 text-base font-medium text-forest"
               >
-                Zertoo <span className="text-[#8a9c00]">Now!</span>
+                Zertoo <span className="text-[#8a9c00]">Eats!</span>
               </a>
               <a href="/login" onClick={() => setOpen(false)} className="py-3 text-base font-medium text-forest">
                 {t.nav.login}

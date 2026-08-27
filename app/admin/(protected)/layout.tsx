@@ -82,7 +82,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#343233] hover:bg-[#F7F8F4] hover:text-[#002D09]"
             >
               <Sparkles size={16} aria-hidden />
-              Zertoo Now
+              Zertoo Eats
             </Link>
             <Link
               href="/admin/security"

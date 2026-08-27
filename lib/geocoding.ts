@@ -6,8 +6,8 @@ export function isGeocodingConfigured(): boolean {
 
 /**
  * Convierte una dirección de texto libre en coordenadas reales, para
- * "cerca de mí" en Zertoo Now. Se llama UNA sola vez por negocio
- * (cuando activa Zertoo Now, o cambia su dirección), no en cada
+ * "cerca de mí" en Zertoo Eats. Se llama UNA sola vez por negocio
+ * (cuando activa Zertoo Eats, o cambia su dirección), no en cada
  * visita — por eso el volumen de llamadas se queda tranquilamente
  * dentro del nivel gratis de Google incluso con muchos negocios.
  *

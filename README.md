@@ -1272,7 +1272,42 @@ dobles, template literals, texto JSX plano) en los 4 archivos
 completos, y se volvió a verificar mecánicamente que las 25 secciones
 del diccionario coincidan entre inglés y español.
 
-## Zertoo Now! — directorio público de descubrimiento
+## Zertoo Eats! — directorio de restaurantes (antes "Zertoo Now")
+
+**Renombrado y reenfocado** — el usuario decidió que este directorio
+sea exclusivamente para restaurantes (no Citas/servicios como
+peluquerías o spas), y que el nombre pase de "Zertoo Now" a "Zertoo
+Eats". El dominio (`now.zertoo.app`) se mantiene igual por ahora a
+propósito — cambiarlo es un paso de infraestructura aparte (DNS +
+Railway) que no se hizo todavía, no está bloqueado por nada del código.
+
+⚠️ **Antes de correr `prisma db push` con este cambio**: se quitaron 5
+valores del enum `NowCategory` (`HAIR_SALON`, `NAIL_SALON`,
+`SPA_WELLNESS`, `BARBERSHOP`, `OTHER_SERVICES`). Si algún negocio real
+ya tiene guardada alguna de esas categorías, Postgres puede rechazar el
+cambio de tipo del enum, o el `push` puede fallar. Revisar antes si
+hay algún tenant con `nowCategory` en alguno de esos 5 valores — si no
+hay ninguno (razonable en esta etapa temprana), el push debería andar
+sin problema.
+
+Qué cambió, en detalle:
+
+- **Esquema**: el enum `NowCategory` quedó con solo las 13 categorías
+  de comida, en ambos proyectos (tienen que coincidir, comparten la
+  misma base de datos).
+- **`/dashboard/settings`**: la sección completa de Zertoo Eats ahora
+  solo aparece para negocios con el módulo de Menú activo — antes
+  cualquier tipo de negocio (Citas, Smartlink) podía activarlo.
+- **Validación real en el servidor**, no solo esconder el checkbox —
+  `/api/tenant/settings` rechaza `nowEnabled: true` si el negocio no
+  tiene el módulo de Restaurante activo, sin importar qué mande la
+  solicitud.
+- Todas las menciones de "Zertoo Now" en el código (títulos, nav del
+  admin, mensajes de error, comentarios) pasaron a "Zertoo Eats" — se
+  verificó con una búsqueda exhaustiva que no quede ninguna en ningún
+  archivo de código de ninguno de los 2 proyectos.
+
+### Descripción general del proyecto
 
 Producto **separado** del Zertoo principal — no vive en este
 repositorio. Pensado para gente buscando dónde comer/ir, no para
@@ -1316,10 +1351,12 @@ preferencia técnica).
   (fotos de "Share this moment", con estado pending/approved/rejected
   — reservado para una etapa futura, la funcionalidad de subir/aprobar
   fotos en sí todavía no está construida).
-- **`/dashboard/settings`** — sección "Zertoo Now" con el interruptor
-  "Aparecer en Zertoo Now" + el selector de categoría (obligatorio si
+- **`/dashboard/settings`** — sección "Zertoo Eats" con el interruptor
+  "Aparecer en Zertoo Eats" + el selector de categoría (obligatorio si
   el interruptor está activo, validado en el navegador y en el
-  servidor).
+  servidor). **Solo se muestra para negocios con el módulo de Menú
+  activo** — el resto de tipos de negocio (Citas, Smartlink) ni
+  siquiera ven esta sección.
 - **`/admin/now`** — lista de todos los negocios con `nowEnabled`
   activo, con un botón para marcarlos como "Destacado" o no
   (`PATCH /api/admin/tenants/[id]/now-featured`).
@@ -1330,11 +1367,11 @@ preferencia técnica).
 
 - **`lib/geocoding.ts`** — convierte la dirección de un negocio en
   coordenadas reales usando Google Geocoding API. Se llama **una sola
-  vez por negocio**, no en cada visita: cuando activa Zertoo Now por
+  vez por negocio**, no en cada visita: cuando activa Zertoo Eats por
   primera vez, o si cambia de dirección mientras ya está activo (o
   simplemente todavía no tenía coordenadas guardadas, para negocios
   que se activaron antes de que esto existiera). Vive conectado desde
-  `/api/tenant/settings`, no desde el proyecto de Zertoo Now — el que
+  `/api/tenant/settings`, no desde el proyecto de Zertoo Eats — el que
   guarda los ajustes del negocio es este proyecto.
 - **`GOOGLE_MAPS_API_KEY`** — si no está configurada, todo sigue
   funcionando igual, simplemente ningún negocio nuevo consigue
@@ -1345,7 +1382,7 @@ preferencia técnica).
   se guarda todo menos las coordenadas.
 - **El filtro por categoría y el cálculo de "cerca de mí" en sí
   (fórmula de Haversine, sin depender de ningún servicio externo)
-  viven en el proyecto de Zertoo Now**, no acá — ver el README de ese
+  viven en el proyecto de Zertoo Eats**, no acá — ver el README de ese
   proyecto para el detalle completo de esa parte.
 
 ### Lo que falta (próximas etapas, en el orden que tiene más sentido seguir)

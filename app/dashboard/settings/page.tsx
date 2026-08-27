@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireTenant } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getEnabledModules } from "@/lib/modules";
 import SettingsForm from "./settings-form";
 
 export default async function SettingsPage() {
@@ -32,6 +33,7 @@ export default async function SettingsPage() {
         nowEnabled: tenant.nowEnabled,
         nowCategory: tenant.nowCategory,
       }}
+      enabledModules={getEnabledModules(tenant)}
     />
   );
 }

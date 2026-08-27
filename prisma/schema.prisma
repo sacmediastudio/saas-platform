@@ -98,13 +98,13 @@ model Tenant {
   // de texto distinto ahí que adentro de las tarjetas blancas.
   menuPageTextColor String @default("#002D09")
 
-  // ---------- Zertoo Now (directorio público, ese es otro proyecto/
+  // ---------- Zertoo Eats (directorio público, ese es otro proyecto/
   // despliegue aparte, pero comparte esta misma base de datos) ----------
   // El negocio decide si quiere aparecer ahí — apagado por defecto, no
   // es algo que se activa solo.
   nowEnabled   Boolean      @default(false)
   nowCategory  NowCategory?
-  // Destacado en Zertoo Now — lo cura el admin de Zertoo a mano, el
+  // Destacado en Zertoo Eats — lo cura el admin de Zertoo a mano, el
   // negocio no puede activarse esto solo (ver /admin, mismo patrón que
   // las solicitudes de módulo).
   nowFeatured  Boolean      @default(false)
@@ -664,7 +664,6 @@ model ModuleActivationRequest {
 // como 3 valores distintos para lo mismo). Lista de arranque, se puede
 // ampliar con el tiempo sin romper nada de lo que ya existe.
 enum NowCategory {
-  // Restaurantes
   ITALIAN
   FRENCH
   INTERNATIONAL
@@ -678,17 +677,11 @@ enum NowCategory {
   SUSHI
   BAR_PUB
   VEGETARIAN
-  // Citas / servicios
-  HAIR_SALON
-  NAIL_SALON
-  SPA_WELLNESS
-  BARBERSHOP
-  OTHER_SERVICES
 }
 
 // Una foto que alguien (sin cuenta, cualquiera) subió desde el momento
 // "Share this moment" del menú/perfil público — no se muestra en
-// Zertoo Now hasta que el negocio la aprueba desde su dashboard. El
+// Zertoo Eats hasta que el negocio la aprueba desde su dashboard. El
 // admin de Zertoo puede borrar cualquiera después, como red de
 // contención extra (esto termina en LA página de Zertoo, no solo en
 // la del negocio).

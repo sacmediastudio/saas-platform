@@ -49,9 +49,10 @@ interface TenantData {
   nowCategory: string | null;
 }
 
-// Misma lista que usa Zertoo Now — lista fija armada por Zertoo, el
+// Misma lista que usa Zertoo Eats — lista fija armada por Zertoo, el
 // negocio elige UNA de acá (evita "italiana"/"Italian food"/"comida
-// italiana" como 3 valores distintos para lo mismo).
+// italiana" como 3 valores distintos para lo mismo). Solo restaurantes
+// — Zertoo Eats quedó enfocado exclusivamente ahí, no en Citas/Smartlink.
 const NOW_CATEGORY_LABELS: Record<string, string> = {
   ITALIAN: "Italiana",
   FRENCH: "Francesa",
@@ -66,15 +67,15 @@ const NOW_CATEGORY_LABELS: Record<string, string> = {
   SUSHI: "Sushi",
   BAR_PUB: "Bar",
   VEGETARIAN: "Vegetariana",
-  HAIR_SALON: "Peluquería",
-  NAIL_SALON: "Salón de uñas",
-  SPA_WELLNESS: "Spa y bienestar",
-  BARBERSHOP: "Barbería",
-  OTHER_SERVICES: "Otros servicios",
 };
 
-
-export default function SettingsForm({ tenant }: { tenant: TenantData }) {
+export default function SettingsForm({
+  tenant,
+  enabledModules,
+}: {
+  tenant: TenantData;
+  enabledModules: ("RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK")[];
+}) {
   const { t } = useDashboardLang();
   const router = useRouter();
   const [form, setForm] = useState(tenant);
@@ -98,7 +99,7 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
   async function handleSave() {
     setError(null);
     if (form.nowEnabled && !form.nowCategory) {
-      setError("Elegí una categoría para aparecer en Zertoo Now.");
+      setError("Elegí una categoría para aparecer en Zertoo Eats.");
       return;
     }
     setSaving(true);
@@ -336,42 +337,44 @@ export default function SettingsForm({ tenant }: { tenant: TenantData }) {
         </div>
       </Section>
 
-      <Section title="Zertoo Now">
-        <p className="text-sm text-[#343233]/60 -mt-2 mb-4">
-          El directorio público de Zertoo — si activás esto, tu negocio aparece ahí para que la
-          gente te descubra.
-        </p>
-        <label className="flex items-center gap-3 mb-4">
-          <input
-            type="checkbox"
-            checked={form.nowEnabled}
-            onChange={(e) => setForm({ ...form, nowEnabled: e.target.checked })}
-            className="w-4 h-4 accent-[#E7FF00]"
-          />
-          <span className="text-sm font-medium">Aparecer en Zertoo Now</span>
-        </label>
-
-        {form.nowEnabled && (
-          <label className="flex flex-col gap-1.5 max-w-xs">
-            <span className="text-xs text-[#343233]/70">Categoría</span>
-            <select
-              value={form.nowCategory ?? ""}
-              onChange={(e) => setForm({ ...form, nowCategory: e.target.value || null })}
-              required
-              className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
-            >
-              <option value="" disabled>
-                Elegí una categoría
-              </option>
-              {Object.entries(NOW_CATEGORY_LABELS).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
+      {enabledModules.includes("RESTAURANT") && (
+        <Section title="Zertoo Eats">
+          <p className="text-sm text-[#343233]/60 -mt-2 mb-4">
+            El directorio de restaurantes de Zertoo — si activás esto, tu menú aparece ahí para que
+            la gente te descubra. Solo para negocios con Menú activo.
+          </p>
+          <label className="flex items-center gap-3 mb-4">
+            <input
+              type="checkbox"
+              checked={form.nowEnabled}
+              onChange={(e) => setForm({ ...form, nowEnabled: e.target.checked })}
+              className="w-4 h-4 accent-[#E7FF00]"
+            />
+            <span className="text-sm font-medium">Aparecer en Zertoo Eats</span>
           </label>
-        )}
-      </Section>
+
+          {form.nowEnabled && (
+            <label className="flex flex-col gap-1.5 max-w-xs">
+              <span className="text-xs text-[#343233]/70">Categoría</span>
+              <select
+                value={form.nowCategory ?? ""}
+                onChange={(e) => setForm({ ...form, nowCategory: e.target.value || null })}
+                required
+                className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
+              >
+                <option value="" disabled>
+                  Elegí una categoría
+                </option>
+                {Object.entries(NOW_CATEGORY_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </Section>
+      )}
 
       {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
