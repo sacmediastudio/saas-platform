@@ -47,6 +47,7 @@ interface TenantData {
   menuShowPhotos: boolean;
   nowEnabled: boolean;
   nowCategory: string | null;
+  googleMapsUrl: string | null;
 }
 
 export default function SettingsForm({
@@ -334,24 +335,43 @@ export default function SettingsForm({
           </label>
 
           {form.nowEnabled && (
-            <label className="flex flex-col gap-1.5 max-w-xs">
-              <span className="text-xs text-[#343233]/70">Categoría</span>
-              <select
-                value={form.nowCategory ?? ""}
-                onChange={(e) => setForm({ ...form, nowCategory: e.target.value || null })}
-                required
-                className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
-              >
-                <option value="" disabled>
-                  Elegí una categoría
-                </option>
-                {Object.entries(t.nowCategories).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
+            <div className="flex flex-col gap-4">
+              <label className="flex flex-col gap-1.5 max-w-xs">
+                <span className="text-xs text-[#343233]/70">Categoría</span>
+                <select
+                  value={form.nowCategory ?? ""}
+                  onChange={(e) => setForm({ ...form, nowCategory: e.target.value || null })}
+                  required
+                  className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
+                >
+                  <option value="" disabled>
+                    Elegí una categoría
                   </option>
-                ))}
-              </select>
-            </label>
+                  {Object.entries(t.nowCategories).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-[#343233]/70">Link de Google Maps (opcional)</span>
+                <input
+                  type="url"
+                  value={form.googleMapsUrl ?? ""}
+                  onChange={(e) => setForm({ ...form, googleMapsUrl: e.target.value || null })}
+                  placeholder="https://maps.app.goo.gl/..."
+                  className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none max-w-md"
+                />
+                <span className="text-xs text-[#343233]/50">
+                  Buscá tu negocio en Google Maps, tocá "Compartir", y pegá el link acá. Si lo cargás,
+                  el botón "Cómo llegar" en Zertoo Eats lleva directo a tu ubicación exacta, en vez de
+                  calcularla desde tu dirección (que puede acercar a la zona, pero no siempre a la
+                  puerta).
+                </span>
+              </label>
+            </div>
           )}
         </Section>
       )}

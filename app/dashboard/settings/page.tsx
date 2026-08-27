@@ -32,6 +32,7 @@ export default async function SettingsPage() {
         menuPageTextColor: tenant.menuPageTextColor,
         nowEnabled: tenant.nowEnabled,
         nowCategory: tenant.nowCategory,
+        googleMapsUrl: tenant.googleMapsUrl,
       }}
       enabledModules={getEnabledModules(tenant)}
     />

@@ -78,6 +78,7 @@ const updateSchema = z
       .optional(),
     nowEnabled: z.boolean().optional(),
     nowCategory: z.enum(NOW_CATEGORIES).nullable().optional(),
+    googleMapsUrl: z.string().url().nullable().optional().or(z.literal("")),
   })
   .refine((data) => !data.nowEnabled || data.nowCategory, {
     message: "Elegí una categoría para aparecer en Zertoo Eats.",
@@ -115,6 +116,7 @@ export async function PATCH(req: NextRequest) {
   // "" para contactEmail significa "lo estoy borrando" — lo normalizamos a null.
   const data: typeof parsed.data & { latitude?: number; longitude?: number } = { ...parsed.data };
   if (data.contactEmail === "") data.contactEmail = null;
+  if (data.googleMapsUrl === "") data.googleMapsUrl = null;
 
   // Geocodifica la dirección — solo cuando hace falta: al activar
   // Zertoo Eats por primera vez (sin coordenadas todavía), o si la

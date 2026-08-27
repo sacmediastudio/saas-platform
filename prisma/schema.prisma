@@ -110,8 +110,19 @@ model Tenant {
   nowFeatured  Boolean      @default(false)
   // Coordenadas reales del negocio, para "cerca de mí" — se completan
   // una sola vez (geocodificando la dirección), no en cada visita.
+  // Suficientemente preciso para ORDENAR por cercanía, no para
+  // navegar exacto — para eso está googleMapsUrl más abajo.
   latitude     Float?
   longitude    Float?
+  // Link de Google Maps que el propio negocio pega (ej. su ficha de
+  // Google Business ya compartida) — cuando existe, "Cómo llegar" en
+  // Zertoo Eats usa ESTO directo en vez de construir una ruta a partir
+  // de la dirección geocodificada, porque el pin que el negocio elige
+  // a mano es mucho más preciso que geocodificar texto libre (una
+  // dirección de texto puede caer en la manzana correcta, pero no en
+  // la puerta exacta). Opcional — si no está, se sigue usando el
+  // sistema de coordenadas de arriba como respaldo.
+  googleMapsUrl String?
   moments      Moment[]
 
   // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
