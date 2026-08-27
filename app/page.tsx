@@ -91,7 +91,7 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
         <div className="hidden items-center gap-4 md:flex">
           <LangSwitch lang={lang} setLang={setLang} />
           <a
-            href="https://now.zertoo.app"
+            href="https://zertooeats.com"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm font-semibold text-graphite hover:opacity-70"
@@ -125,7 +125,7 @@ function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; 
                 </a>
               ))}
               <a
-                href="https://now.zertoo.app"
+                href="https://zertooeats.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setOpen(false)}

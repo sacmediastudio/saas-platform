@@ -1277,9 +1277,9 @@ del diccionario coincidan entre inglés y español.
 **Renombrado y reenfocado** — el usuario decidió que este directorio
 sea exclusivamente para restaurantes (no Citas/servicios como
 peluquerías o spas), y que el nombre pase de "Zertoo Now" a "Zertoo
-Eats". El dominio (`now.zertoo.app`) se mantiene igual por ahora a
-propósito — cambiarlo es un paso de infraestructura aparte (DNS +
-Railway) que no se hizo todavía, no está bloqueado por nada del código.
+Eats". El dominio pasó de `now.zertoo.app` a **`zertooeats.com`**
+(dominio propio, registrado por el usuario) — DNS y Railway ya
+configurados, código actualizado para reflejarlo.
 
 ⚠️ **Antes de correr `prisma db push` con este cambio**: se quitaron 5
 valores del enum `NowCategory` (`HAIR_SALON`, `NAIL_SALON`,
@@ -1322,7 +1322,7 @@ preferencia técnica).
 - **Comparte la misma base de datos** que este proyecto (mismo
   `DATABASE_URL`), pero vive en su propio repositorio
   (`sacmediastudio/zertoo.now`), su propio servicio de Railway, y su
-  propio subdominio (`now.zertoo.app`) — así, si algo sale mal ahí o
+  propio dominio (`zertooeats.com`) — así, si algo sale mal ahí o
   necesita mucho tráfico de golpe, no arriesga la plataforma que ya
   están pagando los negocios.
 - **Su `prisma/schema.prisma` es un subconjunto a propósito** —
@@ -1360,7 +1360,7 @@ preferencia técnica).
 - **`/admin/now`** — lista de todos los negocios con `nowEnabled`
   activo, con un botón para marcarlos como "Destacado" o no
   (`PATCH /api/admin/tenants/[id]/now-featured`).
-- **Landing principal** — link a `now.zertoo.app` en el nav de
+- **Landing principal** — link a `zertooeats.com` en el nav de
   escritorio y en el menú móvil (se abre en pestaña nueva).
 
 ### Buscador por categoría y ubicación ("cerca de mí") — terminado
