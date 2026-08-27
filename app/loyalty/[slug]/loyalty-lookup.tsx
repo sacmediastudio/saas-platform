@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Stamp, Gift } from "lucide-react";
+import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
+import { publicTranslations } from "@/lib/i18n-public";
 
 export default function LoyaltyLookup({ slug }: { slug: string }) {
   const [email, setEmail] = useState("");
@@ -12,6 +14,15 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
     reward: string;
   } | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [lang, setLang] = useState<Lang>("es");
+  useEffect(() => {
+    setLang(getStoredLang());
+  }, []);
+  function toggleLang(l: Lang) {
+    setLang(l);
+    setStoredLang(l);
+  }
+  const t = publicTranslations[lang].loyalty;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,18 +45,34 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
 
   return (
     <div className="max-w-sm mx-auto min-h-screen px-6 pt-16 flex flex-col items-center">
+      <div className="w-full flex justify-end mb-4">
+        <div
+          className="flex items-center rounded-full border border-neutral-300 px-0.5 py-0.5 text-[11px] font-bold"
+          style={{ opacity: 0.85 }}
+        >
+          {(["es", "en"] as const).map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => toggleLang(l)}
+              className={`px-2 py-0.5 rounded-full transition-colors ${lang === l ? "bg-[#002D09] text-white" : ""}`}
+            >
+              {l.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <Stamp size={32} className="mb-4 opacity-70" aria-hidden />
-      <h1 className="text-lg font-semibold text-center mb-1">Tus sellos</h1>
-      <p className="text-sm text-center opacity-60 mb-8">
-        Ingresa el correo con el que reservas para ver cuántas visitas llevas.
-      </p>
+      <h1 className="text-lg font-semibold text-center mb-1">{t.title}</h1>
+      <p className="text-sm text-center opacity-60 mb-8">{t.subtitle}</p>
 
       <form onSubmit={handleSubmit} className="w-full flex flex-col gap-3">
         <input
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          placeholder="name@correo.com"
+          placeholder={t.emailPlaceholder}
           required
           className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
         />
@@ -54,15 +81,11 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
           disabled={status === "loading"}
           className="w-full py-2.5 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-semibold disabled:opacity-50"
         >
-          {status === "loading" ? "Buscando..." : "Consultar"}
+          {status === "loading" ? t.searching : t.submit}
         </button>
       </form>
 
-      {status === "error" && (
-        <p className="text-sm text-red-600 mt-4 text-center">
-          No pudimos encontrar este programa, o el negocio todavía no lo tiene activo.
-        </p>
-      )}
+      {status === "error" && <p className="text-sm text-red-600 mt-4 text-center">{t.notFound}</p>}
 
       {result && (
         <div className="w-full mt-8 border border-neutral-200 rounded-xl p-5 text-center">
@@ -70,7 +93,7 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
           <p className="text-3xl font-extrabold mb-1">
             {result.stamps} / {result.visitsNeeded}
           </p>
-          <p className="text-sm opacity-60 mb-4">sellos</p>
+          <p className="text-sm opacity-60 mb-4">{t.stamps}</p>
 
           <div className="flex justify-center gap-1.5 flex-wrap mb-4">
             {Array.from({ length: result.visitsNeeded }).map((_, i) => (
@@ -86,12 +109,10 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
           {hasReward ? (
             <div className="flex items-center justify-center gap-1.5 text-sm font-semibold bg-[#E7FF00] text-[#002D09] rounded-lg py-2.5 px-3">
               <Gift size={15} aria-hidden />
-              ¡Ganaste! {result.reward}
+              {t.won} {result.reward}
             </div>
           ) : (
-            <p className="text-xs opacity-60">
-              Te faltan {result.visitsNeeded - result.stamps} visita{result.visitsNeeded - result.stamps === 1 ? "" : "s"} para: {result.reward}
-            </p>
+            <p className="text-xs opacity-60">{t.missingVisits(result.visitsNeeded - result.stamps, result.reward)}</p>
           )}
         </div>
       )}

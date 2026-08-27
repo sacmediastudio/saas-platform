@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Gift, Check, Search } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface Lead {
   id: string;
@@ -24,6 +25,7 @@ export default function MenuLeadsView({
   initialRewardText: string;
   initialLeads: Lead[];
 }) {
+  const { t } = useDashboardLang();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [buttonLabel, setButtonLabel] = useState(initialButtonLabel);
   const [rewardText, setRewardText] = useState(initialRewardText);
@@ -62,14 +64,14 @@ export default function MenuLeadsView({
       });
       const body = await res.json();
       if (!res.ok) {
-        setRedeemMsg({ type: "error", text: body.error ?? "No se pudo canjear" });
+        setRedeemMsg({ type: "error", text: body.error ?? t.menuLeads.redeemFailed });
       } else {
-        setRedeemMsg({ type: "ok", text: `¡Canjeado! (${body.lead.name})` });
+        setRedeemMsg({ type: "ok", text: t.menuLeads.redeemedWithName(body.lead.name) });
         setLeads((prev) => prev.map((l) => (l.id === body.lead.id ? body.lead : l)));
         setCodeInput("");
       }
     } catch {
-      setRedeemMsg({ type: "error", text: "No se pudo conectar con el servidor" });
+      setRedeemMsg({ type: "error", text: t.menuLeads.genericError });
     }
     setRedeeming(false);
   }
@@ -79,12 +81,9 @@ export default function MenuLeadsView({
       <DashboardCard>
         <h1 className="text-xl font-semibold mb-1 flex items-center gap-2">
           <Gift size={20} aria-hidden />
-          Premio en el menú
+          {t.menuLeads.title}
         </h1>
-        <p className="text-sm text-[#343233]/70 mb-6">
-          Un botón al final de tu menú público invita al cliente a dejar su nombre, correo y
-          WhatsApp a cambio de un premio — le llega un código de canje por WhatsApp al instante.
-        </p>
+        <p className="text-sm text-[#343233]/70 mb-6">{t.menuLeads.subtitle}</p>
 
         <label className="flex items-center gap-3 mb-4">
           <input
@@ -93,26 +92,26 @@ export default function MenuLeadsView({
             onChange={(e) => setEnabled(e.target.checked)}
             className="w-4 h-4 accent-[#E7FF00]"
           />
-          <span className="text-sm font-medium">Activar en el menú público</span>
+          <span className="text-sm font-medium">{t.menuLeads.activate}</span>
         </label>
 
         {enabled && (
           <>
             <label className="flex items-center gap-3 mb-3">
-              <span className="text-sm w-40 shrink-0">Texto del botón</span>
+              <span className="text-sm w-40 shrink-0">{t.menuLeads.buttonText}</span>
               <input
                 value={buttonLabel}
                 onChange={(e) => setButtonLabel(e.target.value)}
-                placeholder="Postre gratis 🎁"
+                placeholder={t.menuLeads.buttonPlaceholder}
                 className="flex-1 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-1.5 text-sm outline-none"
               />
             </label>
             <label className="flex items-start gap-3 mb-4">
-              <span className="text-sm w-40 shrink-0 pt-1.5">Premio (para el mensaje)</span>
+              <span className="text-sm w-40 shrink-0 pt-1.5">{t.menuLeads.rewardForMessage}</span>
               <input
                 value={rewardText}
                 onChange={(e) => setRewardText(e.target.value)}
-                placeholder="un postre gratis en tu próxima visita"
+                placeholder={t.menuLeads.rewardPlaceholder}
                 className="flex-1 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-1.5 text-sm outline-none"
               />
             </label>
@@ -125,11 +124,11 @@ export default function MenuLeadsView({
             disabled={saving}
             className="text-sm font-semibold px-4 h-9 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 disabled:opacity-50"
           >
-            {saving ? "Guardando..." : "Guardar"}
+            {saving ? t.menuLeads.saving : t.menuLeads.save}
           </button>
           {saved && (
             <span className="flex items-center gap-1 text-sm text-green-700">
-              <Check size={14} aria-hidden /> Guardado
+              <Check size={14} aria-hidden /> {t.menuLeads.saved}
             </span>
           )}
         </div>
@@ -138,12 +137,12 @@ export default function MenuLeadsView({
       {enabled && (
         <>
           <DashboardCard>
-            <h2 className="text-sm font-semibold mb-3">Canjear un código</h2>
+            <h2 className="text-sm font-semibold mb-3">{t.menuLeads.redeemCode}</h2>
             <form onSubmit={handleRedeemByCode} className="flex gap-2">
               <input
                 value={codeInput}
                 onChange={(e) => setCodeInput(e.target.value.toUpperCase())}
-                placeholder="Código, ej. K7XM2P"
+                placeholder={t.menuLeads.codePlaceholder}
                 className="flex-1 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none uppercase tracking-wider"
               />
               <button
@@ -152,7 +151,7 @@ export default function MenuLeadsView({
                 className="flex items-center gap-1.5 text-sm font-medium px-4 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 disabled:opacity-50"
               >
                 <Search size={15} aria-hidden />
-                Canjear
+                {t.menuLeads.redeem}
               </button>
             </form>
             {redeemMsg && (
@@ -163,10 +162,8 @@ export default function MenuLeadsView({
           </DashboardCard>
 
           <DashboardCard>
-            <h2 className="text-sm font-semibold mb-3">Todos los códigos ({leads.length})</h2>
-            {leads.length === 0 && (
-              <p className="text-sm text-[#343233]/60">Todavía no hay ningún código reclamado.</p>
-            )}
+            <h2 className="text-sm font-semibold mb-3">{t.menuLeads.allCodes(leads.length)}</h2>
+            {leads.length === 0 && <p className="text-sm text-[#343233]/60">{t.menuLeads.noCodesYet}</p>}
             <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
               {leads.map((l) => (
                 <div key={l.id} className="flex flex-wrap items-center gap-3 px-4 py-2.5">
@@ -184,7 +181,7 @@ export default function MenuLeadsView({
                       l.redeemedAt ? "bg-green-50 text-green-700" : "bg-amber-50 text-amber-700"
                     }`}
                   >
-                    {l.redeemedAt ? "Canjeado" : "Pendiente"}
+                    {l.redeemedAt ? t.menuLeads.redeemed : t.menuLeads.pending}
                   </span>
                 </div>
               ))}

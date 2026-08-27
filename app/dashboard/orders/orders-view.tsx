@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ShoppingBag, Check, Bike, Store } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { formatCurrency } from "@/lib/currency";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface Settings {
   orderingEnabled: boolean;
@@ -34,20 +35,6 @@ interface Order {
   items: OrderItem[];
 }
 
-const STATUS_META: Record<Order["status"], { label: string; className: string }> = {
-  PENDING: { label: "Pendiente", className: "bg-amber-50 text-amber-700" },
-  CONFIRMED: { label: "Confirmado", className: "bg-blue-50 text-blue-700" },
-  READY: { label: "Listo", className: "bg-green-50 text-green-700" },
-  COMPLETED: { label: "Completado", className: "bg-[#F7F8F4] text-[#343233]" },
-  CANCELLED: { label: "Cancelado", className: "bg-red-50 text-red-700" },
-};
-
-const NEXT_ACTION: Partial<Record<Order["status"], { label: string; next: Order["status"] }>> = {
-  PENDING: { label: "Confirmar", next: "CONFIRMED" },
-  CONFIRMED: { label: "Marcar listo", next: "READY" },
-  READY: { label: "Completar", next: "COMPLETED" },
-};
-
 export default function OrdersView({
   initialSettings,
   currency,
@@ -57,12 +44,27 @@ export default function OrdersView({
   currency: string;
   initialOrders: Order[];
 }) {
+  const { t } = useDashboardLang();
   const [settings, setSettings] = useState(initialSettings);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [orders, setOrders] = useState(initialOrders);
   const [tab, setTab] = useState<"active" | "history">("active");
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const STATUS_META: Record<Order["status"], { label: string; className: string }> = {
+    PENDING: { label: t.orders.statusPending, className: "bg-amber-50 text-amber-700" },
+    CONFIRMED: { label: t.orders.statusConfirmed, className: "bg-blue-50 text-blue-700" },
+    READY: { label: t.orders.statusReady, className: "bg-green-50 text-green-700" },
+    COMPLETED: { label: t.orders.statusCompleted, className: "bg-[#F7F8F4] text-[#343233]" },
+    CANCELLED: { label: t.orders.statusCancelled, className: "bg-red-50 text-red-700" },
+  };
+
+  const NEXT_ACTION: Partial<Record<Order["status"], { label: string; next: Order["status"] }>> = {
+    PENDING: { label: t.orders.confirm, next: "CONFIRMED" },
+    CONFIRMED: { label: t.orders.markReady, next: "READY" },
+    READY: { label: t.orders.complete, next: "COMPLETED" },
+  };
 
   const activeOrders = orders.filter((o) => o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "READY");
   const historyOrders = orders.filter((o) => o.status === "COMPLETED" || o.status === "CANCELLED");
@@ -102,12 +104,9 @@ export default function OrdersView({
       <DashboardCard>
         <h1 className="text-xl font-semibold mb-1 flex items-center gap-2">
           <ShoppingBag size={20} aria-hidden />
-          Pedidos
+          {t.orders.title}
         </h1>
-        <p className="text-sm text-[#343233]/70 mb-6">
-          El cliente arma su pedido en el menú público y lo paga al retirar o recibir — sin pasarela
-          de pago online por ahora.
-        </p>
+        <p className="text-sm text-[#343233]/70 mb-6">{t.orders.subtitle}</p>
 
         <label className="flex items-center gap-3 mb-4">
           <input
@@ -116,7 +115,7 @@ export default function OrdersView({
             onChange={(e) => setSettings({ ...settings, orderingEnabled: e.target.checked })}
             className="w-4 h-4 accent-[#E7FF00]"
           />
-          <span className="text-sm font-medium">Activar pedidos en el menú público</span>
+          <span className="text-sm font-medium">{t.orders.activate}</span>
         </label>
 
         {settings.orderingEnabled && (
@@ -130,7 +129,7 @@ export default function OrdersView({
                   className="w-4 h-4 accent-[#E7FF00]"
                 />
                 <Store size={15} aria-hidden />
-                <span className="text-sm">Pickup (retiro en el local)</span>
+                <span className="text-sm">{t.orders.pickup}</span>
               </label>
               <label className="flex items-center gap-3">
                 <input
@@ -140,14 +139,14 @@ export default function OrdersView({
                   className="w-4 h-4 accent-[#E7FF00]"
                 />
                 <Bike size={15} aria-hidden />
-                <span className="text-sm">Delivery</span>
+                <span className="text-sm">{t.orders.delivery}</span>
               </label>
             </div>
 
             {settings.deliveryEnabled && (
               <div className="flex flex-wrap gap-4 mb-4">
                 <label className="flex items-center gap-2">
-                  <span className="text-sm text-[#343233]/70">Costo de envío</span>
+                  <span className="text-sm text-[#343233]/70">{t.orders.deliveryFee}</span>
                   <input
                     type="number"
                     min="0"
@@ -159,14 +158,14 @@ export default function OrdersView({
                   />
                 </label>
                 <label className="flex items-center gap-2">
-                  <span className="text-sm text-[#343233]/70">Pedido mínimo</span>
+                  <span className="text-sm text-[#343233]/70">{t.orders.minOrder}</span>
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={settings.minDeliveryAmount ?? ""}
                     onChange={(e) => setSettings({ ...settings, minDeliveryAmount: e.target.value ? Number(e.target.value) : null })}
-                    placeholder="Sin mínimo"
+                    placeholder={t.orders.noMinimum}
                     className="w-28 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-2.5 py-1.5 text-sm outline-none"
                   />
                 </label>
@@ -181,11 +180,11 @@ export default function OrdersView({
             disabled={saving}
             className="text-sm font-semibold px-4 h-9 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 disabled:opacity-50"
           >
-            {saving ? "Guardando..." : "Guardar"}
+            {saving ? t.orders.saving : t.orders.save}
           </button>
           {saved && (
             <span className="flex items-center gap-1 text-sm text-green-700">
-              <Check size={14} aria-hidden /> Guardado
+              <Check size={14} aria-hidden /> {t.orders.saved}
             </span>
           )}
         </div>
@@ -198,19 +197,19 @@ export default function OrdersView({
               onClick={() => setTab("active")}
               className={`text-sm font-medium px-3.5 h-9 rounded-lg ${tab === "active" ? "bg-[#002D09] text-white" : "border border-[#002D09]/15"}`}
             >
-              Activos ({activeOrders.length})
+              {t.orders.active} ({activeOrders.length})
             </button>
             <button
               onClick={() => setTab("history")}
               className={`text-sm font-medium px-3.5 h-9 rounded-lg ${tab === "history" ? "bg-[#002D09] text-white" : "border border-[#002D09]/15"}`}
             >
-              Historial
+              {t.orders.history}
             </button>
           </div>
 
           {shown.length === 0 && (
             <p className="text-sm text-[#343233]/60">
-              {tab === "active" ? "No hay pedidos activos." : "Todavía no hay historial."}
+              {tab === "active" ? t.orders.noActiveOrders : t.orders.noHistoryYet}
             </p>
           )}
 
@@ -232,7 +231,7 @@ export default function OrdersView({
 
                   <div className="flex items-center gap-1.5 text-xs text-[#343233]/70 mb-2">
                     {order.fulfillment === "PICKUP" ? <Store size={13} aria-hidden /> : <Bike size={13} aria-hidden />}
-                    {order.fulfillment === "PICKUP" ? "Pickup" : `Delivery — ${order.deliveryAddress}`}
+                    {order.fulfillment === "PICKUP" ? t.orders.pickupShort : `${t.orders.delivery} — ${order.deliveryAddress}`}
                   </div>
 
                   <div className="text-sm mb-2">
@@ -243,7 +242,11 @@ export default function OrdersView({
                     ))}
                   </div>
 
-                  {order.notes && <p className="text-xs text-[#343233]/60 mb-2">Nota: {order.notes}</p>}
+                  {order.notes && (
+                    <p className="text-xs text-[#343233]/60 mb-2">
+                      {t.orders.note}: {order.notes}
+                    </p>
+                  )}
 
                   <p className="text-sm font-bold mb-3">{formatCurrency(order.total, currency)}</p>
 
@@ -261,7 +264,7 @@ export default function OrdersView({
                         disabled={busyId === order.id}
                         className="text-xs px-3 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] disabled:opacity-50"
                       >
-                        Cancelar
+                        {t.orders.cancel}
                       </button>
                     </div>
                   )}

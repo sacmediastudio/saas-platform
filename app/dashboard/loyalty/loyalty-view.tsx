@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Stamp, Gift, Check } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface Card {
   id: string;
@@ -25,6 +26,7 @@ export default function LoyaltyView({
   slug: string;
   initialCards: Card[];
 }) {
+  const { t } = useDashboardLang();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [visitsNeeded, setVisitsNeeded] = useState(initialVisitsNeeded);
   const [reward, setReward] = useState(initialReward);
@@ -51,7 +53,7 @@ export default function LoyaltyView({
   }
 
   async function handleRedeem(card: Card) {
-    if (!confirm(`¿Confirmar que ${card.customerName ?? card.customerEmail} ya reclamó su premio?`)) return;
+    if (!confirm(t.loyalty.confirmRedeem(card.customerName ?? card.customerEmail))) return;
     setRedeeming(card.id);
     const res = await fetch(`/api/tenant/loyalty/${card.id}/redeem`, { method: "POST" });
     if (res.ok) {
@@ -66,12 +68,9 @@ export default function LoyaltyView({
       <DashboardCard>
         <h1 className="text-xl font-semibold mb-1 flex items-center gap-2">
           <Stamp size={20} aria-hidden />
-          Programa de sellos
+          {t.loyalty.title}
         </h1>
-        <p className="text-sm text-[#343233]/70 mb-6">
-          Cada cita confirmada suma un sello, identificado por el correo del cliente — sin apps ni
-          cuentas nuevas.
-        </p>
+        <p className="text-sm text-[#343233]/70 mb-6">{t.loyalty.subtitle}</p>
 
         <label className="flex items-center gap-3 mb-4">
           <input
@@ -80,13 +79,13 @@ export default function LoyaltyView({
             onChange={(e) => setEnabled(e.target.checked)}
             className="w-4 h-4 accent-[#E7FF00]"
           />
-          <span className="text-sm font-medium">Activar programa de sellos</span>
+          <span className="text-sm font-medium">{t.loyalty.activate}</span>
         </label>
 
         {enabled && (
           <>
             <label className="flex items-center gap-3 mb-3">
-              <span className="text-sm w-40 shrink-0">Visitas para el premio</span>
+              <span className="text-sm w-40 shrink-0">{t.loyalty.visitsForReward}</span>
               <input
                 type="number"
                 min="2"
@@ -97,11 +96,11 @@ export default function LoyaltyView({
               />
             </label>
             <label className="flex items-start gap-3 mb-4">
-              <span className="text-sm w-40 shrink-0 pt-1.5">Premio</span>
+              <span className="text-sm w-40 shrink-0 pt-1.5">{t.loyalty.reward}</span>
               <input
                 value={reward}
                 onChange={(e) => setReward(e.target.value)}
-                placeholder="Tu próxima visita es gratis"
+                placeholder={t.loyalty.rewardPlaceholder}
                 className="flex-1 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-1.5 text-sm outline-none"
               />
             </label>
@@ -109,9 +108,7 @@ export default function LoyaltyView({
             <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-4">
               <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
             </div>
-            <p className="text-xs text-[#343233]/60 mb-4">
-              Comparte este link con tus clientes para que consulten cuántos sellos llevan.
-            </p>
+            <p className="text-xs text-[#343233]/60 mb-4">{t.loyalty.shareLinkHint}</p>
           </>
         )}
 
@@ -121,11 +118,11 @@ export default function LoyaltyView({
             disabled={saving}
             className="text-sm font-semibold px-4 h-9 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 disabled:opacity-50"
           >
-            {saving ? "Guardando..." : "Guardar"}
+            {saving ? t.loyalty.saving : t.loyalty.save}
           </button>
           {saved && (
             <span className="flex items-center gap-1 text-sm text-green-700">
-              <Check size={14} aria-hidden /> Guardado
+              <Check size={14} aria-hidden /> {t.loyalty.saved}
             </span>
           )}
         </div>
@@ -133,14 +130,9 @@ export default function LoyaltyView({
 
       {enabled && (
         <DashboardCard>
-          <h2 className="text-sm font-semibold mb-3">Clientes con sellos</h2>
+          <h2 className="text-sm font-semibold mb-3">{t.loyalty.customersWithStamps}</h2>
 
-          {cards.length === 0 && (
-            <p className="text-sm text-[#343233]/60">
-              Todavía no hay ningún cliente con sellos — se van a ir sumando a medida que confirmes
-              citas.
-            </p>
-          )}
+          {cards.length === 0 && <p className="text-sm text-[#343233]/60">{t.loyalty.noCustomersYet}</p>}
 
           <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
             {cards.map((c) => {
@@ -152,7 +144,7 @@ export default function LoyaltyView({
                     <p className="text-xs text-[#343233]/60">{c.customerEmail}</p>
                   </div>
                   <span className="text-sm font-semibold shrink-0">
-                    {c.stamps} / {visitsNeeded} sellos
+                    {c.stamps} / {visitsNeeded} {t.loyalty.stamps}
                   </span>
                   {hasReward ? (
                     <button
@@ -161,10 +153,10 @@ export default function LoyaltyView({
                       className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md bg-[#E7FF00] text-[#002D09] font-medium hover:brightness-105 shrink-0"
                     >
                       <Gift size={13} aria-hidden />
-                      Marcar premio canjeado
+                      {t.loyalty.markRedeemed}
                     </button>
                   ) : (
-                    <span className="text-xs text-[#343233]/50 shrink-0">Todavía no</span>
+                    <span className="text-xs text-[#343233]/50 shrink-0">{t.loyalty.notYet}</span>
                   )}
                 </div>
               );

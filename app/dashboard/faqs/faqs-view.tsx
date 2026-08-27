@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus, Pencil, Trash2, X, ArrowUp, ArrowDown, MessageCircleQuestion } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
+import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface Faq {
   id: string;
@@ -12,6 +13,7 @@ interface Faq {
 }
 
 export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
+  const { t } = useDashboardLang();
   const [faqs, setFaqs] = useState(initialFaqs);
   const [modal, setModal] = useState<{ mode: "create" | "edit"; faq?: Faq } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -50,7 +52,7 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
   }
 
   async function deleteFaq(faq: Faq) {
-    if (!confirm(`¿Borrar la pregunta "${faq.question}"?`)) return;
+    if (!confirm(t.faqs.confirmDelete(faq.question))) return;
     setBusy(faq.id);
     const res = await fetch(`/api/faqs/${faq.id}`, { method: "DELETE" });
     if (res.ok) setFaqs((list) => list.filter((f) => f.id !== faq.id));
@@ -64,25 +66,20 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
         <div>
           <h1 className="text-xl font-semibold flex items-center gap-2">
             <MessageCircleQuestion size={20} aria-hidden />
-            Preguntas frecuentes
+            {t.faqs.title}
           </h1>
-          <p className="text-sm text-[#343233]/70 mt-1">
-            Aparecen como un chat en tu página pública, para resolver dudas comunes sin que tengan que
-            escribirte a ti directamente.
-          </p>
+          <p className="text-sm text-[#343233]/70 mt-1">{t.faqs.subtitle}</p>
         </div>
         <button
           onClick={() => setModal({ mode: "create" })}
           className="flex items-center gap-1.5 text-sm font-medium bg-[#E7FF00] text-[#002D09] px-3.5 h-9 rounded-lg hover:brightness-105"
         >
           <Plus size={16} aria-hidden />
-          Agregar pregunta
+          {t.faqs.addQuestion}
         </button>
       </div>
 
-      {sorted.length === 0 && (
-        <p className="text-sm text-[#343233]/60 mt-6">Todavía no tienes ninguna pregunta. Agrega la primera.</p>
-      )}
+      {sorted.length === 0 && <p className="text-sm text-[#343233]/60 mt-6">{t.faqs.empty}</p>}
 
       <div className="flex flex-col gap-2 mt-6">
         {sorted.map((faq, idx) => (
@@ -96,7 +93,7 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
                 <button
                   onClick={() => move(faq, -1)}
                   disabled={idx === 0 || busy === faq.id}
-                  aria-label="Mover arriba"
+                  aria-label={t.faqs.moveUp}
                   className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
                 >
                   <ArrowUp size={14} aria-hidden />
@@ -104,14 +101,14 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
                 <button
                   onClick={() => move(faq, 1)}
                   disabled={idx === sorted.length - 1 || busy === faq.id}
-                  aria-label="Mover abajo"
+                  aria-label={t.faqs.moveDown}
                   className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
                 >
                   <ArrowDown size={14} aria-hidden />
                 </button>
                 <button
                   onClick={() => setModal({ mode: "edit", faq })}
-                  aria-label="Editar"
+                  aria-label={t.faqs.edit}
                   className="text-[#343233]/60 hover:text-[#002D09] ml-1"
                 >
                   <Pencil size={14} aria-hidden />
@@ -119,7 +116,7 @@ export default function FaqsView({ initialFaqs }: { initialFaqs: Faq[] }) {
                 <button
                   onClick={() => deleteFaq(faq)}
                   disabled={busy === faq.id}
-                  aria-label="Borrar"
+                  aria-label={t.faqs.deleteLabel}
                   className="text-[#343233]/60 hover:text-red-600"
                 >
                   <Trash2 size={14} aria-hidden />
@@ -157,6 +154,7 @@ function FaqModal({
   onCreated: (f: Faq) => void;
   onUpdated: (f: Faq) => void;
 }) {
+  const { t } = useDashboardLang();
   const [question, setQuestion] = useState(faq?.question ?? "");
   const [answer, setAnswer] = useState(faq?.answer ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -177,7 +175,7 @@ function FaqModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo guardar";
+        let message = t.faqs.saveFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -193,7 +191,7 @@ function FaqModal({
       else onUpdated(saved);
       onClose();
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.faqs.genericError);
       setSaving(false);
     }
   }
@@ -202,34 +200,34 @@ function FaqModal({
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
       <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-semibold">{mode === "create" ? "Agregar pregunta" : "Editar pregunta"}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
+          <h2 className="text-base font-semibold">{mode === "create" ? t.faqs.addTitle : t.faqs.editTitle}</h2>
+          <button onClick={onClose} aria-label={t.common.cancel} className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">Pregunta</span>
+            <span className="text-xs text-[#343233]/70">{t.faqs.question}</span>
             <input
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               required
               maxLength={200}
-              placeholder="¿Tienen estacionamiento?"
+              placeholder={t.faqs.questionPlaceholder}
               className={inputClass}
             />
           </label>
 
           <label className="flex flex-col gap-1">
-            <span className="text-xs text-[#343233]/70">Respuesta</span>
+            <span className="text-xs text-[#343233]/70">{t.faqs.answer}</span>
             <textarea
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               required
               maxLength={1000}
               rows={4}
-              placeholder="Sí, tenemos estacionamiento gratuito para clientes."
+              placeholder={t.faqs.answerPlaceholder}
               className={`${inputClass} resize-none`}
             />
           </label>
@@ -242,14 +240,14 @@ function FaqModal({
               onClick={onClose}
               className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
             >
-              Cancelar
+              {t.common.cancel}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
             >
-              {saving ? "Guardando..." : mode === "create" ? "Agregar" : "Guardar"}
+              {saving ? t.faqs.saving : mode === "create" ? t.faqs.add : t.faqs.save}
             </button>
           </div>
         </form>

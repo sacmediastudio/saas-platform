@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { Mail, Phone, MapPin, Calendar } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
+import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
+import { publicTranslations } from "@/lib/i18n-public";
 import FaqChatWidget from "@/components/faq-chat-widget";
 import SmartImage from "@/components/smart-image";
 
@@ -66,16 +68,19 @@ export default function BookingFlow({
   const [errorMsg, setErrorMsg] = useState("");
   // Idioma que el cliente eligió — se guarda con la cita (para saber en
   // qué idioma mandarle el recordatorio de WhatsApp después) y se
-  // recuerda entre visitas, mismo patrón que el resto del sitio.
-  const [lang, setLang] = useState<"es" | "en">("es");
+  // recuerda entre visitas, mismo helper compartido que usa el menú
+  // público (antes esta página reinventaba su propio manejo de
+  // localStorage a mano, y el botón de idioma no traducía NADA — solo
+  // cambiaba el estado interno sin que se notara en ningún texto).
+  const [lang, setLang] = useState<Lang>("es");
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? window.localStorage.getItem("zertoo_lang") : null;
-    if (stored === "en") setLang("en");
+    setLang(getStoredLang());
   }, []);
-  function toggleLang(l: "es" | "en") {
+  function toggleLang(l: Lang) {
     setLang(l);
-    if (typeof window !== "undefined") window.localStorage.setItem("zertoo_lang", l);
+    setStoredLang(l);
   }
+  const t = publicTranslations[lang].booking;
 
   useEffect(() => {
     if (!service || view !== "book") return;
@@ -126,7 +131,7 @@ export default function BookingFlow({
       });
 
       if (!res.ok) {
-        let message = "No se pudo crear la reserva";
+        let message = t.createError;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -137,7 +142,7 @@ export default function BookingFlow({
       }
       setStatus("done");
     } catch {
-      setErrorMsg("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setErrorMsg(t.genericError);
       setStatus("error");
     }
   }
@@ -152,12 +157,10 @@ export default function BookingFlow({
         className="max-w-md mx-auto mt-24 text-center px-6 min-h-screen"
         style={{ backgroundColor: themeBgColor, color: themeTextColor }}
       >
-        <p className="text-lg font-semibold mb-2">Reserva enviada</p>
-        <p className="text-sm opacity-70">
-          Te llegará una confirmación a {customer.email} cuando el negocio confirme tu cita.
-        </p>
+        <p className="text-lg font-semibold mb-2">{t.successTitle}</p>
+        <p className="text-sm opacity-70">{t.successBody(customer.email)}</p>
         <a href={`/review/${tenantSlug}`} className="text-sm font-medium underline mt-6 inline-block" style={{ opacity: 0.8 }}>
-          ¿Ya visitaste antes? Deja tu reseña
+          {t.leaveReviewLink}
         </a>
         <div className="flex justify-center pt-8 opacity-50">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -215,7 +218,7 @@ export default function BookingFlow({
             </div>
           )}
 
-          <p className={`text-lg font-semibold text-center ${tenantTagline ? "mb-1" : "mb-2"}`}>{tenantName}</p>
+          <p className="text-2xl font-bold text-center mb-1">{tenantName}</p>
           {tenantTagline && (
             <p className="text-sm text-center mb-2 max-w-[280px] leading-relaxed" style={{ opacity: hasBgImage ? 0.85 : 0.65 }}>
               {tenantTagline}
@@ -223,7 +226,7 @@ export default function BookingFlow({
           )}
           <p className="flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] font-semibold mb-8 opacity-70">
             <Calendar size={13} aria-hidden />
-            Agendar cita
+            {t.bookAppointment}
           </p>
 
           <div className="w-full flex flex-col gap-3">
@@ -245,16 +248,16 @@ export default function BookingFlow({
                 ) : null}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold truncate">{s.name}</p>
-                  <p className="text-xs opacity-70 mt-0.5">{s.durationMinutes} min</p>
+                  <p className="text-xs opacity-70 mt-0.5">
+                    {s.durationMinutes} {t.min}
+                  </p>
                   {s.description && <p className="text-xs opacity-70 mt-0.5 truncate">{s.description}</p>}
                 </div>
                 <span className="text-sm font-semibold shrink-0">{formatCurrency(s.price, currency)}</span>
               </button>
             ))}
 
-            {services.length === 0 && (
-              <p className="text-sm text-center opacity-70">Este negocio todavía no tiene servicios activos.</p>
-            )}
+            {services.length === 0 && <p className="text-sm text-center opacity-70">{t.noServices}</p>}
           </div>
 
           {hasContact && (
@@ -306,13 +309,13 @@ export default function BookingFlow({
       style={{ backgroundColor: themeBgColor, color: themeTextColor }}
     >
       <button onClick={backToList} className="text-xs font-medium underline mb-4 opacity-70">
-        ← Volver a servicios
+        {t.backToServices}
       </button>
       <p className="text-base font-semibold mb-5">{service?.name}</p>
 
       {step === 2 && (
         <div>
-          <p className="text-sm opacity-60 mb-2.5">Elige fecha y hora</p>
+          <p className="text-sm opacity-60 mb-2.5">{t.chooseDateTime}</p>
           <input
             type="date"
             value={dateParam}
@@ -322,7 +325,7 @@ export default function BookingFlow({
           />
 
           {loadingSlots ? (
-            <p className="text-sm opacity-60 py-4 text-center">Buscando horarios...</p>
+            <p className="text-sm opacity-60 py-4 text-center">{t.searchingSlots}</p>
           ) : availableSlots && availableSlots.length > 0 ? (
             <div className="grid grid-cols-3 gap-2">
               {availableSlots.map((h) => (
@@ -342,14 +345,12 @@ export default function BookingFlow({
               ))}
             </div>
           ) : (
-            <p className="text-sm opacity-60 py-4 text-center">
-              No hay horarios disponibles ese día. Prueba con otra fecha.
-            </p>
+            <p className="text-sm opacity-60 py-4 text-center">{t.noSlotsAvailable}</p>
           )}
 
           <div className="flex gap-2 mt-4">
             <button onClick={backToList} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">
-              Atrás
+              {t.back}
             </button>
             <button
               disabled={!time}
@@ -357,7 +358,7 @@ export default function BookingFlow({
               className="flex-1 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
             >
-              Continuar
+              {t.continueLabel}
             </button>
           </div>
         </div>
@@ -365,36 +366,36 @@ export default function BookingFlow({
 
       {step === 3 && service && (
         <div>
-          <p className="text-sm opacity-60 mb-2.5">Confirma tu reserva</p>
+          <p className="text-sm opacity-60 mb-2.5">{t.confirmBooking}</p>
           <div className="border border-neutral-200 rounded-lg p-3 mb-3 text-sm">
-            <Row label="Servicio" value={service.name} />
+            <Row label={t.service} value={service.name} />
             <Row
-              label="Fecha"
+              label={t.date}
               value={new Date(
                 Number(dateParam.split("-")[0]),
                 Number(dateParam.split("-")[1]) - 1,
                 Number(dateParam.split("-")[2])
-              ).toLocaleDateString("es", { weekday: "long", day: "numeric", month: "short" })}
+              ).toLocaleDateString(lang === "en" ? "en" : "es", { weekday: "long", day: "numeric", month: "short" })}
             />
-            <Row label="Hora" value={time ?? ""} />
-            <Row label="Precio" value={formatCurrency(service.price, currency)} bold />
+            <Row label={t.time} value={time ?? ""} />
+            <Row label={t.price} value={formatCurrency(service.price, currency)} bold />
           </div>
           <input
-            placeholder="Tu nombre"
+            placeholder={t.namePlaceholder}
             value={customer.name}
             onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
             className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm mb-2"
           />
           <input
             type="email"
-            placeholder="name@correo.com"
+            placeholder={t.emailPlaceholder}
             value={customer.email}
             onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
             className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm mb-2"
           />
           <input
             type="tel"
-            placeholder="Teléfono / WhatsApp (opcional)"
+            placeholder={t.phonePlaceholder}
             value={customer.phone}
             onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
             className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm mb-3"
@@ -402,7 +403,7 @@ export default function BookingFlow({
           {status === "error" && <p className="text-red-600 text-sm mb-2">{errorMsg}</p>}
           <div className="flex gap-2">
             <button onClick={() => setStep(2)} className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm">
-              Atrás
+              {t.back}
             </button>
             <button
               disabled={!customer.name || !customer.email || status === "sending"}
@@ -410,7 +411,7 @@ export default function BookingFlow({
               className="flex-1 py-2.5 rounded-lg text-sm font-medium disabled:opacity-40"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
             >
-              {status === "sending" ? "Enviando..." : "Confirmar"}
+              {status === "sending" ? t.sending : t.confirm}
             </button>
           </div>
         </div>

@@ -1136,6 +1136,66 @@ páginas públicas. Enlazada desde:
 - `/book/[slug]` — link en la pantalla de "Reserva enviada"
 - `/link/[slug]` — link debajo de la lista de enlaces
 
+## Idioma en toda la plataforma (auditoría completa)
+
+El usuario pidió revisar toda la plataforma en el tema de idioma —
+esto no era solo "texto faltante por traducir", había un bug real
+activo. Auditoría completa:
+
+| Página | Estado antes | Estado ahora |
+|---|---|---|
+| `/menu/[slug]` | ✅ Ya andaba bien | Sin cambios |
+| `/book/[slug]` | ⚠️ Tenía un botón ES/EN **visible pero que no hacía nada** — cambiaba el estado interno sin traducir ni un solo texto de la página. Peor que no tener botón: genera una expectativa falsa. | ✅ Corregido, ahora sí traduce todo |
+| `/link/[slug]` (Smartlink) | ❌ Sin ningún soporte de idioma | ✅ Bilingüe completo |
+| `/review/[slug]` (Reseñas) | ❌ Sin ningún soporte de idioma | ✅ Bilingüe completo |
+| `/loyalty/[slug]` (Sellos) | ❌ Sin ningún soporte de idioma | ✅ Bilingüe completo |
+
+- **`lib/i18n-public.ts`** — diccionario nuevo, compartido entre las 4
+  páginas (booking, smartlink, review, loyalty), mismo patrón que
+  `lib/i18n-dashboard.ts` y `lib/i18n-landing.ts` — para no tener
+  frases traducidas sueltas y desalineadas por archivo.
+- **Se unificó el mecanismo de guardar el idioma elegido** —
+  `booking-flow.tsx` reinventaba su propio manejo de `localStorage` a
+  mano; ahora las 4 páginas usan `getStoredLang`/`setStoredLang` de
+  `lib/i18n-auth.ts`, el mismo helper que ya usaba el menú. Todas
+  comparten la misma clave (`zertoo_lang`), así que el idioma elegido
+  en una página se respeta en las demás.
+- **Smartlink (`/link/[slug]`) se reestructuró** — antes era 100%
+  servidor sin ninguna interactividad (no podía tener un selector real
+  sin recargar la página). Ahora `page.tsx` solo busca los datos y
+  `smartlink-view.tsx` (nuevo, componente cliente) maneja el idioma y
+  el resto de la interacción — mismo patrón que ya usaban menú y citas.
+- Se encontró y corrigió también un `aria-label` (para lectores de
+  pantalla) que quedaba fijo en español en el formulario de reseñas,
+  sin importar el idioma elegido.
+- **Alcance que quedó afuera a propósito**: `/loyalty/[slug]` es la
+  única de las 4 páginas que no recibe ningún color de marca del
+  negocio (fondo/botón/texto) — se ve neutra, sin el branding que sí
+  tienen las otras 3. Es un tema de diseño, no de idioma, así que no
+  se tocó — quedó anotado por si se quiere resolver aparte más
+  adelante.
+
+### El dashboard del negocio — las 6 secciones restantes, terminado
+
+Las 6 secciones que quedaban 100% en español fijo (Facturación,
+Clientes/CRM, FAQs, Sellos, Postre gratis, Pedidos) ahora usan el
+mismo diccionario central (`lib/i18n-dashboard.ts`) que ya usaban las
+otras 7 — el dashboard completo queda bilingüe.
+
+- Se agregó una sección nueva al diccionario por cada una:
+  `customers`, `billing`, `loyalty`, `menuLeads`, `faqs`, `orders`.
+- **Facturación reutiliza traducciones que ya existían** en vez de
+  duplicarlas — los nombres de módulo (Menú/Citas/Smartlink) salen de
+  `t.nav.menu`/`t.nav.bookings`/`t.nav.smartlink`, que ya estaban
+  traducidos para el nav. A propósito **no se tocó `MODULE_LABELS`**
+  (en `lib/modules.ts`, siempre en español) porque también lo usa el
+  panel de admin, que queda fuera del alcance de esta traducción — el
+  admin es una herramienta interna, no algo que el negocio o sus
+  clientes vean.
+- Auditoría verificada con una búsqueda amplia (strings sueltos y
+  template literals) en los 6 archivos después de traducirlos — sin
+  ningún texto en español suelto fuera del diccionario.
+
 ## Zertoo Now! — directorio público de descubrimiento
 
 Producto **separado** del Zertoo principal — no vive en este
@@ -1190,15 +1250,34 @@ preferencia técnica).
 - **Landing principal** — link a `now.zertoo.app` en el nav de
   escritorio y en el menú móvil (se abre en pestaña nueva).
 
+### Buscador por categoría y ubicación ("cerca de mí") — terminado
+
+- **`lib/geocoding.ts`** — convierte la dirección de un negocio en
+  coordenadas reales usando Google Geocoding API. Se llama **una sola
+  vez por negocio**, no en cada visita: cuando activa Zertoo Now por
+  primera vez, o si cambia de dirección mientras ya está activo (o
+  simplemente todavía no tenía coordenadas guardadas, para negocios
+  que se activaron antes de que esto existiera). Vive conectado desde
+  `/api/tenant/settings`, no desde el proyecto de Zertoo Now — el que
+  guarda los ajustes del negocio es este proyecto.
+- **`GOOGLE_MAPS_API_KEY`** — si no está configurada, todo sigue
+  funcionando igual, simplemente ningún negocio nuevo consigue
+  coordenadas (no aparece en "cerca de mí", pero sí en el resto del
+  directorio). Ver `.env.example` para cómo conseguirla.
+- Si falla la geocodificación puntual de un negocio (dirección mal
+  escrita, etc.), no bloquea el guardado del resto de sus ajustes —
+  se guarda todo menos las coordenadas.
+- **El filtro por categoría y el cálculo de "cerca de mí" en sí
+  (fórmula de Haversine, sin depender de ningún servicio externo)
+  viven en el proyecto de Zertoo Now**, no acá — ver el README de ese
+  proyecto para el detalle completo de esa parte.
+
 ### Lo que falta (próximas etapas, en el orden que tiene más sentido seguir)
 
-1. Buscador por categoría y ubicación ("cerca de mí" — necesita
-   geocodificar la dirección de cada negocio, un servicio externo
-   nuevo; ver la conversación sobre esto para el análisis de costo)
-2. Botones de "Cómo llegar" (abre la app de mapas del visitante) y
+1. Botones de "Cómo llegar" (abre la app de mapas del visitante) y
    "Compartir" (WhatsApp directo + el share nativo del teléfono) en
    cada negocio
-3. El botón "Share this moment" en el menú/perfil público, y la
+2. El botón "Share this moment" en el menú/perfil público, y la
    bandeja de aprobación de fotos en el dashboard de cada negocio
    (el modelo `Moment` ya existe, falta toda la UI de subir/aprobar)
 
