@@ -666,16 +666,38 @@ model ModuleActivationRequest {
 enum NowCategory {
   ITALIAN
   FRENCH
+  LOCAL
+  COLOMBIAN
+  MEXICAN
   INTERNATIONAL
   ASIAN
-  CRIOLLA
+  JAPANESE
+  CHINESE
+  INDIAN
   STEAKHOUSE
   SEAFOOD
-  FAST_FOOD
-  CAFE_DESSERTS
-  PIZZERIA
   SUSHI
+  PIZZERIA
+  BURGERS
+  FAST_FOOD
+  BBQ_GRILL
+  CAFE
+  BAKERY_PASTRY
+  BREAKFAST_BRUNCH
+  ICE_CREAM_GELATO
+  DESSERTS
+  VEGETARIAN_VEGAN
   BAR_PUB
+  BEACH_BAR
+  FOOD_TRUCK
+  // ⚠️ TEMPORAL — no quitar todavía. Hay negocios reales usando estos
+  // 3 valores (ej. "La Ramada Colombiana" tiene CRIOLLA). Reasignarlos
+  // a su equivalente nuevo (CRIOLLA→COLOMBIAN o LOCAL, VEGETARIAN→
+  // VEGETARIAN_VEGAN, CAFE_DESSERTS→CAFE/DESSERTS/etc.) antes de
+  // borrar estos 3 del enum — si no, Postgres puede rechazar el
+  // cambio, o esos negocios quedan con una categoría inexistente.
+  CRIOLLA
+  CAFE_DESSERTS
   VEGETARIAN
 }
 

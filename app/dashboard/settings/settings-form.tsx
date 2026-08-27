@@ -49,26 +49,6 @@ interface TenantData {
   nowCategory: string | null;
 }
 
-// Misma lista que usa Zertoo Eats — lista fija armada por Zertoo, el
-// negocio elige UNA de acá (evita "italiana"/"Italian food"/"comida
-// italiana" como 3 valores distintos para lo mismo). Solo restaurantes
-// — Zertoo Eats quedó enfocado exclusivamente ahí, no en Citas/Smartlink.
-const NOW_CATEGORY_LABELS: Record<string, string> = {
-  ITALIAN: "Italiana",
-  FRENCH: "Francesa",
-  INTERNATIONAL: "Internacional",
-  ASIAN: "Asiática",
-  CRIOLLA: "Criolla",
-  STEAKHOUSE: "Steakhouse",
-  SEAFOOD: "Mariscos",
-  FAST_FOOD: "Comida rápida",
-  CAFE_DESSERTS: "Café y postres",
-  PIZZERIA: "Pizzería",
-  SUSHI: "Sushi",
-  BAR_PUB: "Bar",
-  VEGETARIAN: "Vegetariana",
-};
-
 export default function SettingsForm({
   tenant,
   enabledModules,
@@ -365,7 +345,7 @@ export default function SettingsForm({
                 <option value="" disabled>
                   Elegí una categoría
                 </option>
-                {Object.entries(NOW_CATEGORY_LABELS).map(([value, label]) => (
+                {Object.entries(t.nowCategories).map(([value, label]) => (
                   <option key={value} value={value}>
                     {label}
                   </option>

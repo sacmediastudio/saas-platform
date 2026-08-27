@@ -8,22 +8,41 @@ import { getEnabledModules } from "@/lib/modules";
 
 const CURRENCIES = ["USD", "EUR", "MXN", "COP", "ARS", "CLP", "PEN", "BRL", "AWG"] as const;
 
-// Mismos 13 valores que el enum NowCategory de Prisma — tienen que
-// coincidir exacto. Solo restaurantes — Zertoo Eats quedó enfocado
-// exclusivamente ahí.
+// Mismos valores que el enum NowCategory de Prisma. Los últimos 3
+// (CRIOLLA, CAFE_DESSERTS, VEGETARIAN) son TEMPORALES — ver la nota en
+// prisma/schema.prisma. Se mantienen acá solo para que un negocio que
+// todavía tenga uno de esos 3 valores pueda seguir guardando el resto
+// de sus ajustes sin que esto lo bloquee; no aparecen como opción en
+// el desplegable (eso sale de t.nowCategories, que ya no los incluye).
 const NOW_CATEGORIES = [
   "ITALIAN",
   "FRENCH",
+  "LOCAL",
+  "COLOMBIAN",
+  "MEXICAN",
   "INTERNATIONAL",
   "ASIAN",
-  "CRIOLLA",
+  "JAPANESE",
+  "CHINESE",
+  "INDIAN",
   "STEAKHOUSE",
   "SEAFOOD",
-  "FAST_FOOD",
-  "CAFE_DESSERTS",
-  "PIZZERIA",
   "SUSHI",
+  "PIZZERIA",
+  "BURGERS",
+  "FAST_FOOD",
+  "BBQ_GRILL",
+  "CAFE",
+  "BAKERY_PASTRY",
+  "BREAKFAST_BRUNCH",
+  "ICE_CREAM_GELATO",
+  "DESSERTS",
+  "VEGETARIAN_VEGAN",
   "BAR_PUB",
+  "BEACH_BAR",
+  "FOOD_TRUCK",
+  "CRIOLLA",
+  "CAFE_DESSERTS",
   "VEGETARIAN",
 ] as const;
 
