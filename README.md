@@ -1235,6 +1235,43 @@ se agrega después también pase por ahí — hay que revisarlo cada vez.
   corrigieron antes de seguir, gracias a esta verificación mecánica en
   vez de confiar solo en la lectura visual.
 
+### Tercera pasada — el usuario probó en producción y encontró más
+
+Después de desplegar la segunda pasada, el usuario reportó ver
+"idiomas mezclados" de verdad en producción — con capturas reales del
+nav y el menú en inglés mostrando texto en español suelto. Encontramos
+dos causas de fondo:
+
+1. **`components/dashboard-shell.tsx` (el nav) nunca se había
+   revisado** — ninguna de las dos pasadas anteriores tocó este
+   archivo, porque el foco estaba en el *contenido* de cada sección
+   (Menú, Citas, Smartlink), no en la barra que las enlaza a todas. 5
+   de los 10 links (Pedidos, Premio, Clientes, Sellos, FAQs) estaban
+   fijos en español directo en el código, mientras el resto sí usaba
+   el diccionario — se agregaron a la sección `nav` y se conectaron.
+   De paso se encontró el mismo problema en el botón de menú
+   hamburguesa en mobile ("Cerrar menú"/"Abrir menú").
+2. **Un punto ciego real en el método de búsqueda** — las dos pasadas
+   anteriores solo buscaban texto **entre comillas** (`"..."` o
+   `` `...` ``). Pero bastante contenido está como texto plano de JSX,
+   sin comillas (ej. `<button>Importar desde Excel</button>`), que esa
+   búsqueda no detecta. El `ImportModal` completo resultó tener casi
+   todo su contenido así — título del modal, intro, botones,
+   mensajes de resultado — a pesar de ya tener el hook conectado.
+   `NewBookingModal` y `BlockScheduleModal` en citas tenían el mismo
+   patrón (errores de red genéricos y placeholders de ejemplo sin
+   traducir).
+
+**La lección que vale la pena dejar escrita**: revisar "¿este
+componente usa el hook?" no alcanza — hay que releer **todo** el
+contenido de cada modal/vista línea por línea al menos una vez,
+porque el hook puede estar ahí desde el principio mientras texto
+nuevo se sigue agregando fijo al lado, sesión tras sesión. Esta
+tercera pasada combinó tres patrones de búsqueda a la vez (comillas
+dobles, template literals, texto JSX plano) en los 4 archivos
+completos, y se volvió a verificar mecánicamente que las 25 secciones
+del diccionario coincidan entre inglés y español.
+
 ## Zertoo Now! — directorio público de descubrimiento
 
 Producto **separado** del Zertoo principal — no vive en este

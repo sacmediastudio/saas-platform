@@ -54,14 +54,14 @@ export default function DashboardShell({
     ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
     ...(enabledModules.includes("RESTAURANT")
       ? [
-          { href: "/dashboard/orders", label: "Pedidos", icon: ShoppingBag },
-          { href: "/dashboard/menu-leads", label: "Premio", icon: Gift },
+          { href: "/dashboard/orders", label: t.nav.orders, icon: ShoppingBag },
+          { href: "/dashboard/menu-leads", label: t.nav.menuLeads, icon: Gift },
         ]
       : []),
     { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star },
-    { href: "/dashboard/customers", label: "Clientes", icon: Users },
-    { href: "/dashboard/faqs", label: "FAQs", icon: MessageCircleQuestion },
-    { href: "/dashboard/loyalty", label: "Sellos", icon: Stamp },
+    { href: "/dashboard/customers", label: t.nav.customers, icon: Users },
+    { href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion },
+    { href: "/dashboard/loyalty", label: t.nav.loyalty, icon: Stamp },
     { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks },
     { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard },
     { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
@@ -130,7 +130,7 @@ export default function DashboardShell({
             <LangSwitch />
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+              aria-label={mobileOpen ? t.nav.closeMenu : t.nav.openMenu}
               className="p-1.5"
             >
               {mobileOpen ? <X size={22} aria-hidden /> : <Menu size={22} aria-hidden />}

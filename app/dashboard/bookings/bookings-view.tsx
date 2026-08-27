@@ -532,7 +532,7 @@ function NewBookingModal({
       onCreated();
       onClose();
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.bookingModal.genericError);
       setSaving(false);
     }
   }
@@ -599,7 +599,7 @@ function NewBookingModal({
             value={form.customerName}
             onChange={(e) => setForm({ ...form, customerName: e.target.value })}
             required
-            placeholder="Ana Martínez"
+            placeholder={t.bookingModal.customerNamePlaceholder}
             className={inputClass}
           />
         </Field>
@@ -610,7 +610,7 @@ function NewBookingModal({
             value={form.customerEmail}
             onChange={(e) => setForm({ ...form, customerEmail: e.target.value })}
             required
-            placeholder="name@correo.com"
+            placeholder={t.bookingModal.customerEmailPlaceholder}
             className={inputClass}
           />
         </Field>
@@ -681,7 +681,7 @@ function BlockScheduleModal({
       onCreated();
       setDone(true);
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.blockModal.genericError);
       setSaving(false);
     }
   }
@@ -755,7 +755,7 @@ function BlockScheduleModal({
           <input
             value={form.reason}
             onChange={(e) => setForm({ ...form, reason: e.target.value })}
-            placeholder="Almuerzo, vacaciones, mantenimiento..."
+            placeholder={t.blockModal.reasonPlaceholder}
             className={inputClass}
           />
         </Field>

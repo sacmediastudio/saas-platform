@@ -140,9 +140,9 @@ export default function SmartLinkEditor({
         </button>
       </div>
       <p className="text-sm text-[#343233]/70 mb-4">
-        Foto y nombre se editan en{" "}
+        {t.smartlink.editInSettingsBefore}
         <Link href="/dashboard/settings" className="underline hover:text-[#002D09]">
-          Ajustes
+          {t.nav.settings}
         </Link>
         .
       </p>

@@ -140,7 +140,7 @@ export default function MenuEditor({
               className="flex items-center gap-1.5 text-sm font-medium border border-[#002D09]/15 px-3 h-9 rounded-lg hover:bg-[#F7F8F4]"
             >
               <Upload size={16} aria-hidden />
-              Importar desde Excel
+              {t.menu.importFromExcel}
             </button>
             <button
               onClick={() => setCategoryModal({ mode: "create" })}
@@ -397,7 +397,7 @@ function DishModal({
       else onUpdated(normalized);
       onClose();
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.menu.genericError);
       setSaving(false);
     }
   }
@@ -629,7 +629,7 @@ function CategoryModal({
       else onUpdated(saved);
       onClose();
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.menu.genericError);
       setSaving(false);
     }
   }
@@ -770,7 +770,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
       setInvalidRows(body.invalidRows);
       setStep("preview");
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.menu.genericError);
     }
     setLoading(false);
     e.target.value = ""; // permite volver a subir el mismo archivo si hace falta reintentar
@@ -804,31 +804,28 @@ function ImportModal({ onClose }: { onClose: () => void }) {
       setResult(body);
       setStep("done");
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.menu.genericError);
     }
     setLoading(false);
   }
 
   return (
-    <ModalShell title="Importar menú desde Excel" onClose={onClose}>
+    <ModalShell title={t.menu.importModalTitle} onClose={onClose}>
       {step === "upload" && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-[#343233]/70">
-            Descarga la plantilla, complétala con tu menú, y súbela — te dejamos revisar todo antes
-            de que se guarde nada. Las fotos se agregan después, plato por plato.
-          </p>
+          <p className="text-sm text-[#343233]/70">{t.menu.importIntro}</p>
           <a
             href="/api/menu-items/template"
             className="flex items-center justify-center gap-1.5 text-sm font-medium border border-[#002D09]/15 h-9 rounded-lg hover:bg-[#F7F8F4]"
           >
-            Descargar plantilla
+            {t.menu.downloadTemplate}
           </a>
           <label className="flex items-center justify-center gap-1.5 text-sm font-semibold h-10 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 cursor-pointer">
             <Upload size={15} aria-hidden />
             {loading ? t.menu.reading : t.menu.uploadFilledFile}
             <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} disabled={loading} className="hidden" />
           </label>
-          <p className="text-xs text-[#343233]/50 text-center -mt-2">Máximo 5 MB, hasta 500 platos por archivo.</p>
+          <p className="text-xs text-[#343233]/50 text-center -mt-2">{t.menu.fileLimits}</p>
           {error && <p className="text-red-600 text-sm">{error}</p>}
         </div>
       )}
@@ -836,7 +833,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
       {step === "preview" && (
         <div className="flex flex-col gap-4">
           <p className="text-sm text-[#343233]/70">
-            {validRows.length} platos listos para importar
+            {t.menu.readyToImport(validRows.length)}
             {invalidRows.length > 0 ? t.menu.importErrorsSummary(invalidRows.length) : ""}.
           </p>
 
@@ -847,7 +844,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
                   <span className="font-medium">{r.nombre}</span>
                   <span className="text-[#343233]/60">
                     {" "}
-                    — {r.categoria} — {r.variablePrice ? "Precio variable (Preguntar)" : `$${r.precio?.toFixed(2)}`}
+                    — {r.categoria} — {r.variablePrice ? t.menu.variablePriceLabel : `$${r.precio?.toFixed(2)}`}
                   </span>
                 </div>
               ))}
@@ -858,7 +855,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
             <div className="border border-red-200 bg-red-50 rounded-lg overflow-hidden divide-y divide-red-200 max-h-40 overflow-y-auto">
               {invalidRows.map((r) => (
                 <div key={r.rowNumber} className="px-3 py-2 text-sm">
-                  <span className="font-medium">Fila {r.rowNumber}</span>
+                  <span className="font-medium">{t.menu.row(r.rowNumber)}</span>
                   <span className="text-red-700"> — {r.errors.join(", ")}</span>
                 </div>
               ))}
@@ -872,7 +869,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
               onClick={() => setStep("upload")}
               className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
             >
-              Volver
+              {t.menu.back}
             </button>
             <button
               onClick={handleConfirm}
@@ -888,14 +885,16 @@ function ImportModal({ onClose }: { onClose: () => void }) {
       {step === "done" && result && (
         <div className="flex flex-col gap-4 items-center text-center py-2">
           <p className="text-sm text-[#343233]/80">
-            ¡Listo! Se importaron <strong>{result.created}</strong> platos
+            {t.menu.importDonePrefix}
+            <strong>{result.created}</strong>
+            {t.menu.importDoneSuffix}
             {result.categoriesCreated > 0 ? t.menu.importCategoriesCreated(result.categoriesCreated) : ""}.
           </p>
           <button
             onClick={() => window.location.reload()}
             className="w-full py-2.5 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-semibold hover:brightness-105"
           >
-            Ver mi menú actualizado
+            {t.menu.viewUpdatedMenu}
           </button>
         </div>
       )}
