@@ -41,12 +41,6 @@ const NOW_CATEGORY_LABELS: Record<string, string> = {
   BAR_PUB: "Bar & Pub",
   BEACH_BAR: "Beach Bar",
   FOOD_TRUCK: "Food Truck",
-  // Temporales — ver la nota en prisma/schema.prisma. Se dejan acá
-  // solo para que el admin pueda seguir viendo bien la categoría de
-  // negocios que todavía no se migraron a la lista nueva.
-  CRIOLLA: "Criolla",
-  CAFE_DESSERTS: "Café y postres",
-  VEGETARIAN: "Vegetariana",
 };
 
 export default function NowFeaturedView({ tenants: initialTenants }: { tenants: Tenant[] }) {
