@@ -1196,6 +1196,45 @@ otras 7 — el dashboard completo queda bilingüe.
   template literals) en los 6 archivos después de traducirlos — sin
   ningún texto en español suelto fuera del diccionario.
 
+### Segunda pasada — Menú, Citas y Smartlink tenían huecos, a pesar de ya "usar" el diccionario
+
+El usuario pidió revisar esto de nuevo, específicamente estos 3 —
+buen instinto: aunque `menu-editor.tsx`, `bookings-view.tsx` y
+`smartlink-editor.tsx` usan `useDashboardLang()` desde hace tiempo,
+fueron creciendo con funciones nuevas a lo largo de toda la sesión
+(add-ons, importar Excel, precio variable) que se agregaron con texto
+fijo en español, sin pasar nunca por el diccionario. "Usar el sistema"
+en el componente principal no garantiza que **cada string nuevo** que
+se agrega después también pase por ahí — hay que revisarlo cada vez.
+
+- Se encontraron y corrigieron ~35 strings sueltos entre los 3
+  archivos: confirmaciones de borrar (`confirm()`), aria-labels de
+  editar/borrar/mover, mensajes de error de guardado, y varios
+  placeholders de ejemplo en campos de texto (nombre de plato, nombre
+  de add-on, nombre y descripción de servicio).
+- **`ModalShell`** (el contenedor compartido de los modales, en menú y
+  citas) no tenía `useDashboardLang()` en absoluto — su botón de
+  cerrar quedaba fijo en español sin importar el idioma elegido. Se le
+  agregó el hook a los dos.
+- Se agregó `close`/`moveUp`/`moveDown` a la sección `common`
+  compartida, reutilizables entre menú/citas/smartlink/FAQs, en vez de
+  duplicar la misma traducción en cada sección.
+- **Falso positivo descartado, a propósito**: los placeholders
+  "Postres"/"Desserts" en el modal de categoría NO se tocaron — son
+  ejemplos legítimos en dos campos separados (nombre en español,
+  nombre en inglés de la categoría), no texto de interfaz que deba
+  responder al idioma del dashboard.
+- **Verificación mecánica, no solo visual** — se escribió un script
+  que compara automáticamente las claves de cada sección entre `en` y
+  `es` en todo `lib/i18n-dashboard.ts` (las 25 secciones del archivo,
+  no solo las tocadas en esta pasada), para confirmar que no haya
+  quedado ninguna clave solo en un idioma. Vale la pena mencionar:
+  durante esta edición hubo dos tropiezos reales (una apertura de
+  sección que se perdió, una llave de cierre duplicada) al mover texto
+  entre bloques grandes del archivo — ambos se detectaron y
+  corrigieron antes de seguir, gracias a esta verificación mecánica en
+  vez de confiar solo en la lectura visual.
+
 ## Zertoo Now! — directorio público de descubrimiento
 
 Producto **separado** del Zertoo principal — no vive en este

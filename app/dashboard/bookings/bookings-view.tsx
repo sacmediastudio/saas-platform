@@ -93,13 +93,13 @@ export default function BookingsView({
   }
 
   async function deleteService(service: ServiceOption) {
-    if (!confirm(`¿Borrar el servicio "${service.name}"?`)) return;
+    if (!confirm(t.bookings.confirmDeleteService(service.name))) return;
     const res = await fetch(`/api/services/${service.id}`, { method: "DELETE" });
     if (res.ok) {
       setServices((prev) => prev.filter((s) => s.id !== service.id));
     } else {
       const body = await res.json().catch(() => null);
-      alert(body?.error ?? "No se pudo borrar el servicio");
+      alert(body?.error ?? t.bookings.deleteServiceFailed);
     }
   }
 
@@ -155,14 +155,14 @@ export default function BookingsView({
               <span className="text-sm font-medium">{formatCurrency(s.price, currency)}</span>
               <button
                 onClick={() => setServiceModal({ mode: "edit", service: s })}
-                aria-label={`Editar ${s.name}`}
+                aria-label={t.bookings.editService(s.name)}
                 className="text-[#343233]/60 hover:text-[#002D09]"
               >
                 <Pencil size={15} aria-hidden />
               </button>
               <button
                 onClick={() => deleteService(s)}
-                aria-label={`Borrar ${s.name}`}
+                aria-label={t.bookings.deleteService(s.name)}
                 className="text-[#343233]/60 hover:text-red-600"
               >
                 <Trash2 size={15} aria-hidden />
@@ -318,11 +318,11 @@ function ServiceModal({
     const price = Number(form.price);
     const durationMinutes = Number(form.durationMinutes);
     if (!Number.isFinite(price) || price <= 0) {
-      setError("Ingresa un precio válido");
+      setError(t.bookings.invalidPrice);
       return;
     }
     if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
-      setError("Ingresa una duración válida");
+      setError(t.bookings.invalidDuration);
       return;
     }
 
@@ -344,7 +344,7 @@ function ServiceModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo guardar el servicio";
+        let message = t.bookings.saveServiceFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -400,7 +400,7 @@ function ServiceModal({
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
-            placeholder="Corte y color"
+            placeholder={t.serviceModal.namePlaceholder}
             className={inputClass}
           />
         </Field>
@@ -410,7 +410,7 @@ function ServiceModal({
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             rows={2}
-            placeholder="Incluye lavado y peinado"
+            placeholder={t.serviceModal.descriptionPlaceholder}
             className={`${inputClass} resize-none`}
           />
         </Field>
@@ -519,7 +519,7 @@ function NewBookingModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo crear la cita";
+        let message = t.bookings.createBookingFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -669,7 +669,7 @@ function BlockScheduleModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo crear el bloqueo";
+        let message = t.bookings.createBlockFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -819,12 +819,13 @@ function ModalShell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useDashboardLang();
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
       <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
+          <button onClick={onClose} aria-label={t.common.close} className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>

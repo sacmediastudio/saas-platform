@@ -100,7 +100,7 @@ export default function SmartLinkEditor({
   }
 
   async function deleteItem(item: SmartLinkItem) {
-    if (!confirm(`¿Borrar "${item.label}"?`)) return;
+    if (!confirm(t.smartlink.confirmDelete(item.label))) return;
     setBusy(item.id);
     const res = await fetch(`/api/smartlink-items/${item.id}`, { method: "DELETE" });
     if (res.ok) setItems((prev) => prev.filter((i) => i.id !== item.id));
@@ -217,7 +217,7 @@ export default function SmartLinkEditor({
                 <button
                   onClick={() => move(item, -1)}
                   disabled={idx === 0}
-                  aria-label="Mover arriba"
+                  aria-label={t.common.moveUp}
                   className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
                 >
                   <ArrowUp size={14} aria-hidden />
@@ -225,14 +225,14 @@ export default function SmartLinkEditor({
                 <button
                   onClick={() => move(item, 1)}
                   disabled={idx === sortedItems.length - 1}
-                  aria-label="Mover abajo"
+                  aria-label={t.common.moveDown}
                   className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
                 >
                   <ArrowDown size={14} aria-hidden />
                 </button>
                 <button
                   onClick={() => setModal({ mode: "edit", item })}
-                  aria-label={`Editar ${item.label}`}
+                  aria-label={t.smartlink.editLink(item.label)}
                   className="text-[#343233]/60 hover:text-[#002D09] ml-1"
                 >
                   <Pencil size={14} aria-hidden />
@@ -240,7 +240,7 @@ export default function SmartLinkEditor({
                 <button
                   onClick={() => deleteItem(item)}
                   disabled={busy === item.id}
-                  aria-label={`Borrar ${item.label}`}
+                  aria-label={t.smartlink.deleteLink(item.label)}
                   className="text-[#343233]/60 hover:text-red-600"
                 >
                   <Trash2 size={14} aria-hidden />
@@ -303,7 +303,7 @@ function LinkModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo guardar el link";
+        let message = t.smartlink.saveLinkFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -328,7 +328,7 @@ function LinkModal({
       <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{mode === "create" ? t.smartlinkModal.titleCreate : t.smartlinkModal.titleEdit}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
+          <button onClick={onClose} aria-label={t.common.close} className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>

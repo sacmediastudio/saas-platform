@@ -101,7 +101,7 @@ export default function MenuEditor({
   }
 
   async function deleteDish(item: MenuItem) {
-    if (!confirm(`¿Borrar "${item.name}"? Esta acción no se puede deshacer.`)) return;
+    if (!confirm(t.menu.confirmDeleteDish(item.name))) return;
     setSaving(item.id);
     const res = await fetch(`/api/menu-items/${item.id}`, { method: "DELETE" });
     if (res.ok) {
@@ -116,13 +116,13 @@ export default function MenuEditor({
       alert("Esta categoría tiene platos dentro. Muévelos o bórralos antes de eliminar la categoría.");
       return;
     }
-    if (!confirm(`¿Borrar la categoría "${cat.name}"?`)) return;
+    if (!confirm(t.menu.confirmDeleteCategory(cat.name))) return;
     const res = await fetch(`/api/menu-categories/${cat.id}`, { method: "DELETE" });
     if (res.ok) {
       setCategories((prev) => prev.filter((c) => c.id !== cat.id));
     } else {
       const body = await res.json().catch(() => null);
-      alert(body?.error ?? "No se pudo borrar la categoría");
+      alert(body?.error ?? t.menu.deleteCategoryFailed);
     }
   }
 
@@ -191,14 +191,14 @@ export default function MenuEditor({
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setCategoryModal({ mode: "edit", category: cat })}
-                  aria-label={`Renombrar ${cat.name}`}
+                  aria-label={t.menu.renameCategory(cat.name)}
                   className="text-[#343233]/60 hover:text-[#002D09]"
                 >
                   <Pencil size={13} aria-hidden />
                 </button>
                 <button
                   onClick={() => deleteCategory(cat)}
-                  aria-label={`Borrar ${cat.name}`}
+                  aria-label={t.menu.deleteCategory(cat.name)}
                   className="text-[#343233]/60 hover:text-red-600"
                 >
                   <Trash2 size={13} aria-hidden />
@@ -250,7 +250,7 @@ export default function MenuEditor({
                       </button>
                       <button
                         onClick={() => setDishModal({ mode: "edit", item })}
-                        aria-label={`Editar ${item.name}`}
+                        aria-label={t.menu.editDish(item.name)}
                         className="text-[#343233]/60 hover:text-[#002D09]"
                       >
                         <Pencil size={15} aria-hidden />
@@ -258,7 +258,7 @@ export default function MenuEditor({
                       <button
                         onClick={() => deleteDish(item)}
                         disabled={saving === item.id}
-                        aria-label={`Borrar ${item.name}`}
+                        aria-label={t.menu.deleteDish(item.name)}
                         className="text-[#343233]/60 hover:text-red-600"
                       >
                         <Trash2 size={15} aria-hidden />
@@ -351,7 +351,7 @@ function DishModal({
 
     const price = Number(form.price);
     if (!form.categoryId) {
-      setError("Elige una categoría");
+      setError(t.menu.pickCategory);
       return;
     }
     if (!form.variablePrice && (!Number.isFinite(price) || price <= 0)) {
@@ -381,7 +381,7 @@ function DishModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo guardar el plato";
+        let message = t.menu.saveDishFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -438,7 +438,7 @@ function DishModal({
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
-            placeholder="Bruschetta clásica"
+            placeholder={t.dishModal.namePlaceholder}
             className={inputClass}
           />
         </Field>
@@ -531,7 +531,7 @@ function DishModal({
                   onChange={(e) =>
                     setAddOns((prev) => prev.map((a, j) => (j === i ? { ...a, name: e.target.value } : a)))
                   }
-                  placeholder="Papas fritas"
+                  placeholder={t.dishModal.addOnNamePlaceholder}
                   className="flex-1 min-w-0 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none focus:border-[#002D09]/40"
                 />
                 <input
@@ -614,7 +614,7 @@ function CategoryModal({
       });
 
       if (!res.ok) {
-        let message = "No se pudo guardar la categoría";
+        let message = t.menu.saveCategoryFailed;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -713,12 +713,13 @@ function ModalShell({
   onClose: () => void;
   children: React.ReactNode;
 }) {
+  const { t } = useDashboardLang();
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
       <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-semibold">{title}</h2>
-          <button onClick={onClose} aria-label="Cerrar" className="text-[#343233]/60 hover:text-[#002D09]">
+          <button onClick={onClose} aria-label={t.common.close} className="text-[#343233]/60 hover:text-[#002D09]">
             <X size={18} aria-hidden />
           </button>
         </div>
@@ -741,6 +742,7 @@ interface ImportRow {
 }
 
 function ImportModal({ onClose }: { onClose: () => void }) {
+  const { t } = useDashboardLang();
   const [step, setStep] = useState<"upload" | "preview" | "done">("upload");
   const [validRows, setValidRows] = useState<ImportRow[]>([]);
   const [invalidRows, setInvalidRows] = useState<ImportRow[]>([]);
@@ -760,7 +762,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/menu-items/import/preview", { method: "POST", body: formData });
       const body = await res.json();
       if (!res.ok) {
-        setError(body.error ?? "No se pudo leer el archivo");
+        setError(body.error ?? t.menu.importReadFailed);
         setLoading(false);
         return;
       }
@@ -795,7 +797,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
       });
       const body = await res.json();
       if (!res.ok) {
-        setError(body.error ?? "No se pudo importar el menú");
+        setError(body.error ?? t.menu.importFailed);
         setLoading(false);
         return;
       }
@@ -823,7 +825,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
           </a>
           <label className="flex items-center justify-center gap-1.5 text-sm font-semibold h-10 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 cursor-pointer">
             <Upload size={15} aria-hidden />
-            {loading ? "Leyendo..." : "Subir archivo lleno"}
+            {loading ? t.menu.reading : t.menu.uploadFilledFile}
             <input type="file" accept=".xlsx,.xls" onChange={handleFileChange} disabled={loading} className="hidden" />
           </label>
           <p className="text-xs text-[#343233]/50 text-center -mt-2">Máximo 5 MB, hasta 500 platos por archivo.</p>
@@ -835,7 +837,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-4">
           <p className="text-sm text-[#343233]/70">
             {validRows.length} platos listos para importar
-            {invalidRows.length > 0 ? `, ${invalidRows.length} con errores (no se van a importar)` : ""}.
+            {invalidRows.length > 0 ? t.menu.importErrorsSummary(invalidRows.length) : ""}.
           </p>
 
           {validRows.length > 0 && (
@@ -877,7 +879,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
               disabled={loading || validRows.length === 0}
               className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
             >
-              {loading ? "Importando..." : `Importar ${validRows.length} platos`}
+              {loading ? t.menu.importing : t.menu.importConfirm(validRows.length)}
             </button>
           </div>
         </div>
@@ -887,7 +889,7 @@ function ImportModal({ onClose }: { onClose: () => void }) {
         <div className="flex flex-col gap-4 items-center text-center py-2">
           <p className="text-sm text-[#343233]/80">
             ¡Listo! Se importaron <strong>{result.created}</strong> platos
-            {result.categoriesCreated > 0 ? ` y se crearon ${result.categoriesCreated} categorías nuevas` : ""}.
+            {result.categoriesCreated > 0 ? t.menu.importCategoriesCreated(result.categoriesCreated) : ""}.
           </p>
           <button
             onClick={() => window.location.reload()}
