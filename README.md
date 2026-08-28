@@ -1308,6 +1308,33 @@ modales del archivo (`LeadClaimModal`, `ItemCustomizeModal`,
   agotado). Se detectó revisando el archivo inmediatamente después de
   cada cambio, no al final, y se corrigió antes de seguir.
 
+## Quinta pasada — Ajustes del dashboard (`/dashboard/settings`), completo sin traducir
+
+El usuario reportó ver el formulario de Ajustes casi entero en
+español al cambiar a inglés, salvo el título de la página y las
+categorías de Zertoo Eats. Este archivo **nunca pasó por ninguna de
+las 3 auditorías del dashboard** (esas cubrieron Menú, Citas,
+Smartlink, y el nav) — quedó completamente afuera del radar hasta
+ahora, a pesar de ser una de las páginas más grandes y con más
+contenido de todo el dashboard.
+
+- Se agregaron 2 secciones nuevas al diccionario: `settingsForm` (47
+  claves — perfil, contacto, moneda, apariencia, vista previa, Zertoo
+  Eats) y `timezones` (14 ciudades — algunas cambian de verdad entre
+  idiomas, como "Nueva York"/"New York", "Ciudad de México"/"Mexico
+  City", "Londres"/"London").
+- La lista de zonas horarias, que antes era una constante fija en
+  español dentro del propio archivo, ahora vive en el diccionario
+  central.
+- `ImageField` (el componente de subir logo/foto) no tenía el hook de
+  idioma conectado en absoluto — se le agregó.
+- **Se dejó a propósito** "Logo" sin ternario — es la misma palabra
+  exacta en los dos idiomas.
+- Verificación mecánica final: las 28 secciones completas del
+  diccionario coinciden entre inglés y español, y la búsqueda
+  combinada de los 3 patrones en el archivo no encuentra nada más
+  suelto.
+
 ## Segunda moneda en el menú público (ej. "$20 / Afl. 35")
 
 Pensado específicamente para Aruba, donde el florín (AWG) circula a la

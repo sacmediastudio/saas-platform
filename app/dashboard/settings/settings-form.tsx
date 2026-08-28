@@ -9,23 +9,6 @@ import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import DashboardCard from "@/components/dashboard-card";
 
-const TIMEZONE_LABELS: Record<string, string> = {
-  "America/Aruba": "Aruba (AST, UTC-4)",
-  "America/New_York": "Nueva York (EST/EDT)",
-  "America/Chicago": "Chicago (CST/CDT)",
-  "America/Denver": "Denver (MST/MDT)",
-  "America/Los_Angeles": "Los Ángeles (PST/PDT)",
-  "America/Mexico_City": "Ciudad de México",
-  "America/Bogota": "Bogotá",
-  "America/Lima": "Lima",
-  "America/Santiago": "Santiago de Chile",
-  "America/Argentina/Buenos_Aires": "Buenos Aires",
-  "America/Sao_Paulo": "São Paulo",
-  "Europe/Madrid": "Madrid",
-  "Europe/London": "Londres",
-  UTC: "UTC",
-};
-
 interface TenantData {
   name: string;
   slug: string;
@@ -94,7 +77,7 @@ export default function SettingsForm({
         body: JSON.stringify(form),
       });
       if (!res.ok) {
-        let message = "No se pudieron guardar los cambios";
+        let message = t.settingsForm.genericSaveError;
         try {
           const body = await res.json();
           if (typeof body.error === "string") message = body.error;
@@ -107,7 +90,7 @@ export default function SettingsForm({
       router.refresh(); // el nombre del negocio se usa en el sidebar
       setTimeout(() => setSaved(false), 2500);
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(t.settingsForm.genericError);
     } finally {
       setSaving(false);
     }
@@ -120,9 +103,7 @@ export default function SettingsForm({
   }
 
   const heroLabel =
-    form.businessType === "SMARTLINK"
-      ? "Imagen de fondo (cubre toda tu página de Smartlink)"
-      : "Foto principal (aparece arriba de tu página pública)";
+    form.businessType === "SMARTLINK" ? t.settingsForm.heroLabelSmartlink : t.settingsForm.heroLabelRestaurant;
 
   return (
     <div className="max-w-lg">
@@ -130,8 +111,8 @@ export default function SettingsForm({
       <h1 className="text-xl font-semibold mb-1">{t.settings.title}</h1>
       <p className="text-sm text-[#343233]/70 mb-6">{t.settings.subtitle}</p>
 
-      <Section title="Perfil del negocio">
-        <Field label="Nombre del negocio">
+      <Section title={t.settingsForm.profileSection}>
+        <Field label={t.settingsForm.businessName}>
           <input
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -162,8 +143,8 @@ export default function SettingsForm({
         <Field
           label={
             form.businessType === "SMARTLINK"
-              ? "Descripción corta (aparece debajo de tu nombre)"
-              : "Descripción corta (aparece debajo de tu nombre en el menú público)"
+              ? t.settingsForm.taglineLabelSmartlink
+              : t.settingsForm.taglineLabelRestaurant
           }
         >
           <textarea
@@ -173,8 +154,8 @@ export default function SettingsForm({
             maxLength={200}
             placeholder={
               form.businessType === "SMARTLINK"
-                ? "Diseñadora gráfica y fotógrafa en Buenos Aires."
-                : "Cortes a la parrilla, cócteles tropicales y la cálida hospitalidad de la isla."
+                ? t.settingsForm.taglinePlaceholderSmartlink
+                : t.settingsForm.taglinePlaceholderRestaurant
             }
             className={`${inputClass} resize-none`}
           />
@@ -189,24 +170,24 @@ export default function SettingsForm({
               className="w-4 h-4 accent-[#E7FF00]"
             />
             <span>
-              Mostrar la foto de cada plato en la lista del menú{" "}
-              <span className="text-[#343233]/60">(no solo en Destacados)</span>
+              {t.settingsForm.showDishPhotos}{" "}
+              <span className="text-[#343233]/60">{t.settingsForm.showDishPhotosNote}</span>
             </span>
           </label>
         )}
       </Section>
 
-      <Section title="Contacto">
-        <Field label="Correo">
+      <Section title={t.settingsForm.contactSection}>
+        <Field label={t.settingsForm.email}>
           <input
             type="email"
             value={form.contactEmail ?? ""}
             onChange={(e) => setForm({ ...form, contactEmail: e.target.value })}
-            placeholder="contacto@tunegocio.com"
+            placeholder={t.settingsForm.emailPlaceholder}
             className={inputClass}
           />
         </Field>
-        <Field label="Teléfono">
+        <Field label={t.settingsForm.phone}>
           <input
             value={form.contactPhone ?? ""}
             onChange={(e) => setForm({ ...form, contactPhone: e.target.value })}
@@ -214,18 +195,18 @@ export default function SettingsForm({
             className={inputClass}
           />
         </Field>
-        <Field label="Dirección">
+        <Field label={t.settingsForm.address}>
           <input
             value={form.address ?? ""}
             onChange={(e) => setForm({ ...form, address: e.target.value })}
-            placeholder="Calle 123, Ciudad"
+            placeholder={t.settingsForm.addressPlaceholder}
             className={inputClass}
           />
         </Field>
       </Section>
 
-      <Section title="Moneda">
-        <Field label="Moneda de tus precios">
+      <Section title={t.settingsForm.currencySection}>
+        <Field label={t.settingsForm.currencyLabel}>
           <select
             value={form.currency}
             onChange={(e) => setForm({ ...form, currency: e.target.value })}
@@ -252,13 +233,13 @@ export default function SettingsForm({
             }
             className="w-4 h-4 accent-[#E7FF00]"
           />
-          <span className="text-sm font-medium">Mostrar una segunda moneda en el menú (ej. "$20 / Afl. 35")</span>
+          <span className="text-sm font-medium">{t.settingsForm.secondCurrencyToggle}</span>
         </label>
 
         {form.secondaryCurrencyCode && (
           <div className="flex flex-wrap gap-4 mt-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs text-[#343233]/70">Segunda moneda</span>
+              <span className="text-xs text-[#343233]/70">{t.settingsForm.secondCurrencyLabel}</span>
               <select
                 value={form.secondaryCurrencyCode}
                 onChange={(e) => setForm({ ...form, secondaryCurrencyCode: e.target.value })}
@@ -273,7 +254,7 @@ export default function SettingsForm({
             </label>
             <label className="flex flex-col gap-1.5">
               <span className="text-xs text-[#343233]/70">
-                Cuántos {form.secondaryCurrencyCode} por 1 {form.currency}
+                {t.settingsForm.secondCurrencyRateLabel(form.secondaryCurrencyCode, form.currency)}
               </span>
               <input
                 type="number"
@@ -287,14 +268,11 @@ export default function SettingsForm({
             </label>
           </div>
         )}
-        <p className="text-xs text-[#343233]/50 mt-3 max-w-md">
-          Pensado para tasas fijas (como el florín arubeño, anclado al dólar) — se carga una vez y no
-          cambia sola. El primer precio se muestra en negrita, el segundo en texto regular.
-        </p>
+        <p className="text-xs text-[#343233]/50 mt-3 max-w-md">{t.settingsForm.secondCurrencyHint}</p>
       </Section>
 
-      <Section title="Zona horaria">
-        <Field label="Zona horaria de tu negocio (importante para el módulo de Citas)">
+      <Section title={t.settingsForm.timezoneSection}>
+        <Field label={t.settingsForm.timezoneLabel}>
           <select
             value={form.timezone}
             onChange={(e) => setForm({ ...form, timezone: e.target.value })}
@@ -302,42 +280,42 @@ export default function SettingsForm({
           >
             {TIMEZONES.map((tz) => (
               <option key={tz} value={tz}>
-                {TIMEZONE_LABELS[tz] ?? tz}
+                {t.timezones[tz as keyof typeof t.timezones] ?? tz}
               </option>
             ))}
           </select>
         </Field>
       </Section>
 
-      <Section title="Apariencia de tu página pública">
+      <Section title={t.settingsForm.appearanceSection}>
         <div className="grid grid-cols-2 gap-4">
           <ColorField
-            label="Fondo"
+            label={t.settingsForm.background}
             value={form.themeBgColor}
             onChange={(v) => setForm({ ...form, themeBgColor: v })}
           />
           <ColorField
-            label="Texto"
+            label={t.settingsForm.text}
             value={form.themeTextColor}
             onChange={(v) => setForm({ ...form, themeTextColor: v })}
           />
           <ColorField
-            label="Botones"
+            label={t.settingsForm.buttons}
             value={form.buttonColor}
             onChange={(v) => setForm({ ...form, buttonColor: v })}
           />
           <ColorField
-            label="Texto del botón"
+            label={t.settingsForm.buttonText}
             value={form.buttonTextColor}
             onChange={(v) => setForm({ ...form, buttonTextColor: v })}
           />
           <ColorField
-            label="Tarjetas del menú"
+            label={t.settingsForm.menuCards}
             value={form.menuCardColor}
             onChange={(v) => setForm({ ...form, menuCardColor: v })}
           />
           <ColorField
-            label="Texto sobre el fondo"
+            label={t.settingsForm.textOnBackground}
             value={form.menuPageTextColor}
             onChange={(v) => setForm({ ...form, menuPageTextColor: v })}
           />
@@ -347,12 +325,12 @@ export default function SettingsForm({
           className="rounded-xl border border-[#002D09]/10 px-4 py-4 flex items-center justify-between gap-3"
           style={{ backgroundColor: form.themeBgColor, color: form.themeTextColor }}
         >
-          <span className="text-sm">Así se ve tu página pública</span>
+          <span className="text-sm">{t.settingsForm.previewPageLabel}</span>
           <span
             className="text-xs font-semibold px-3.5 py-2 rounded-full"
             style={{ backgroundColor: form.buttonColor, color: form.buttonTextColor }}
           >
-            Botón
+            {t.settingsForm.previewButtonLabel}
           </span>
         </div>
 
@@ -361,7 +339,7 @@ export default function SettingsForm({
           style={{ backgroundColor: form.themeBgColor, color: form.menuPageTextColor }}
         >
           <span className="text-xs font-semibold tracking-[0.15em] uppercase opacity-70">
-            Así se ve "Destacados" y el menú de categorías, directo sobre el fondo
+            {t.settingsForm.previewFeaturedLabel}
           </span>
         </div>
 
@@ -369,16 +347,13 @@ export default function SettingsForm({
           className="rounded-2xl px-4 py-4 mt-3 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
           style={{ backgroundColor: form.menuCardColor, color: form.themeTextColor }}
         >
-          <span className="text-sm">Así se ve una tarjeta del menú (categoría o destacado)</span>
+          <span className="text-sm">{t.settingsForm.previewCardLabel}</span>
         </div>
       </Section>
 
       {enabledModules.includes("RESTAURANT") && (
         <Section title="Zertoo Eats">
-          <p className="text-sm text-[#343233]/60 -mt-2 mb-4">
-            El directorio de restaurantes de Zertoo — si activás esto, tu menú aparece ahí para que
-            la gente te descubra. Solo para negocios con Menú activo.
-          </p>
+          <p className="text-sm text-[#343233]/60 -mt-2 mb-4">{t.settingsForm.zertooEatsDescription}</p>
           <label className="flex items-center gap-3 mb-4">
             <input
               type="checkbox"
@@ -386,13 +361,13 @@ export default function SettingsForm({
               onChange={(e) => setForm({ ...form, nowEnabled: e.target.checked })}
               className="w-4 h-4 accent-[#E7FF00]"
             />
-            <span className="text-sm font-medium">Aparecer en Zertoo Eats</span>
+            <span className="text-sm font-medium">{t.settingsForm.appearOnZertooEats}</span>
           </label>
 
           {form.nowEnabled && (
             <div className="flex flex-col gap-4">
               <label className="flex flex-col gap-1.5 max-w-xs">
-                <span className="text-xs text-[#343233]/70">Categoría</span>
+                <span className="text-xs text-[#343233]/70">{t.settingsForm.categoryLabel}</span>
                 <select
                   value={form.nowCategory ?? ""}
                   onChange={(e) => setForm({ ...form, nowCategory: e.target.value || null })}
@@ -400,7 +375,7 @@ export default function SettingsForm({
                   className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
                 >
                   <option value="" disabled>
-                    Elegí una categoría
+                    {t.settingsForm.chooseCategoryDefault}
                   </option>
                   {Object.entries(t.nowCategories).map(([value, label]) => (
                     <option key={value} value={value}>
@@ -411,7 +386,7 @@ export default function SettingsForm({
               </label>
 
               <label className="flex flex-col gap-1.5">
-                <span className="text-xs text-[#343233]/70">Link de Google Maps (opcional)</span>
+                <span className="text-xs text-[#343233]/70">{t.settingsForm.googleMapsLabel}</span>
                 <input
                   type="url"
                   value={form.googleMapsUrl ?? ""}
@@ -419,12 +394,7 @@ export default function SettingsForm({
                   placeholder="https://maps.app.goo.gl/..."
                   className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none max-w-md"
                 />
-                <span className="text-xs text-[#343233]/50">
-                  Buscá tu negocio en Google Maps, tocá "Compartir", y pegá el link acá. Si lo cargás,
-                  el botón "Cómo llegar" en Zertoo Eats lleva directo a tu ubicación exacta, en vez de
-                  calcularla desde tu dirección (que puede acercar a la zona, pero no siempre a la
-                  puerta).
-                </span>
+                <span className="text-xs text-[#343233]/50">{t.settingsForm.googleMapsHint}</span>
               </label>
             </div>
           )}
@@ -511,6 +481,7 @@ function ImageField({
   onRemove: () => void;
   shape: "square" | "wide";
 }) {
+  const { t } = useDashboardLang();
   const previewClass =
     shape === "square" ? "w-16 h-16 rounded-lg object-cover" : "w-full h-24 rounded-lg object-cover";
   const placeholderClass =
@@ -531,7 +502,7 @@ function ImageField({
       )}
       <div className="flex gap-3">
         <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer w-fit">
-          {uploading ? "Procesando..." : value ? "Cambiar" : "Subir"}
+          {uploading ? t.settingsForm.imageProcessing : value ? t.settingsForm.imageChange : t.settingsForm.imageUpload}
           <input
             type="file"
             accept="image/*"
@@ -544,7 +515,7 @@ function ImageField({
         </label>
         {value && (
           <button onClick={onRemove} className="text-xs text-[#343233]/60 hover:text-red-600">
-            Quitar
+            {t.settingsForm.imageRemove}
           </button>
         )}
       </div>
