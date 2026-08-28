@@ -1272,6 +1272,42 @@ dobles, template literals, texto JSX plano) en los 4 archivos
 completos, y se volvió a verificar mecánicamente que las 25 secciones
 del diccionario coincidan entre inglés y español.
 
+### Cuarta pasada — el menú público (`/menu/[slug]`), el más viejo de todos, resultó ser el peor
+
+El usuario reportó ver "Dejar una reseña", "Llamar", "Destacados" fijos
+en español al cambiar a inglés en el menú público — la página que se
+asumía "ya bilingüe" desde el arranque mismo de todo este proyecto,
+porque fue la primera en tener un selector de idioma funcionando.
+
+La auditoría reveló que esa suposición estaba mal: de las ~40 frases
+sin traducir encontradas en las 1273 líneas del archivo, **solo una**
+(el "Preguntar"/"Ask" del precio variable) usaba el patrón de idioma
+que el archivo ya tenía. Todo lo demás — favoritos, personalizar
+platos con add-ons, pedidos con delivery/pickup, canjear premios —
+se construyó en sesiones posteriores sin pasar nunca por ahí. Los 3
+modales del archivo (`LeadClaimModal`, `ItemCustomizeModal`,
+`CheckoutModal`) ni siquiera recibían el idioma como prop.
+
+- Se agregó la prop de idioma a los 3 modales (`lang` en dos,
+  `language` en `CheckoutModal` porque ya existía con ese nombre para
+  otro propósito — se mantuvo para no generar una inconsistencia
+  innecesaria en ese archivo específico).
+- Se creó una función auxiliar `favLabel()` para el botón de
+  favoritos, reutilizada en sus 2 apariciones, en vez de repetir un
+  ternario anidado de 4 ramas cada vez.
+- **Se dejaron a propósito sin ternario** "Pickup", "Delivery", y
+  "Total" — son la misma palabra exacta en los dos idiomas, agregar
+  una traducción ahí no cambia nada y solo suma código innecesario.
+- Verificación mecánica: se buscaron los 3 patrones (comillas, texto
+  JSX plano, template literals) en todo el archivo después de
+  traducir todo, confirmando que cada frase encontrada apareciera en
+  su par bilingüe (inglés y español juntos), no solo en uno de los
+  dos idiomas.
+- Hubo un tropiezo real en el camino — un `str_replace` se comió la
+  mitad de un ternario (la rama de precio cuando el plato no está
+  agotado). Se detectó revisando el archivo inmediatamente después de
+  cada cambio, no al final, y se corrigió antes de seguir.
+
 ## Zertoo Eats! — directorio de restaurantes (antes "Zertoo Now")
 
 **Renombrado y reenfocado** — el usuario decidió que este directorio

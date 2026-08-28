@@ -93,6 +93,11 @@ export default function PublicMenu({
     setLang(stored === "en" ? "en" : "es");
   }, []);
 
+  function favLabel(isFav: boolean): string {
+    if (isFav) return lang === "en" ? "Remove from favorites" : "Quitar de favoritos";
+    return lang === "en" ? "Add to favorites" : "Agregar a favoritos";
+  }
+
   function categoryLabel(cat: CategoryData) {
     return lang === "en" && cat.nameEn ? cat.nameEn : cat.name;
   }
@@ -291,7 +296,7 @@ export default function PublicMenu({
             className="flex items-center gap-1.5 text-sm font-semibold px-6 py-3 rounded-full hover:brightness-105 transition-all"
             style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
           >
-            Ver menú
+            {lang === "en" ? "View menu" : "Ver menú"}
             <ChevronDown size={16} aria-hidden />
           </button>
         </div>
@@ -304,7 +309,7 @@ export default function PublicMenu({
             className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4"
             style={{ color: tenant.menuPageTextColor }}
           >
-            Destacados
+            {lang === "en" ? "Featured" : "Destacados"}
           </h2>
           <div className="flex flex-col gap-5">
             {featuredItems.map((item) => (
@@ -335,14 +340,14 @@ export default function PublicMenu({
                   )}
                   <span className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                     <Star size={12} className="fill-white" aria-hidden />
-                    Destacado
+                    {lang === "en" ? "Featured" : "Destacado"}
                   </span>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       toggleWishlist(item.id);
                     }}
-                    aria-label={wishlist.includes(item.id) ? "Quitar de favoritos" : "Agregar a favoritos"}
+                    aria-label={favLabel(wishlist.includes(item.id))}
                     className="absolute top-3 right-3 bg-black/50 hover:bg-black/65 rounded-full p-2 transition-colors"
                   >
                     <Heart
@@ -380,7 +385,7 @@ export default function PublicMenu({
             {showLeftArrow && (
               <button
                 onClick={() => scrollCategoryNav("left")}
-                aria-label="Ver categorías anteriores"
+                aria-label={lang === "en" ? "See previous categories" : "Ver categorías anteriores"}
                 className="absolute left-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                 style={{ backgroundColor: tenant.themeBgColor, color: tenant.menuPageTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
               >
@@ -415,7 +420,7 @@ export default function PublicMenu({
             {showRightArrow && (
               <button
                 onClick={() => scrollCategoryNav("right")}
-                aria-label="Ver más categorías"
+                aria-label={lang === "en" ? "See more categories" : "Ver más categorías"}
                 className="absolute right-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
                 style={{ backgroundColor: tenant.themeBgColor, color: tenant.menuPageTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
               >
@@ -427,7 +432,7 @@ export default function PublicMenu({
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setShowWishlistOnly((v) => !v)}
-              aria-label="Ver favoritos"
+              aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
               className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
               style={{
                 backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
@@ -499,7 +504,7 @@ export default function PublicMenu({
                     >
                       <button
                         onClick={() => toggleWishlist(item.id)}
-                        aria-label={liked ? "Quitar de favoritos" : "Agregar a favoritos"}
+                        aria-label={favLabel(liked)}
                         className="shrink-0 p-1 -ml-1"
                       >
                         <Heart
@@ -529,7 +534,7 @@ export default function PublicMenu({
                             <p className="text-base font-semibold">{item.name}</p>
                             {item.status === "SOLD_OUT" ? (
                               <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
-                                Agotado
+                                {lang === "en" ? "Sold out" : "Agotado"}
                               </span>
                             ) : (
                               <span className="text-base font-semibold shrink-0">
@@ -547,7 +552,7 @@ export default function PublicMenu({
                           {item.addOns.length > 0 ? (
                             <button
                               onClick={() => setCustomizeItem(item)}
-                              aria-label="Personalizar y agregar al pedido"
+                              aria-label={lang === "en" ? "Customize and add to order" : "Personalizar y agregar al pedido"}
                               className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
                               style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
                             >
@@ -559,7 +564,7 @@ export default function PublicMenu({
                                 <>
                                   <button
                                     onClick={() => quickRemove(item.id)}
-                                    aria-label="Quitar uno"
+                                    aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
                                     className="w-6 h-6 rounded-full border flex items-center justify-center text-sm"
                                     style={{ borderColor: "currentColor" }}
                                   >
@@ -572,7 +577,7 @@ export default function PublicMenu({
                               )}
                               <button
                                 onClick={() => quickAdd(item.id)}
-                                aria-label="Agregar al pedido"
+                                aria-label={lang === "en" ? "Add to order" : "Agregar al pedido"}
                                 className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
                                 style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
                               >
@@ -610,7 +615,7 @@ export default function PublicMenu({
             style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
           >
             <Star size={14} aria-hidden />
-            Dejar una reseña
+            {lang === "en" ? "Leave a review" : "Dejar una reseña"}
           </a>
         </div>
 
@@ -662,7 +667,7 @@ export default function PublicMenu({
           style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
         >
           <Phone size={15} aria-hidden />
-          Llamar
+          {lang === "en" ? "Call" : "Llamar"}
         </a>
       )}
 
@@ -693,7 +698,7 @@ export default function PublicMenu({
               />
               <button
                 onClick={() => setZoomedItem(null)}
-                aria-label="Cerrar"
+                aria-label={lang === "en" ? "Close" : "Cerrar"}
                 className="absolute top-3 right-3 bg-black/60 text-white rounded-full p-2 hover:bg-black/75"
               >
                 <X size={18} aria-hidden />
@@ -703,7 +708,7 @@ export default function PublicMenu({
               <div className="flex items-baseline justify-between gap-3">
                 <p className="text-lg font-bold">{zoomedItem.name}</p>
                 {zoomedItem.status === "SOLD_OUT" ? (
-                  <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">Agotado</span>
+                  <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">{lang === "en" ? "Sold out" : "Agotado"}</span>
                 ) : (
                   <span className="text-lg font-bold shrink-0">
                     {priceLabel(zoomedItem)}
@@ -724,6 +729,7 @@ export default function PublicMenu({
           rewardLabel={tenant.menuLeadButtonLabel}
           buttonColor={tenant.buttonColor}
           buttonTextColor={tenant.buttonTextColor}
+          lang={lang}
           onClose={() => setLeadModalOpen(false)}
         />
       )}
@@ -735,7 +741,7 @@ export default function PublicMenu({
           style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
         >
           <span>
-            {cartCount} {cartCount === 1 ? "ítem" : "ítems"}
+            {cartCount} {lang === "en" ? (cartCount === 1 ? "item" : "items") : cartCount === 1 ? "ítem" : "ítems"}
           </span>
           <span className="flex items-center gap-2">
             {formatCurrency(cartSubtotal, tenant.currency)}
@@ -750,6 +756,7 @@ export default function PublicMenu({
           currency={tenant.currency}
           buttonColor={tenant.buttonColor}
           buttonTextColor={tenant.buttonTextColor}
+          lang={lang}
           onClose={() => setCustomizeItem(null)}
           onAdd={(line) => {
             addCustomizedLine(line);
@@ -790,12 +797,14 @@ function LeadClaimModal({
   rewardLabel,
   buttonColor,
   buttonTextColor,
+  lang,
   onClose,
 }: {
   slug: string;
   rewardLabel: string;
   buttonColor: string;
   buttonTextColor: string;
+  lang: Lang;
   onClose: () => void;
 }) {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
@@ -814,14 +823,14 @@ function LeadClaimModal({
       });
       const body = await res.json();
       if (!res.ok) {
-        setErrorMsg(body.error ?? "No se pudo procesar tu solicitud");
+        setErrorMsg(body.error ?? (lang === "en" ? "Couldn't process your request" : "No se pudo procesar tu solicitud"));
         setStatus("error");
         return;
       }
       setAlreadyClaimed(Boolean(body.alreadyClaimed));
       setStatus("done");
     } catch {
-      setErrorMsg("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setErrorMsg(lang === "en" ? "Couldn't connect to the server. Please try again." : "No se pudo conectar con el servidor. Intenta de nuevo.");
       setStatus("error");
     }
   }
@@ -835,29 +844,41 @@ function LeadClaimModal({
         {status === "done" ? (
           <div className="text-center">
             <p className="text-lg font-semibold mb-2">
-              {alreadyClaimed ? "Ya habías reclamado tu premio" : "¡Listo!"}
+              {alreadyClaimed
+                ? lang === "en"
+                  ? "You already claimed your reward"
+                  : "Ya habías reclamado tu premio"
+                : lang === "en"
+                  ? "All set!"
+                  : "¡Listo!"}
             </p>
             <p className="text-sm opacity-70 mb-4">
               {alreadyClaimed
-                ? "Te reenviamos tu código por WhatsApp — revisa tus mensajes."
-                : "Te mandamos tu código de canje por WhatsApp. Muéstralo en tu próxima visita."}
+                ? lang === "en"
+                  ? "We resent your code by WhatsApp — check your messages."
+                  : "Te reenviamos tu código por WhatsApp — revisa tus mensajes."
+                : lang === "en"
+                  ? "We sent your claim code by WhatsApp. Show it on your next visit."
+                  : "Te mandamos tu código de canje por WhatsApp. Muéstralo en tu próxima visita."}
             </p>
             <button
               onClick={onClose}
               className="w-full py-2.5 rounded-lg text-sm font-semibold"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
             >
-              Cerrar
+              {lang === "en" ? "Close" : "Cerrar"}
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <p className="text-lg font-semibold mb-1">{rewardLabel}</p>
             <p className="text-sm opacity-70 mb-2">
-              Déjanos tus datos y te mandamos tu código de canje por WhatsApp.
+              {lang === "en"
+                ? "Leave your info and we'll send your claim code by WhatsApp."
+                : "Déjanos tus datos y te mandamos tu código de canje por WhatsApp."}
             </p>
             <input
-              placeholder="Tu nombre"
+              placeholder={lang === "en" ? "Your name" : "Tu nombre"}
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
@@ -865,7 +886,7 @@ function LeadClaimModal({
             />
             <input
               type="email"
-              placeholder="name@correo.com"
+              placeholder={lang === "en" ? "name@email.com" : "name@correo.com"}
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
@@ -873,7 +894,7 @@ function LeadClaimModal({
             />
             <input
               type="tel"
-              placeholder="Tu WhatsApp (con código de país)"
+              placeholder={lang === "en" ? "Your WhatsApp (with country code)" : "Tu WhatsApp (con código de país)"}
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               required
@@ -886,7 +907,7 @@ function LeadClaimModal({
                 onClick={onClose}
                 className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
               >
-                Cancelar
+                {lang === "en" ? "Cancel" : "Cancelar"}
               </button>
               <button
                 type="submit"
@@ -894,7 +915,7 @@ function LeadClaimModal({
                 className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
-                {status === "sending" ? "Enviando..." : "Reclamar"}
+                {status === "sending" ? (lang === "en" ? "Sending..." : "Enviando...") : lang === "en" ? "Claim" : "Reclamar"}
               </button>
             </div>
           </form>
@@ -982,13 +1003,13 @@ function CheckoutModal({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        setError(body.error ?? "No se pudo enviar tu pedido");
+        setError(body.error ?? (language === "en" ? "Couldn't send your order" : "No se pudo enviar tu pedido"));
         setStatus("error");
         return;
       }
       setStatus("done");
     } catch {
-      setError("No se pudo conectar con el servidor. Intenta de nuevo.");
+      setError(language === "en" ? "Couldn't connect to the server. Please try again." : "No se pudo conectar con el servidor. Intenta de nuevo.");
       setStatus("error");
     }
   }
@@ -1001,19 +1022,21 @@ function CheckoutModal({
       >
         {status === "done" ? (
           <div className="text-center py-6">
-            <p className="text-lg font-semibold mb-2">¡Pedido enviado!</p>
-            <p className="text-sm opacity-70 mb-4">Te mandamos la confirmación por correo y WhatsApp.</p>
+            <p className="text-lg font-semibold mb-2">{language === "en" ? "Order sent!" : "¡Pedido enviado!"}</p>
+            <p className="text-sm opacity-70 mb-4">
+              {language === "en" ? "We sent the confirmation by email and WhatsApp." : "Te mandamos la confirmación por correo y WhatsApp."}
+            </p>
             <button
               onClick={onSuccess}
               className="w-full py-2.5 rounded-lg text-sm font-semibold"
               style={{ backgroundColor: buttonColor, color: buttonTextColor }}
             >
-              Cerrar
+              {language === "en" ? "Close" : "Cerrar"}
             </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <p className="text-lg font-semibold mb-1">Tu pedido</p>
+            <p className="text-lg font-semibold mb-1">{language === "en" ? "Your order" : "Tu pedido"}</p>
 
             <div className="flex flex-col gap-2 mb-2">
               {cartLines.map((line) => {
@@ -1033,14 +1056,14 @@ function CheckoutModal({
                           + {selectedAddOns.map((a) => a.name).join(", ")}
                         </p>
                       )}
-                      {line.notes && <p className="text-xs opacity-60 pl-3">Nota: {line.notes}</p>}
+                      {line.notes && <p className="text-xs opacity-60 pl-3">{language === "en" ? "Note" : "Nota"}: {line.notes}</p>}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <span>{formatCurrency(lineTotal(line), currency)}</span>
                       <button
                         type="button"
                         onClick={() => onRemoveLine(line.lineId)}
-                        aria-label="Quitar"
+                        aria-label={language === "en" ? "Remove" : "Quitar"}
                         className="opacity-50 hover:opacity-100"
                       >
                         <X size={14} aria-hidden />
@@ -1075,7 +1098,7 @@ function CheckoutModal({
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 required
-                placeholder="Dirección de entrega"
+                placeholder={language === "en" ? "Delivery address" : "Dirección de entrega"}
                 className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
               />
             )}
@@ -1084,7 +1107,7 @@ function CheckoutModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="Tu nombre"
+              placeholder={language === "en" ? "Your name" : "Tu nombre"}
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
             />
             <input
@@ -1092,7 +1115,7 @@ function CheckoutModal({
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              placeholder="Tu correo"
+              placeholder={language === "en" ? "Your email" : "Tu correo"}
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
             />
             <input
@@ -1100,20 +1123,20 @@ function CheckoutModal({
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              placeholder="Tu WhatsApp (con código de país)"
+              placeholder={language === "en" ? "Your WhatsApp (with country code)" : "Tu WhatsApp (con código de país)"}
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
             />
             <textarea
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
               rows={2}
-              placeholder="Notas del pedido en general (opcional)"
+              placeholder={language === "en" ? "General order notes (optional)" : "Notas del pedido en general (opcional)"}
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none"
             />
 
             {fee > 0 && (
               <div className="flex justify-between text-sm opacity-70">
-                <span>Envío</span>
+                <span>{language === "en" ? "Delivery fee" : "Envío"}</span>
                 <span>{formatCurrency(fee, currency)}</span>
               </div>
             )}
@@ -1124,7 +1147,9 @@ function CheckoutModal({
 
             {belowMinimum && (
               <p className="text-xs text-red-600">
-                El pedido mínimo para delivery es {formatCurrency(minDeliveryAmount!, currency)}.
+                {language === "en"
+                  ? `The minimum order for delivery is ${formatCurrency(minDeliveryAmount!, currency)}.`
+                  : `El pedido mínimo para delivery es ${formatCurrency(minDeliveryAmount!, currency)}.`}
               </p>
             )}
             {status === "error" && <p className="text-sm text-red-600">{error}</p>}
@@ -1135,7 +1160,7 @@ function CheckoutModal({
                 onClick={onClose}
                 className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
               >
-                Cancelar
+                {language === "en" ? "Cancel" : "Cancelar"}
               </button>
               <button
                 type="submit"
@@ -1143,7 +1168,13 @@ function CheckoutModal({
                 className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
                 style={{ backgroundColor: buttonColor, color: buttonTextColor }}
               >
-                {status === "sending" ? "Enviando..." : "Confirmar pedido"}
+                {status === "sending"
+                  ? language === "en"
+                    ? "Sending..."
+                    : "Enviando..."
+                  : language === "en"
+                    ? "Confirm order"
+                    : "Confirmar pedido"}
               </button>
             </div>
           </form>
@@ -1158,6 +1189,7 @@ function ItemCustomizeModal({
   currency,
   buttonColor,
   buttonTextColor,
+  lang,
   onClose,
   onAdd,
 }: {
@@ -1165,6 +1197,7 @@ function ItemCustomizeModal({
   currency: string;
   buttonColor: string;
   buttonTextColor: string;
+  lang: Lang;
   onClose: () => void;
   onAdd: (line: Omit<CartLine, "lineId">) => void;
 }) {
@@ -1193,7 +1226,7 @@ function ItemCustomizeModal({
 
         {item.addOns.length > 0 && (
           <div className="flex flex-col gap-2 mb-4">
-            <p className="text-xs font-semibold uppercase opacity-60">Add-ons</p>
+            <p className="text-xs font-semibold uppercase opacity-60">{lang === "en" ? "Add-ons" : "Extras"}</p>
             {item.addOns.map((addOn) => (
               <label key={addOn.id} className="flex items-center justify-between gap-2 text-sm cursor-pointer">
                 <span className="flex items-center gap-2">
@@ -1206,7 +1239,7 @@ function ItemCustomizeModal({
                   {addOn.name}
                 </span>
                 <span className="opacity-60">
-                  {addOn.price > 0 ? `+${formatCurrency(addOn.price, currency)}` : "Gratis"}
+                  {addOn.price > 0 ? `+${formatCurrency(addOn.price, currency)}` : lang === "en" ? "Free" : "Gratis"}
                 </span>
               </label>
             ))}
@@ -1217,17 +1250,19 @@ function ItemCustomizeModal({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={2}
-          placeholder="Algo específico para este plato (opcional), ej. sin cebolla"
+          placeholder={
+            lang === "en" ? "Anything specific for this dish (optional), e.g. no onion" : "Algo específico para este plato (opcional), ej. sin cebolla"
+          }
           className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none mb-4"
         />
 
         <div className="flex items-center justify-between mb-5">
-          <span className="text-sm font-medium">Cantidad</span>
+          <span className="text-sm font-medium">{lang === "en" ? "Quantity" : "Cantidad"}</span>
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              aria-label="Quitar uno"
+              aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
               className="w-7 h-7 rounded-full border border-neutral-200 flex items-center justify-center"
             >
               −
@@ -1236,7 +1271,7 @@ function ItemCustomizeModal({
             <button
               type="button"
               onClick={() => setQuantity((q) => q + 1)}
-              aria-label="Agregar uno"
+              aria-label={lang === "en" ? "Add one" : "Agregar uno"}
               className="w-7 h-7 rounded-full border border-neutral-200 flex items-center justify-center"
             >
               +
@@ -1250,7 +1285,7 @@ function ItemCustomizeModal({
             onClick={onClose}
             className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
           >
-            Cancelar
+            {lang === "en" ? "Cancel" : "Cancelar"}
           </button>
           <button
             type="button"
@@ -1258,7 +1293,7 @@ function ItemCustomizeModal({
             className="flex-1 py-2.5 rounded-lg text-sm font-semibold"
             style={{ backgroundColor: buttonColor, color: buttonTextColor }}
           >
-            Agregar · {formatCurrency(lineTotal, currency)}
+            {lang === "en" ? "Add" : "Agregar"} · {formatCurrency(lineTotal, currency)}
           </button>
         </div>
       </div>
