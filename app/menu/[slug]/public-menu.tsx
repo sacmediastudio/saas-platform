@@ -47,6 +47,8 @@ interface TenantData {
   contactPhone: string | null;
   address: string | null;
   currency: string;
+  secondaryCurrencyCode: string | null;
+  secondaryCurrencyRate: number | null;
   themeBgColor: string;
   themeTextColor: string;
   buttonColor: string;
@@ -107,7 +109,15 @@ export default function PublicMenu({
 
   function priceLabel(item: MenuItemData) {
     if (item.variablePrice) return lang === "en" ? "Ask" : "Preguntar";
-    return formatCurrency(item.price, tenant.currency);
+    const primary = formatCurrency(item.price, tenant.currency);
+    if (!tenant.secondaryCurrencyCode || !tenant.secondaryCurrencyRate) return primary;
+    const secondary = formatCurrency(item.price * tenant.secondaryCurrencyRate, tenant.secondaryCurrencyCode);
+    return (
+      <>
+        <span className="font-bold">{primary}</span>{" "}
+        <span className="font-normal opacity-70">/ {secondary}</span>
+      </>
+    );
   }
 
   // Wishlist del cliente: solo vive en su navegador (no requiere cuenta

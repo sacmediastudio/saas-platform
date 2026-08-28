@@ -37,6 +37,8 @@ interface TenantData {
   contactPhone: string | null;
   address: string | null;
   currency: string;
+  secondaryCurrencyCode: string | null;
+  secondaryCurrencyRate: number | null;
   timezone: string;
   themeBgColor: string;
   themeTextColor: string;
@@ -236,6 +238,59 @@ export default function SettingsForm({
             ))}
           </select>
         </Field>
+
+        <label className="flex items-center gap-3 mt-4">
+          <input
+            type="checkbox"
+            checked={Boolean(form.secondaryCurrencyCode)}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                secondaryCurrencyCode: e.target.checked ? "AWG" : null,
+                secondaryCurrencyRate: e.target.checked ? (form.secondaryCurrencyRate ?? 1.79) : null,
+              })
+            }
+            className="w-4 h-4 accent-[#E7FF00]"
+          />
+          <span className="text-sm font-medium">Mostrar una segunda moneda en el menú (ej. "$20 / Afl. 35")</span>
+        </label>
+
+        {form.secondaryCurrencyCode && (
+          <div className="flex flex-wrap gap-4 mt-3">
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-[#343233]/70">Segunda moneda</span>
+              <select
+                value={form.secondaryCurrencyCode}
+                onChange={(e) => setForm({ ...form, secondaryCurrencyCode: e.target.value })}
+                className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
+              >
+                {SUPPORTED_CURRENCIES.filter((c) => c !== form.currency).map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="flex flex-col gap-1.5">
+              <span className="text-xs text-[#343233]/70">
+                Cuántos {form.secondaryCurrencyCode} por 1 {form.currency}
+              </span>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.secondaryCurrencyRate ?? ""}
+                onChange={(e) => setForm({ ...form, secondaryCurrencyRate: Number(e.target.value) })}
+                placeholder="1.79"
+                className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none w-32"
+              />
+            </label>
+          </div>
+        )}
+        <p className="text-xs text-[#343233]/50 mt-3 max-w-md">
+          Pensado para tasas fijas (como el florín arubeño, anclado al dólar) — se carga una vez y no
+          cambia sola. El primer precio se muestra en negrita, el segundo en texto regular.
+        </p>
       </Section>
 
       <Section title="Zona horaria">

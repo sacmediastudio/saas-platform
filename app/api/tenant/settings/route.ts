@@ -51,6 +51,8 @@ const updateSchema = z
     contactPhone: z.string().nullable().optional(),
     address: z.string().nullable().optional(),
     currency: z.enum(CURRENCIES).optional(),
+    secondaryCurrencyCode: z.enum(CURRENCIES).nullable().optional(),
+    secondaryCurrencyRate: z.number().positive().nullable().optional(),
     timezone: z.enum(TIMEZONES).optional(),
     themeBgColor: z
       .string()

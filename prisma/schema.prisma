@@ -81,6 +81,13 @@ model Tenant {
   contactPhone  String?
   address       String?
   currency      String  @default("USD")
+  // Segunda moneda opcional en el menú público (ej. "$20 / Afl. 35")
+  // — pensado para mercados donde 2 monedas circulan a la vez (como
+  // Aruba, con el florín fijo al dólar). Tasa fija que el negocio
+  // carga a mano, no un tipo de cambio en vivo — no hace falta, la
+  // mayoría de estas monedas están ancladas y no fluctúan día a día.
+  secondaryCurrencyCode String?
+  secondaryCurrencyRate Float?
   themeBgColor  String  @default("#ffffff")
   themeTextColor String @default("#002D09")
   buttonColor      String @default("#E7FF00")

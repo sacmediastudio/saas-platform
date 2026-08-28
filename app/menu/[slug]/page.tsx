@@ -72,6 +72,8 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
           contactPhone: tenant.contactPhone,
           address: tenant.address,
           currency: tenant.currency,
+          secondaryCurrencyCode: tenant.secondaryCurrencyCode,
+          secondaryCurrencyRate: tenant.secondaryCurrencyRate,
           themeBgColor: tenant.themeBgColor,
           themeTextColor: tenant.themeTextColor,
           buttonColor: tenant.buttonColor,

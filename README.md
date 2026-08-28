@@ -1308,6 +1308,38 @@ modales del archivo (`LeadClaimModal`, `ItemCustomizeModal`,
   agotado). Se detectó revisando el archivo inmediatamente después de
   cada cambio, no al final, y se corrigió antes de seguir.
 
+## Segunda moneda en el menú público (ej. "$20 / Afl. 35")
+
+Pensado específicamente para Aruba, donde el florín (AWG) circula a la
+par del dólar a una tasa fija de 1 USD = 1.79 AWG desde 1986 (no es un
+tipo de cambio flotante) — muchos negocios muestran precios en las 2
+monedas indistintamente.
+
+- **Esquema**: 2 campos nuevos en `Tenant` —
+  `secondaryCurrencyCode` y `secondaryCurrencyRate`. Cambio aditivo,
+  ambos opcionales — no rompe nada para negocios que no lo activen.
+- **`priceLabel()`** en `public-menu.tsx` es el punto central donde se
+  resuelven los 3 lugares donde se ve el precio de un plato
+  (destacados, lista de categorías, imagen ampliada) — se actualizó
+  ahí una sola vez en vez de tocar cada lugar por separado. Primer
+  precio en negrita, segundo en texto regular y algo más tenue,
+  separados por "/".
+- **`/dashboard/settings` → sección Moneda**: checkbox para activar,
+  selector de cuál segunda moneda, y el campo de tasa fija (con 1.79
+  como valor por defecto). Es una tasa que el negocio carga una vez a
+  mano, no un tipo de cambio en vivo — no hace falta para este caso,
+  dado que la tasa está fija por ley/convención hace décadas.
+- **Alcance, a propósito**: esto solo cubre los precios mientras se
+  navega el menú (destacados, categorías, imagen ampliada) — el
+  carrito y el checkout siguen mostrando una sola moneda. Quedó como
+  pregunta abierta para el usuario si extenderlo también ahí, no se
+  decidió unilateralmente.
+- Se encontró y corrigió un error propio en el camino: un `str_replace`
+  usó `themeBgColor` como línea de contexto en un lado del reemplazo
+  pero no en el otro, borrándolo por completo de la interfaz sin
+  querer. Se detectó revisando el archivo inmediatamente después del
+  cambio.
+
 ## Zertoo Eats! — directorio de restaurantes (antes "Zertoo Now")
 
 **Renombrado y reenfocado** — el usuario decidió que este directorio
