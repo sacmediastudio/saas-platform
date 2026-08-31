@@ -106,6 +106,12 @@ export const dashboardTranslations = {
       saveLinkFailed: "Couldn't save the link",
       editInSettingsBefore: "Photo and name are edited in ",
     },
+    billingBanner: {
+      trialExpired:
+        "Your trial ended — you can't use your dashboard or public pages until you subscribe.",
+      pastDue: "Your subscription has a pending payment — update your payment method to avoid losing access.",
+      goToBilling: "Go to Billing →",
+    },
     settings: {
       title: "Settings",
       subtitle: "Profile, branding, and preferences for your business.",
@@ -569,6 +575,12 @@ export const dashboardTranslations = {
       deleteLink: (label: string) => `Borrar ${label}`,
       saveLinkFailed: "No se pudo guardar el link",
       editInSettingsBefore: "Foto y nombre se editan en ",
+    },
+    billingBanner: {
+      trialExpired:
+        "Tu período de prueba terminó — no podés usar el dashboard ni tus páginas públicas hasta que te suscribas.",
+      pastDue: "Tu suscripción tiene un pago pendiente — actualiza tu método de pago para no perder acceso.",
+      goToBilling: "Ir a Facturación →",
     },
     settings: {
       title: "Ajustes",
