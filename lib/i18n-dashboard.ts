@@ -108,7 +108,7 @@ export const dashboardTranslations = {
     },
     billingBanner: {
       trialExpired:
-        "Your trial ended — you can't use your dashboard or public pages until you subscribe.",
+        "Your trial period has ended — subscribe so you don't lose touch with your customers.",
       pastDue: "Your subscription has a pending payment — update your payment method to avoid losing access.",
       goToBilling: "Go to Billing →",
     },
@@ -578,7 +578,7 @@ export const dashboardTranslations = {
     },
     billingBanner: {
       trialExpired:
-        "Tu período de prueba terminó — no podés usar el dashboard ni tus páginas públicas hasta que te suscribas.",
+        "Tu período de prueba ha terminado — suscríbete para que no pierdas conexión con tus clientes.",
       pastDue: "Tu suscripción tiene un pago pendiente — actualiza tu método de pago para no perder acceso.",
       goToBilling: "Ir a Facturación →",
     },
