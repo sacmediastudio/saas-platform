@@ -4,6 +4,8 @@ import { db } from "@/lib/db";
 import { recordPageView } from "@/lib/analytics";
 import { getEnabledModules } from "@/lib/modules";
 import { jsonLdScriptProps } from "@/lib/json-ld";
+import { ensureTrialEndsAt, getBillingStatus } from "@/lib/billing-status";
+import UnavailableMessage from "@/components/unavailable-message";
 import PublicMenu from "./public-menu";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -30,6 +32,10 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 export default async function PublicMenuPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
   if (!tenant || tenant.suspended || !getEnabledModules(tenant).includes("RESTAURANT")) notFound();
+
+  const subscription = await db.subscription.findUnique({ where: { tenantId: tenant.id } });
+  const trialEndsAt = await ensureTrialEndsAt(db, tenant);
+  if (getBillingStatus({ trialEndsAt }, subscription) === "trial_expired") return <UnavailableMessage />;
 
   await recordPageView(tenant.id, "MENU");
 

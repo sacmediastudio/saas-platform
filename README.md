@@ -1335,6 +1335,40 @@ contenido de todo el dashboard.
   combinada de los 3 patrones en el archivo no encuentra nada más
   suelto.
 
+## Bloqueo real cuando el trial vence sin suscripción
+
+Antes, cuando el trial vencía, solo se mostraba un aviso — el negocio
+podía seguir usando todo lo que ya tenía activo sin límite, para
+siempre, sin pagar nunca. El usuario probó esto en carne propia la
+semana pasada y decidió que había que bloquear de verdad: todo el
+dashboard salvo Facturación, y las 5 páginas públicas (menú, citas,
+smartlink, reseñas, sellos) muestran "No disponible por el momento"
+hasta que se suscriban.
+
+- **`app/dashboard/(gated)/`** — grupo de rutas de Next.js (los
+  paréntesis no agregan nada a la URL, solo organizan archivos). Las
+  11 secciones del dashboard (Menú, Citas, Smartlink, Pedidos,
+  Reseñas, Clientes, FAQs, Sellos, Postre gratis, Módulos, Ajustes) se
+  movieron ahí adentro; `billing/` queda a propósito afuera, como
+  carpeta hermana, para no bloquearse a sí misma.
+- Se eligió esto en vez de un simple `if` en el layout de arriba
+  porque un layout compartido no tiene forma confiable de saber en
+  qué sub-ruta está parado sin pasar por trucos de middleware — y en
+  vez de un redirect del lado del cliente (que no bloquea nada si el
+  JavaScript no llegó a cargar), este bloqueo pasa en el servidor,
+  de verdad.
+- Se verificó que ningún archivo movido usara imports relativos que
+  se pudieran haber roto con el traslado — todos usan el alias `@/`,
+  así que fue un movimiento 100% seguro.
+- **`components/unavailable-message.tsx`** — mensaje compartido entre
+  las 5 páginas públicas, bilingüe mostrando los 2 idiomas juntos (a
+  esa altura, antes de cargar nada del negocio, todavía no se sabe
+  qué idioma prefiere quien visita).
+- **De paso, un hallazgo aparte**: la página pública de Reseñas nunca
+  chequeaba `tenant.suspended` — un negocio suspendido desde el admin
+  igual podía recibir reseñas nuevas. Se corrigió de paso, ya que se
+  estaba tocando ese mismo archivo para el chequeo de facturación.
+
 ## Segunda moneda en el menú público (ej. "$20 / Afl. 35")
 
 Pensado específicamente para Aruba, donde el florín (AWG) circula a la

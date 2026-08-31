@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
+import { ensureTrialEndsAt, getBillingStatus } from "@/lib/billing-status";
+import UnavailableMessage from "@/components/unavailable-message";
 import ReviewForm from "./review-form";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
@@ -10,7 +12,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 export default async function PublicReviewPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
-  if (!tenant) notFound();
+  if (!tenant || tenant.suspended) notFound();
+
+  const subscription = await db.subscription.findUnique({ where: { tenantId: tenant.id } });
+  const trialEndsAt = await ensureTrialEndsAt(db, tenant);
+  if (getBillingStatus({ trialEndsAt }, subscription) === "trial_expired") return <UnavailableMessage />;
 
   const externalLinks = await db.externalReviewLink.findMany({
     where: { tenantId: tenant.id, enabled: true },
