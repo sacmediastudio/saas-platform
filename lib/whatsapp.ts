@@ -178,16 +178,22 @@ export async function sendOrderConfirmationWhatsApp(params: {
  * contacto configurado en Ajustes. A propósito en un solo idioma fijo
  * (no depende de qué idioma eligió el cliente) — no tenemos guardado
  * en qué idioma prefiere leer sus avisos cada negocio.
+ *
+ * Incluye qué se pidió y cómo se entrega, no solo el total — para que
+ * el negocio pueda arrancar a prepararlo mirando el mensaje solo, sin
+ * necesidad de abrir el panel primero.
  */
 export async function sendNewOrderAlertWhatsApp(params: {
   toPhone: string;
   customerName: string;
+  itemsSummary: string;
+  fulfillmentInfo: string;
   total: string;
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: NEW_ORDER_ALERT_TEMPLATE_NAME,
     languageCode: NEW_ORDER_ALERT_LANG,
-    bodyParams: [params.customerName, params.total],
+    bodyParams: [params.customerName, params.itemsSummary, params.fulfillmentInfo, params.total],
   });
 }

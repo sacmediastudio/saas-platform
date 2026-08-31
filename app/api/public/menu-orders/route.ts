@@ -167,9 +167,24 @@ export async function POST(req: NextRequest) {
   // Aviso al NEGOCIO — al número de contacto configurado en Ajustes, no
   // al mismo número que usa para mandar mensajes (son cosas distintas).
   if (tenant.contactPhone) {
+    let itemsSummary = orderItems
+      .map((i) => {
+        let line = `${i.quantity}x ${i.name}`;
+        if (i.addOns && i.addOns.length > 0) line += ` (+ ${i.addOns.map((a) => a.name).join(", ")})`;
+        if (i.notes) line += ` — ${i.notes}`;
+        return line;
+      })
+      .join("\n");
+    if (data.notes) itemsSummary += `\n📝 ${data.notes}`;
+
+    const fulfillmentInfo =
+      data.fulfillment === "DELIVERY" ? `🚗 Delivery: ${data.deliveryAddress}` : "🏪 Retiro en el local";
+
     await sendNewOrderAlertWhatsApp({
       toPhone: tenant.contactPhone,
       customerName: data.customerName,
+      itemsSummary,
+      fulfillmentInfo,
       total: totalLabel,
     }).catch((err) => console.error("No se pudo avisarle al negocio del pedido nuevo por WhatsApp:", err));
   }
