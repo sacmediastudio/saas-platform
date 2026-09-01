@@ -23,10 +23,25 @@ export async function POST(req: NextRequest) {
 
   const origin = req.headers.get("origin") || `https://${req.headers.get("host")}`;
   const stripe = getStripe();
-  const portalSession = await stripe.billingPortal.sessions.create({
-    customer: subscription.stripeCustomerId,
-    return_url: `${origin}/dashboard/billing`,
-  });
 
-  return NextResponse.json({ url: portalSession.url });
+  try {
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: subscription.stripeCustomerId,
+      return_url: `${origin}/dashboard/billing`,
+    });
+    return NextResponse.json({ url: portalSession.url });
+  } catch (err: any) {
+    // El cliente guardado no existe en este ambiente de Stripe (ej. se
+    // migró de test mode a modo Live) — en la práctica, no hay una
+    // suscripción real acá aunque la base de datos tenga un ID viejo
+    // guardado. No tiene sentido "autocorregir" creando un cliente
+    // nuevo vacío para el portal — hay que suscribirse de nuevo.
+    if (err?.code === "resource_missing") {
+      return NextResponse.json(
+        { error: "Todavía no tenés una suscripción activa — hacé clic en \"Suscribirse\" primero." },
+        { status: 400 }
+      );
+    }
+    throw err;
+  }
 }

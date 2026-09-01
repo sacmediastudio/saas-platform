@@ -38,7 +38,20 @@ export async function getOrCreateStripeCustomer(tenantId: string): Promise<strin
   ]);
   if (!tenant) throw new Error("Negocio no encontrado");
 
-  if (subscription?.stripeCustomerId) return subscription.stripeCustomerId;
+  if (subscription?.stripeCustomerId) {
+    // Confirma que el cliente todavía exista del lado de Stripe antes
+    // de reusarlo — si se cambió de test mode a modo Live (o de
+    // cuenta de Stripe), un ID guardado de antes ya no existe ahí, y
+    // conviene crear uno nuevo en silencio en vez de que la solicitud
+    // falle con un error que el negocio no puede resolver por su cuenta.
+    try {
+      const existing = await stripe.customers.retrieve(subscription.stripeCustomerId);
+      if (!("deleted" in existing && existing.deleted)) return subscription.stripeCustomerId;
+    } catch (err: any) {
+      if (err?.code !== "resource_missing") throw err;
+      // el cliente guardado no existe en este ambiente — sigue de largo y crea uno nuevo
+    }
+  }
 
   const customer = await stripe.customers.create({
     name: tenant.name,
