@@ -64,9 +64,9 @@ export async function POST(req: NextRequest) {
         businessType,
         enabledModules: [businessType],
         plan: "STARTER",
-        // "7 días gratis" de la landing — se fija una sola vez acá,
+        // "14 días gratis" de la landing — se fija una sola vez acá,
         // nunca se vuelve a tocar después.
-        trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60_000),
+        trialEndsAt: new Date(Date.now() + 14 * 24 * 60 * 60_000),
       },
     });
     const user = await tx.user.create({

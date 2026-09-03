@@ -15,7 +15,7 @@ export async function ensureTrialEndsAt(
 ): Promise<Date> {
   if (tenant.trialEndsAt) return tenant.trialEndsAt;
 
-  const fairTrialEnd = new Date(tenant.createdAt.getTime() + 7 * 24 * 60 * 60_000);
+  const fairTrialEnd = new Date(tenant.createdAt.getTime() + 14 * 24 * 60 * 60_000);
   await db.tenant.update({ where: { id: tenant.id }, data: { trialEndsAt: fairTrialEnd } });
   return fairTrialEnd;
 }
