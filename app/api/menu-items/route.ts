@@ -50,10 +50,18 @@ export async function POST(req: NextRequest) {
 
   const { addOns, ...itemData } = parsed.data;
 
+  // Sin esto, todo plato nuevo nace con el 0 por defecto del esquema —
+  // y si TODOS los platos de una categoría comparten el mismo valor,
+  // "subir"/"bajar" no tiene nada que intercambiar de verdad.
+  const existingCount = await db.menuItem.count({
+    where: { tenantId: session.tenantId, categoryId: itemData.categoryId },
+  });
+
   const item = await db.menuItem.create({
     data: {
       tenantId: session.tenantId, // nunca viene del body
       ...itemData,
+      sortOrder: existingCount,
       addOns: { create: addOns.map((a, i) => ({ ...a, sortOrder: i })) },
     },
     include: { addOns: true },

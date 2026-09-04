@@ -5,6 +5,37 @@ import { getViewsTrend, getTotalViews } from "@/lib/analytics";
 import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import MenuEditor from "./menu-editor";
 
+// Repara platos que quedaron con sortOrder=0 duplicado dentro de la
+// misma categoría — un bug real de antes, nunca se les asignaba un
+// valor propio al crearlos, así que "subir"/"bajar" no tenía nada
+// real que intercambiar entre platos que compartían el mismo 0. Se
+// ejecuta una sola vez por categoría afectada — una vez reparada, sus
+// valores ya quedan distintos entre sí y esto no vuelve a tocarla.
+async function ensureItemSortOrder(
+  items: { id: string; categoryId: string; sortOrder: number }[]
+): Promise<void> {
+  const byCategory = new Map<string, typeof items>();
+  for (const item of items) {
+    const list = byCategory.get(item.categoryId) ?? [];
+    list.push(item);
+    byCategory.set(item.categoryId, list);
+  }
+
+  const updates: Promise<unknown>[] = [];
+  for (const catItems of byCategory.values()) {
+    const uniqueValues = new Set(catItems.map((i) => i.sortOrder));
+    if (uniqueValues.size === catItems.length) continue; // ya están todos distintos, no hace falta tocar nada
+
+    catItems.forEach((item, idx) => {
+      if (item.sortOrder !== idx) {
+        item.sortOrder = idx; // se refleja también en lo que ya se va a devolver, sin pedir todo de nuevo
+        updates.push(db.menuItem.update({ where: { id: item.id }, data: { sortOrder: idx } }));
+      }
+    });
+  }
+  if (updates.length > 0) await Promise.all(updates);
+}
+
 export default async function MenuPage() {
   const session = await requireTenant();
 
@@ -31,6 +62,8 @@ export default async function MenuPage() {
     getViewsTrend(session.tenantId, "MENU"),
     getTotalViews(session.tenantId, "MENU"),
   ]);
+
+  await ensureItemSortOrder(items);
 
   // Serializar Decimal -> number para pasarlo a un client component.
   const serializedItems = items.map((i) => ({ ...i, price: Number(i.price) }));

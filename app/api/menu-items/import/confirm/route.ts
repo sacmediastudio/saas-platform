@@ -51,9 +51,23 @@ export async function POST(req: NextRequest) {
       nextSortOrder++;
     }
 
+    // Cuántos platos ya tenía cada categoría ANTES de esta importación
+    // — sin esto, todo lo importado nacería con el 0 por defecto del
+    // esquema, y "subir"/"bajar" en el editor no tendría nada real que
+    // intercambiar entre platos de la misma categoría.
+    const existingCounts = await tx.menuItem.groupBy({
+      by: ["categoryId"],
+      where: { tenantId: session.tenantId },
+      _count: { id: true },
+    });
+    const nextItemSortOrder = new Map(existingCounts.map((c) => [c.categoryId, c._count.id]));
+
     for (const row of rows) {
       const category = categoryByName.get(normalize(row.categoria));
       if (!category) continue; // no debería pasar, pero por las dudas no rompe la importación entera
+
+      const sortOrder = nextItemSortOrder.get(category.id) ?? 0;
+      nextItemSortOrder.set(category.id, sortOrder + 1);
 
       await tx.menuItem.create({
         data: {
@@ -65,6 +79,7 @@ export async function POST(req: NextRequest) {
           price: row.precio,
           variablePrice: row.variablePrice,
           featured: row.destacado,
+          sortOrder,
         },
       });
       created++;
