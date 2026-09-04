@@ -318,7 +318,50 @@ export default function PublicMenu({
         className="sticky top-0 z-20 backdrop-blur"
         style={{ backgroundColor: tenant.themeBgColor + "e6" }}
       >
-        <div className="max-w-xl mx-auto px-5 py-3 flex items-center gap-2">
+        <div className="max-w-xl mx-auto px-5 py-3 flex flex-col gap-2">
+          <div className="flex items-center justify-end gap-2">
+            <button
+              onClick={() => setShowWishlistOnly((v) => !v)}
+              aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
+              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
+              style={{
+                backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
+                color: showWishlistOnly ? tenant.buttonTextColor : tenant.themeTextColor,
+                border: showWishlistOnly ? "none" : "1px solid color-mix(in srgb, currentColor 20%, transparent)",
+              }}
+            >
+              <Heart size={13} className={wishlist.length > 0 ? "fill-current" : ""} aria-hidden />
+              {wishlist.length}
+            </button>
+            <div
+              className="flex items-center rounded-full p-0.5 text-xs font-bold"
+              style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
+            >
+              {(["ES", "EN"] as const).map((l) => {
+                const value = l.toLowerCase() as Lang;
+                const active = lang === value;
+                return (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => {
+                      setLang(value);
+                      setStoredLang(value);
+                    }}
+                    className="px-2 py-1 rounded-full transition-colors"
+                    style={{
+                      backgroundColor: active ? tenant.buttonColor : "transparent",
+                      color: active ? tenant.buttonTextColor : tenant.themeTextColor,
+                      opacity: active ? 1 : 0.6,
+                    }}
+                  >
+                    {l}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="relative flex-1 min-w-0 flex items-center">
             {showLeftArrow && (
               <button
@@ -365,49 +408,6 @@ export default function PublicMenu({
                 <ChevronRight size={16} aria-hidden />
               </button>
             )}
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setShowWishlistOnly((v) => !v)}
-              aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
-              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
-              style={{
-                backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
-                color: showWishlistOnly ? tenant.buttonTextColor : tenant.themeTextColor,
-                border: showWishlistOnly ? "none" : "1px solid color-mix(in srgb, currentColor 20%, transparent)",
-              }}
-            >
-              <Heart size={13} className={wishlist.length > 0 ? "fill-current" : ""} aria-hidden />
-              {wishlist.length}
-            </button>
-            <div
-              className="flex items-center rounded-full p-0.5 text-xs font-bold"
-              style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
-            >
-              {(["ES", "EN"] as const).map((l) => {
-                const value = l.toLowerCase() as Lang;
-                const active = lang === value;
-                return (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => {
-                      setLang(value);
-                      setStoredLang(value);
-                    }}
-                    className="px-2 py-1 rounded-full transition-colors"
-                    style={{
-                      backgroundColor: active ? tenant.buttonColor : "transparent",
-                      color: active ? tenant.buttonTextColor : tenant.themeTextColor,
-                      opacity: active ? 1 : 0.6,
-                    }}
-                  >
-                    {l}
-                  </button>
-                );
-              })}
-            </div>
           </div>
         </div>
       </div>
