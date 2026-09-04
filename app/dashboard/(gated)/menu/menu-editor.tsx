@@ -114,7 +114,7 @@ export default function MenuEditor({
   // Reordena DENTRO de la misma categoría — subir/bajar un plato nunca
   // lo mueve a otra categoría, solo cambia su posición en la lista.
   async function moveDish(item: MenuItem, direction: -1 | 1) {
-    const catItems = items.filter((i) => i.categoryId === item.categoryId);
+    const catItems = items.filter((i) => i.categoryId === item.categoryId).sort((a, b) => a.sortOrder - b.sortOrder);
     const idx = catItems.findIndex((i) => i.id === item.id);
     const swapWith = catItems[idx + direction];
     if (!swapWith) return;
@@ -218,7 +218,7 @@ export default function MenuEditor({
       )}
 
       {categories.map((cat) => {
-        const catItems = items.filter((i) => i.categoryId === cat.id);
+        const catItems = items.filter((i) => i.categoryId === cat.id).sort((a, b) => a.sortOrder - b.sortOrder);
         return (
           <div key={cat.id} className="mb-6">
             <div className="flex items-center justify-between mb-2">
