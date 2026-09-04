@@ -522,18 +522,20 @@ export default function PublicMenu({
                       key={item.id}
                       className={`py-4 first:pt-0 flex items-center gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
                     >
-                      <button
-                        onClick={() => toggleWishlist(item.id)}
-                        aria-label={favLabel(liked)}
-                        className="shrink-0 p-1 -ml-1"
-                      >
-                        <Heart
-                          size={18}
-                          className={liked ? "fill-red-500 text-red-500" : ""}
-                          style={liked ? undefined : { opacity: 0.35 }}
-                          aria-hidden
-                        />
-                      </button>
+                      {!hasPhoto && (
+                        <button
+                          onClick={() => toggleWishlist(item.id)}
+                          aria-label={favLabel(liked)}
+                          className="shrink-0 p-1 -ml-1"
+                        >
+                          <Heart
+                            size={18}
+                            className={liked ? "fill-red-500 text-red-500" : ""}
+                            style={liked ? undefined : { opacity: 0.35 }}
+                            aria-hidden
+                          />
+                        </button>
+                      )}
                       <div
                         onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
                         className={`flex-1 min-w-0 flex gap-3 ${
@@ -541,13 +543,30 @@ export default function PublicMenu({
                         }`}
                       >
                         {hasPhoto && (
-                          <SmartImage
-                            src={item.imageUrl}
-                            alt={item.name}
-                            width={56}
-                            height={56}
-                            className="w-14 h-14 rounded-lg object-cover shrink-0"
-                          />
+                          <div className="relative shrink-0">
+                            <SmartImage
+                              src={item.imageUrl}
+                              alt={item.name}
+                              width={56}
+                              height={56}
+                              className="w-14 h-14 rounded-lg object-cover"
+                            />
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleWishlist(item.id);
+                              }}
+                              aria-label={favLabel(liked)}
+                              className="absolute top-0.5 right-0.5 p-1 rounded-full"
+                              style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+                            >
+                              <Heart
+                                size={13}
+                                className={liked ? "fill-red-500 text-red-500" : "text-white"}
+                                aria-hidden
+                              />
+                            </button>
+                          </div>
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-3">
