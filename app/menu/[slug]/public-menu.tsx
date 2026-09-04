@@ -312,78 +312,6 @@ export default function PublicMenu({
         </div>
       </div>
 
-      {/* Destacados */}
-      {featuredItems.length > 0 && (
-        <div className="px-5 py-8 max-w-xl mx-auto">
-          <h2
-            className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4"
-            style={{ color: tenant.menuPageTextColor }}
-          >
-            {lang === "en" ? "Featured" : "Destacados"}
-          </h2>
-          <div className="flex flex-col gap-5">
-            {featuredItems.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-2xl overflow-hidden border shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
-                style={{ borderColor: "color-mix(in srgb, currentColor 12%, transparent)" }}
-              >
-                <div
-                  className={`relative w-full aspect-[4/3] bg-black/10 ${item.imageUrl ? "cursor-pointer active:opacity-80 transition-opacity" : ""}`}
-                  onClick={item.imageUrl ? () => setZoomedItem(item) : undefined}
-                >
-                  {item.imageUrl ? (
-                    <SmartImage
-                      src={item.imageUrl}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                      sizes="(min-width: 576px) 576px, 100vw"
-                    />
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center text-4xl font-bold opacity-20"
-                      style={{ backgroundColor: "currentColor" }}
-                    >
-                      <span style={{ color: tenant.themeBgColor }}>{item.name.charAt(0)}</span>
-                    </div>
-                  )}
-                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                    <Star size={12} className="fill-white" aria-hidden />
-                    {lang === "en" ? "Featured" : "Destacado"}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleWishlist(item.id);
-                    }}
-                    aria-label={favLabel(wishlist.includes(item.id))}
-                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/65 rounded-full p-2 transition-colors"
-                  >
-                    <Heart
-                      size={16}
-                      className={wishlist.includes(item.id) ? "fill-red-500 text-red-500" : "text-white"}
-                      aria-hidden
-                    />
-                  </button>
-                </div>
-                <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xl font-bold leading-tight">{item.name}</p>
-                    <span className="text-xl font-bold text-red-600 shrink-0">
-                      {priceLabel(item)}
-                    </span>
-                  </div>
-                  {itemDescription(item) && (
-                    <p className="text-sm opacity-60 mt-2">{itemDescription(item)}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* Nav de categorías, pegajosa */}
       <div
         ref={navRef}
@@ -483,6 +411,78 @@ export default function PublicMenu({
           </div>
         </div>
       </div>
+
+      {/* Destacados */}
+      {featuredItems.length > 0 && (
+        <div className="px-5 py-8 max-w-xl mx-auto">
+          <h2
+            className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4"
+            style={{ color: tenant.menuPageTextColor }}
+          >
+            {lang === "en" ? "Featured" : "Destacados"}
+          </h2>
+          <div className="flex flex-col gap-5">
+            {featuredItems.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-2xl overflow-hidden border shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
+                style={{ borderColor: "color-mix(in srgb, currentColor 12%, transparent)" }}
+              >
+                <div
+                  className={`relative w-full aspect-[4/3] bg-black/10 ${item.imageUrl ? "cursor-pointer active:opacity-80 transition-opacity" : ""}`}
+                  onClick={item.imageUrl ? () => setZoomedItem(item) : undefined}
+                >
+                  {item.imageUrl ? (
+                    <SmartImage
+                      src={item.imageUrl}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                      sizes="(min-width: 576px) 576px, 100vw"
+                    />
+                  ) : (
+                    <div
+                      className="w-full h-full flex items-center justify-center text-4xl font-bold opacity-20"
+                      style={{ backgroundColor: "currentColor" }}
+                    >
+                      <span style={{ color: tenant.themeBgColor }}>{item.name.charAt(0)}</span>
+                    </div>
+                  )}
+                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                    <Star size={12} className="fill-white" aria-hidden />
+                    {lang === "en" ? "Featured" : "Destacado"}
+                  </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleWishlist(item.id);
+                    }}
+                    aria-label={favLabel(wishlist.includes(item.id))}
+                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/65 rounded-full p-2 transition-colors"
+                  >
+                    <Heart
+                      size={16}
+                      className={wishlist.includes(item.id) ? "fill-red-500 text-red-500" : "text-white"}
+                      aria-hidden
+                    />
+                  </button>
+                </div>
+                <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-xl font-bold leading-tight">{item.name}</p>
+                    <span className="text-xl font-bold text-red-600 shrink-0">
+                      {priceLabel(item)}
+                    </span>
+                  </div>
+                  {itemDescription(item) && (
+                    <p className="text-sm opacity-60 mt-2">{itemDescription(item)}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Lista de platos por categoría — con o sin foto, según lo que
           el negocio haya elegido en Ajustes (menuShowPhotos). */}
