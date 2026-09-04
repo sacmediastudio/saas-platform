@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check, Upload, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import TrendStatCard from "@/components/trend-stat-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
@@ -24,6 +24,7 @@ interface MenuItem {
   status: "AVAILABLE" | "SOLD_OUT" | "SEASONAL";
   imageUrl: string | null;
   featured: boolean;
+  sortOrder: number;
   addOns?: AddOn[];
 }
 interface Category {
@@ -107,6 +108,40 @@ export default function MenuEditor({
     if (res.ok) {
       setItems((prev) => prev.filter((i) => i.id !== item.id));
     }
+    setSaving(null);
+  }
+
+  // Reordena DENTRO de la misma categoría — subir/bajar un plato nunca
+  // lo mueve a otra categoría, solo cambia su posición en la lista.
+  async function moveDish(item: MenuItem, direction: -1 | 1) {
+    const catItems = items.filter((i) => i.categoryId === item.categoryId);
+    const idx = catItems.findIndex((i) => i.id === item.id);
+    const swapWith = catItems[idx + direction];
+    if (!swapWith) return;
+
+    setSaving(item.id);
+    const prev = items;
+    setItems((list) =>
+      list.map((i) => {
+        if (i.id === item.id) return { ...i, sortOrder: swapWith.sortOrder };
+        if (i.id === swapWith.id) return { ...i, sortOrder: item.sortOrder };
+        return i;
+      })
+    );
+
+    const [res1, res2] = await Promise.all([
+      fetch(`/api/menu-items/${item.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sortOrder: swapWith.sortOrder }),
+      }),
+      fetch(`/api/menu-items/${swapWith.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sortOrder: item.sortOrder }),
+      }),
+    ]);
+    if (!res1.ok || !res2.ok) setItems(prev);
     setSaving(null);
   }
 
@@ -210,7 +245,7 @@ export default function MenuEditor({
               <p className="text-xs text-[#343233]/40">Sin platos todavía.</p>
             ) : (
               <div className="border border-[#002D09]/10 rounded-lg overflow-hidden divide-y divide-[#002D09]/10">
-                {catItems.map((item) => {
+                {catItems.map((item, idx) => {
                   const s = statusStyles[item.status];
                   return (
                     <div key={item.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 px-3.5 py-2.5">
@@ -247,6 +282,22 @@ export default function MenuEditor({
                         className={`text-xs px-2.5 py-1 rounded-md font-medium ${s.className}`}
                       >
                         {t.dishModal.status[item.status]}
+                      </button>
+                      <button
+                        onClick={() => moveDish(item, -1)}
+                        disabled={idx === 0 || saving === item.id}
+                        aria-label={t.common.moveUp}
+                        className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
+                      >
+                        <ArrowUp size={14} aria-hidden />
+                      </button>
+                      <button
+                        onClick={() => moveDish(item, 1)}
+                        disabled={idx === catItems.length - 1 || saving === item.id}
+                        aria-label={t.common.moveDown}
+                        className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
+                      >
+                        <ArrowDown size={14} aria-hidden />
                       </button>
                       <button
                         onClick={() => setDishModal({ mode: "edit", item })}

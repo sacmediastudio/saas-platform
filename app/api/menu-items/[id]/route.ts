@@ -15,6 +15,7 @@ const updateSchema = z.object({
   categoryId: z.string().optional(),
   imageUrl: z.string().min(1).nullable().optional(),
   featured: z.boolean().optional(),
+  sortOrder: z.number().int().optional(),
   addOns: z.array(addOnSchema).max(30).optional(),
 });
 
