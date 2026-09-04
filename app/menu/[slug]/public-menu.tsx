@@ -319,7 +319,20 @@ export default function PublicMenu({
         style={{ backgroundColor: tenant.themeBgColor + "e6" }}
       >
         <div className="max-w-xl mx-auto px-5 py-3 flex flex-col gap-2">
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              {tenant.logoUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={tenant.logoUrl} alt="" className="w-7 h-7 rounded-md object-cover shrink-0" />
+              )}
+              <span
+                className="text-sm font-semibold truncate"
+                style={{ color: tenant.menuPageTextColor }}
+              >
+                {tenant.name}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => setShowWishlistOnly((v) => !v)}
               aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
@@ -361,6 +374,7 @@ export default function PublicMenu({
               })}
             </div>
           </div>
+          </div>
 
           <div className="relative flex-1 min-w-0 flex items-center">
             {showLeftArrow && (
@@ -374,10 +388,6 @@ export default function PublicMenu({
               </button>
             )}
             <div ref={categoryScrollRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
-              {tenant.logoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={tenant.logoUrl} alt="" className="w-6 h-6 rounded-md object-cover shrink-0 mr-1" />
-              )}
               {categoriesWithItems.map((cat) => (
                 <button
                   key={cat.id}
