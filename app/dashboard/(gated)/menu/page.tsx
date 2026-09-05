@@ -80,6 +80,7 @@ export default async function MenuPage() {
       viewsChangePercent={viewsTrend.changePercent}
       totalViews={totalViews}
       avgRating={avgRating}
+      orderingEnabled={tenant.orderingEnabled}
     />
   );
 }

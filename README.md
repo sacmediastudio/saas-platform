@@ -1335,6 +1335,32 @@ contenido de todo el dashboard.
   combinada de los 3 patrones en el archivo no encuentra nada más
   suelto.
 
+## Estadísticas de pedidos en el dashboard de menú
+
+El usuario preguntó si era posible mostrar más que solo vistas de
+página — pedidos, deliveries, ventas, con selector de período y
+gráficos de verdad. Todos los datos ya existían en `MenuOrder`
+(`total`, `fulfillment`, `createdAt`) — no hizo falta ningún cambio de
+esquema, solo agregar la capa de agregación y visualización.
+
+- **`recharts`** — primera librería de gráficos del proyecto, se
+  agregó a `package.json`.
+- **`lib/order-analytics.ts`** — agrupa pedidos en "baldes" según el
+  período elegido (día → 24 horas, semana → 7 días, mes → 30 días,
+  año → 12 meses). Los baldes de año son **meses de calendario
+  reales** (28-31 días cada uno), no un promedio fijo de
+  milisegundos — con un tamaño fijo, los bordes de cada mes se
+  hubieran ido desalineando de a poco.
+- **`app/api/tenant/order-stats/route.ts`** — expone esto según
+  `?period=day|week|month|year`.
+- **`order-stats-panel.tsx`** — selector de período, 3 tarjetas de
+  resumen (reutilizando `TrendStatCard`, el mismo componente que ya
+  usa el resto del dashboard, para que se vea consistente y no un
+  agregado que desentona) y 2 gráficos de barras (pedidos y ventas).
+- El panel solo se muestra si el negocio tiene pedidos activados
+  (`tenant.orderingEnabled`) — sin eso, sería un panel vacío sin
+  sentido para negocios que usan el menú solo para mostrar platos.
+
 ## Idioma de las plantillas de WhatsApp
 
 Al armar las plantillas para Meta (`order_confirmation`, `new_order_alert`,

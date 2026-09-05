@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Plus, Pencil, Trash2, X, Image as ImageIcon, Copy, Check, Upload, ArrowUp, ArrowDown } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import TrendStatCard from "@/components/trend-stat-card";
+import OrderStatsPanel from "./order-stats-panel";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import DashboardCard from "@/components/dashboard-card";
@@ -48,6 +49,7 @@ export default function MenuEditor({
   viewsChangePercent,
   totalViews,
   avgRating,
+  orderingEnabled,
 }: {
   categories: Category[];
   initialItems: MenuItem[];
@@ -57,6 +59,7 @@ export default function MenuEditor({
   viewsChangePercent: number | null;
   totalViews: number;
   avgRating: number | null;
+  orderingEnabled: boolean;
 }) {
   const { t } = useDashboardLang();
   const [categories, setCategories] = useState(initialCategories);
@@ -209,6 +212,12 @@ export default function MenuEditor({
           <TrendStatCard label={t.menu.avgRating} value={avgRating !== null ? avgRating.toFixed(1) : "—"} />
         </div>
       </DashboardCard>
+
+      {orderingEnabled && (
+        <DashboardCard>
+          <OrderStatsPanel currency={currency} />
+        </DashboardCard>
+      )}
 
       <DashboardCard>
       {categories.length === 0 && (
