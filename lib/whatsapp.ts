@@ -186,6 +186,7 @@ export async function sendOrderConfirmationWhatsApp(params: {
 export async function sendNewOrderAlertWhatsApp(params: {
   toPhone: string;
   customerName: string;
+  customerPhone: string;
   itemsSummary: string;
   fulfillmentInfo: string;
   total: string;
@@ -194,6 +195,6 @@ export async function sendNewOrderAlertWhatsApp(params: {
     toPhone: params.toPhone,
     templateName: NEW_ORDER_ALERT_TEMPLATE_NAME,
     languageCode: NEW_ORDER_ALERT_LANG,
-    bodyParams: [params.customerName, params.itemsSummary, params.fulfillmentInfo, params.total],
+    bodyParams: [params.customerName, params.itemsSummary, params.fulfillmentInfo, params.total, params.customerPhone],
   });
 }

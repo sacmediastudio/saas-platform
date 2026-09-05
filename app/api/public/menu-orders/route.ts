@@ -183,6 +183,7 @@ export async function POST(req: NextRequest) {
     await sendNewOrderAlertWhatsApp({
       toPhone: tenant.contactPhone,
       customerName: data.customerName,
+      customerPhone: data.customerPhone,
       itemsSummary,
       fulfillmentInfo,
       total: totalLabel,
