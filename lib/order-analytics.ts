@@ -17,6 +17,7 @@ interface BucketResult {
 export interface OrderStatsResult {
   totalOrders: number;
   totalDeliveries: number;
+  totalPickup: number;
   totalSales: number;
   changeOrdersPercent: number | null;
   changeSalesPercent: number | null;
@@ -97,6 +98,7 @@ export async function getOrderStats(tenantId: string, period: OrderPeriod): Prom
 
   const totalOrders = currentOrders.length;
   const totalDeliveries = currentOrders.filter((o) => o.fulfillment === "DELIVERY").length;
+  const totalPickup = currentOrders.filter((o) => o.fulfillment === "PICKUP").length;
   const totalSales = Math.round(currentOrders.reduce((sum, o) => sum + o.total, 0) * 100) / 100;
 
   const previousTotalOrders = previousOrders.length;
@@ -107,5 +109,13 @@ export async function getOrderStats(tenantId: string, period: OrderPeriod): Prom
   const changeSalesPercent =
     previousTotalSales > 0 ? Math.round(((totalSales - previousTotalSales) / previousTotalSales) * 100) : null;
 
-  return { totalOrders, totalDeliveries, totalSales, changeOrdersPercent, changeSalesPercent, buckets: bucketResults };
+  return {
+    totalOrders,
+    totalDeliveries,
+    totalPickup,
+    totalSales,
+    changeOrdersPercent,
+    changeSalesPercent,
+    buckets: bucketResults,
+  };
 }

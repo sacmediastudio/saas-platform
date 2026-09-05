@@ -17,6 +17,7 @@ interface Bucket {
 interface OrderStats {
   totalOrders: number;
   totalDeliveries: number;
+  totalPickup: number;
   totalSales: number;
   changeOrdersPercent: number | null;
   changeSalesPercent: number | null;
@@ -77,13 +78,14 @@ export default function OrderStatsPanel({ currency }: { currency: string }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <TrendStatCard
               label={t.menu.orderStats.totalOrders}
               value={stats.totalOrders}
               changePercent={stats.changeOrdersPercent}
             />
             <TrendStatCard label={t.menu.orderStats.totalDeliveries} value={stats.totalDeliveries} />
+            <TrendStatCard label={t.menu.orderStats.totalPickup} value={stats.totalPickup} />
             <TrendStatCard
               label={t.menu.orderStats.totalSales}
               value={formatCurrency(stats.totalSales, currency)}
