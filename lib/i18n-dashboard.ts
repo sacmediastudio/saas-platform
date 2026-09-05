@@ -166,6 +166,9 @@ export const dashboardTranslations = {
       phone: "Phone",
       address: "Address",
       addressPlaceholder: "123 Main St, City",
+      alertLanguageLabel: "Language for your WhatsApp order alerts",
+      alertLanguageHint:
+        "This only affects operational alerts (like new orders) — not the language your customers see.",
       currencySection: "Currency",
       currencyLabel: "Currency for your prices",
       secondCurrencyToggle: 'Show a second currency on the menu (e.g. "$20 / Afl. 35")',
@@ -636,6 +639,9 @@ export const dashboardTranslations = {
       phone: "Teléfono",
       address: "Dirección",
       addressPlaceholder: "Calle 123, Ciudad",
+      alertLanguageLabel: "Idioma de tus avisos de pedidos por WhatsApp",
+      alertLanguageHint:
+        "Esto solo afecta los avisos operativos (como pedido nuevo) — no el idioma que ven tus clientes.",
       currencySection: "Moneda",
       currencyLabel: "Moneda de tus precios",
       secondCurrencyToggle: 'Mostrar una segunda moneda en el menú (ej. "$20 / Afl. 35")',

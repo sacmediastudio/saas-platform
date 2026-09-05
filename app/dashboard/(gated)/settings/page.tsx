@@ -22,6 +22,7 @@ export default async function SettingsPage() {
         contactEmail: tenant.contactEmail,
         contactPhone: tenant.contactPhone,
         address: tenant.address,
+        alertLanguage: tenant.alertLanguage,
         currency: tenant.currency,
         secondaryCurrencyCode: tenant.secondaryCurrencyCode,
         secondaryCurrencyRate: tenant.secondaryCurrencyRate,

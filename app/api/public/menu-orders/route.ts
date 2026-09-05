@@ -187,6 +187,7 @@ export async function POST(req: NextRequest) {
       itemsSummary,
       fulfillmentInfo,
       total: totalLabel,
+      language: tenant.alertLanguage,
     }).catch((err) => console.error("No se pudo avisarle al negocio del pedido nuevo por WhatsApp:", err));
   }
 

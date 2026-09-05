@@ -80,6 +80,12 @@ model Tenant {
   contactEmail  String?
   contactPhone  String?
   address       String?
+  // Idioma fijo para los avisos operativos por WhatsApp (ej. pedido
+  // nuevo) — una preferencia que el negocio elige una sola vez en
+  // Ajustes, deliberada. Distinta del idioma del panel (ese cambia
+  // seguido con solo tocar ES/EN, y sería raro que un aviso operativo
+  // cambie de idioma según qué botón se haya tocado por última vez).
+  alertLanguage String  @default("es")
   currency      String  @default("USD")
   // Segunda moneda opcional en el menú público (ej. "$20 / Afl. 35")
   // — pensado para mercados donde 2 monedas circulan a la vez (como

@@ -1335,6 +1335,44 @@ contenido de todo el dashboard.
   combinada de los 3 patrones en el archivo no encuentra nada más
   suelto.
 
+## Idioma de las plantillas de WhatsApp
+
+Al armar las plantillas para Meta (`order_confirmation`, `new_order_alert`,
+`menu_lead_reward`), surgió que 2 de las 3 estaban fijas en español sin
+razón real — dado que en Aruba se habla inglés también, no tenía sentido.
+
+- **`menu_lead_reward`** (código de premio, al cliente) — ahora varía
+  según el idioma que el cliente tenía elegido en el menú al reclamarlo,
+  mismo criterio que `order_confirmation`. Se agregó `lang` al body del
+  POST en `LeadClaimModal`, y se separaron las constantes de idioma en
+  `lib/whatsapp.ts` (antes una sola, ahora ES/EN independientes).
+- **`new_order_alert`** (pedido nuevo, al negocio) — acá el criterio es
+  distinto a propósito: no depende del idioma del cliente (el dueño del
+  negocio no necesariamente habla lo mismo que quien le compra), sino
+  de una preferencia fija que el negocio elige en Ajustes
+  (`Tenant.alertLanguage`, default `"es"`). Deliberadamente **no** se
+  ató esto al toggle ES/EN del panel — ese cambia seguido con solo
+  tocar un botón, y un aviso operativo cambiando de idioma según cuál
+  fue el último toque al toggle sería confuso e inconsistente.
+- Cada plantilla sigue resolviendo su PROPIO código de idioma de forma
+  independiente (no se comparten constantes entre ellas) — lección ya
+  aprendida con `booking_reminder`, que Meta aprobó como `es_CO` en vez
+  del genérico `es`; no hay garantía de que las nuevas queden aprobadas
+  con el mismo código exacto.
+
+### Nota aparte sobre el proceso de aprobación de plantillas en Meta
+
+`new_order_alert` fue rechazada 2 veces antes de quedar bien:
+1. Variables consecutivas sin texto real entre ellas (`{{2}}` y `{{3}}`
+   cada una sola en su propia línea) — Meta lo rechaza automático.
+2. Muy pocas palabras reales en relación a la cantidad de variables, y
+   terminaba en una variable seguida de un simple punto (Meta lo
+   interpreta como "termina en variable", no como texto real).
+
+La lección: cada variable necesita una frase completa alrededor, no
+una etiqueta corta pegada — y ni el primer ni el último carácter del
+mensaje puede ser (efectivamente) una variable sin acompañamiento.
+
 ## Bloqueo real cuando el trial vence sin suscripción
 
 Antes, cuando el trial vencía, solo se mostraba un aviso — el negocio

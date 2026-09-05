@@ -10,6 +10,7 @@ const schema = z.object({
   name: z.string().min(1).max(100),
   email: z.string().email(),
   phone: z.string().min(6).max(30),
+  lang: z.enum(["es", "en"]).optional(),
 });
 
 function generateClaimCode(): string {
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
-  const { slug, name, email, phone } = parsed.data;
+  const { slug, name, email, phone, lang } = parsed.data;
 
   const tenant = await db.tenant.findUnique({ where: { slug } });
   if (!tenant || !tenant.menuLeadEnabled) {
@@ -80,6 +81,7 @@ export async function POST(req: NextRequest) {
     businessName: tenant.name,
     rewardText: tenant.menuLeadRewardText,
     claimCode,
+    language: lang ?? "es",
   }).catch((err) => console.error("No se pudo enviar el código de canje por WhatsApp:", err));
 
   return NextResponse.json({ claimCode: lead.claimCode, alreadyClaimed: false }, { status: 201 });

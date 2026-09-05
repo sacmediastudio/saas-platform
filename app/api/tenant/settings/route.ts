@@ -50,6 +50,7 @@ const updateSchema = z
     contactEmail: z.string().email().nullable().optional().or(z.literal("")),
     contactPhone: z.string().nullable().optional(),
     address: z.string().nullable().optional(),
+    alertLanguage: z.enum(["es", "en"]).optional(),
     currency: z.enum(CURRENCIES).optional(),
     secondaryCurrencyCode: z.enum(CURRENCIES).nullable().optional(),
     secondaryCurrencyRate: z.number().positive().nullable().optional(),

@@ -22,7 +22,8 @@ const TEMPLATE_LANG_ES = process.env.WHATSAPP_TEMPLATE_LANG_ES || "es";
 const TEMPLATE_LANG_EN = process.env.WHATSAPP_TEMPLATE_LANG_EN || "en_US";
 
 const LEAD_TEMPLATE_NAME = process.env.WHATSAPP_LEAD_TEMPLATE_NAME || "menu_lead_reward";
-const LEAD_TEMPLATE_LANG = process.env.WHATSAPP_LEAD_TEMPLATE_LANG || "es";
+const LEAD_TEMPLATE_LANG_ES = process.env.WHATSAPP_LEAD_TEMPLATE_LANG_ES || "es";
+const LEAD_TEMPLATE_LANG_EN = process.env.WHATSAPP_LEAD_TEMPLATE_LANG_EN || "en_US";
 
 // Confirmación de pedido al CLIENTE — sí varía según el idioma que el
 // cliente eligió al pedir (mismo criterio que los recordatorios de citas).
@@ -32,9 +33,13 @@ const ORDER_CONFIRMATION_LANG_EN = process.env.WHATSAPP_ORDER_CONFIRMATION_LANG_
 
 // Aviso de pedido nuevo al NEGOCIO — a propósito NO varía según el
 // idioma del cliente (el dueño del negocio no necesariamente habla el
-// mismo idioma que su cliente) — un solo idioma fijo, configurable.
+// mismo idioma que su cliente). Varía según Tenant.alertLanguage, una
+// preferencia fija que el negocio elige una sola vez en Ajustes — no
+// según el idioma del panel en un momento dado, que puede cambiar
+// seguido con solo tocar el botón ES/EN.
 const NEW_ORDER_ALERT_TEMPLATE_NAME = process.env.WHATSAPP_NEW_ORDER_ALERT_TEMPLATE_NAME || "new_order_alert";
-const NEW_ORDER_ALERT_LANG = process.env.WHATSAPP_NEW_ORDER_ALERT_LANG || "es";
+const NEW_ORDER_ALERT_LANG_ES = process.env.WHATSAPP_NEW_ORDER_ALERT_LANG_ES || "es";
+const NEW_ORDER_ALERT_LANG_EN = process.env.WHATSAPP_NEW_ORDER_ALERT_LANG_EN || "en_US";
 
 export function isWhatsAppConfigured(): boolean {
   return Boolean(ACCESS_TOKEN && PHONE_NUMBER_ID);
@@ -114,7 +119,9 @@ export async function sendBookingReminder(params: {
 /**
  * Manda el código de canje del premio del menú (ej. "Postre gratis").
  * Igual que arriba, el orden de bodyParams tiene que coincidir con las
- * variables {{1}}, {{2}}, etc. de la plantilla aprobada.
+ * variables {{1}}, {{2}}, etc. de la plantilla aprobada. Varía según
+ * el idioma que el cliente tenía elegido en el menú al reclamarlo —
+ * mismo criterio que la confirmación de pedido.
  */
 export async function sendMenuLeadCode(params: {
   toPhone: string;
@@ -122,11 +129,12 @@ export async function sendMenuLeadCode(params: {
   businessName: string;
   rewardText: string;
   claimCode: string;
+  language: string;
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: LEAD_TEMPLATE_NAME,
-    languageCode: LEAD_TEMPLATE_LANG,
+    languageCode: params.language === "en" ? LEAD_TEMPLATE_LANG_EN : LEAD_TEMPLATE_LANG_ES,
     bodyParams: [params.customerName, params.businessName, params.rewardText, params.claimCode],
   });
 }
@@ -175,9 +183,9 @@ export async function sendOrderConfirmationWhatsApp(params: {
 
 /**
  * Le avisa al NEGOCIO que le llegó un pedido nuevo — al número de
- * contacto configurado en Ajustes. A propósito en un solo idioma fijo
- * (no depende de qué idioma eligió el cliente) — no tenemos guardado
- * en qué idioma prefiere leer sus avisos cada negocio.
+ * contacto configurado en Ajustes. Varía según Tenant.alertLanguage,
+ * la preferencia fija que el negocio eligió en Ajustes — no según el
+ * idioma del cliente que hizo el pedido.
  *
  * Incluye qué se pidió y cómo se entrega, no solo el total — para que
  * el negocio pueda arrancar a prepararlo mirando el mensaje solo, sin
@@ -190,11 +198,12 @@ export async function sendNewOrderAlertWhatsApp(params: {
   itemsSummary: string;
   fulfillmentInfo: string;
   total: string;
+  language: string;
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
     templateName: NEW_ORDER_ALERT_TEMPLATE_NAME,
-    languageCode: NEW_ORDER_ALERT_LANG,
+    languageCode: params.language === "en" ? NEW_ORDER_ALERT_LANG_EN : NEW_ORDER_ALERT_LANG_ES,
     bodyParams: [params.customerName, params.itemsSummary, params.fulfillmentInfo, params.total, params.customerPhone],
   });
 }

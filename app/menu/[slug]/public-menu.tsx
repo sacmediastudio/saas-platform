@@ -858,7 +858,7 @@ function LeadClaimModal({
       const res = await fetch("/api/public/menu-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, ...form }),
+        body: JSON.stringify({ slug, ...form, lang }),
       });
       const body = await res.json();
       if (!res.ok) {

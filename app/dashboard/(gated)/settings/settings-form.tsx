@@ -19,6 +19,7 @@ interface TenantData {
   contactEmail: string | null;
   contactPhone: string | null;
   address: string | null;
+  alertLanguage: string;
   currency: string;
   secondaryCurrencyCode: string | null;
   secondaryCurrencyRate: number | null;
@@ -202,6 +203,17 @@ export default function SettingsForm({
             placeholder={t.settingsForm.addressPlaceholder}
             className={inputClass}
           />
+        </Field>
+        <Field label={t.settingsForm.alertLanguageLabel}>
+          <select
+            value={form.alertLanguage}
+            onChange={(e) => setForm({ ...form, alertLanguage: e.target.value })}
+            className={inputClass}
+          >
+            <option value="es">Español</option>
+            <option value="en">English</option>
+          </select>
+          <span className="text-xs text-[#343233]/50 mt-1 block">{t.settingsForm.alertLanguageHint}</span>
         </Field>
       </Section>
 
