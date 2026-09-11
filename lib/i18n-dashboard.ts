@@ -247,7 +247,9 @@ export const dashboardTranslations = {
       sourceBookings: "Bookings",
       sourceReviews: "Reviews",
       sourceMenu: "Menu",
-      csvHeaders: ["Name", "Email", "Phone", "Source", "Last seen"],
+      sourceOrder: "Orders",
+      loyaltyStamps: (n: number) => `${n} stamps`,
+      csvHeaders: ["Name", "Email", "Phone", "Source", "Stamps", "Last seen"],
       csvFilename: "customers.csv",
     },
     modules: {
@@ -734,7 +736,9 @@ export const dashboardTranslations = {
       sourceBookings: "Citas",
       sourceReviews: "Reseñas",
       sourceMenu: "Menú",
-      csvHeaders: ["Nombre", "Correo", "Teléfono", "Origen", "Última vez"],
+      sourceOrder: "Pedidos",
+      loyaltyStamps: (n: number) => `${n} sellos`,
+      csvHeaders: ["Nombre", "Correo", "Teléfono", "Origen", "Sellos", "Última vez"],
       csvFilename: "clientes.csv",
     },
     modules: {

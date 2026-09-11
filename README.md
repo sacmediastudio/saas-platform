@@ -1335,6 +1335,80 @@ contenido de todo el dashboard.
   combinada de los 3 patrones en el archivo no encuentra nada más
   suelto.
 
+## Sistema de sellos con toque de NFC + Apple/Google Wallet
+
+El usuario vio en otro restaurante un sistema de sellos con "tap para
+confirmar" usando Wallet, y pidió construir lo mismo — pero con el
+matiz de que Zertoo provee el hardware NFC a cada negocio, así que el
+diseño final terminó siendo distinto a un QR genérico.
+
+**Un hallazgo importante en el camino**: gran parte de la
+configuración de sellos (activar, cantidad de visitas, texto del
+premio, canjear) **ya existía** de antes — casi se duplica por no
+revisar a fondo primero. Lo genuinamente nuevo era una sola pieza:
+**no existía ninguna forma de sumar un sello**, en ningún lado del
+código.
+
+### Cómo funciona el toque en la caja
+
+Una etiqueta NFC simple (sin leer nada del pase — evita la
+certificación avanzada de Apple, que es más restringida) programada
+para abrir `/loyalty/[slug]/tap`. El cliente toca con su propio
+teléfono, la página lo reconoce por un identificador guardado en su
+dispositivo (mismo mecanismo que ya usa Zertoo Eats para favoritos), y
+el empleado ve "¿Sos Ana?" antes de confirmar — recién ahí se suma el
+sello de verdad. Límite de 1 sello cada 20 horas por tarjeta, para que
+alguien no pueda sumar de más sin visitar en persona.
+
+### Variables de entorno nuevas — cómo conseguir cada una
+
+**`WALLET_AUTH_SECRET`** — cualquier string largo y random que elijas
+vos mismo (por ejemplo, generado con `openssl rand -hex 32`). No viene
+de ningún lado externo.
+
+**Apple Wallet** (necesita la cuenta de Apple Developer, la misma de
+Certucce Digital LLC que ya está aprobada):
+1. En developer.apple.com → Certificates, Identifiers & Profiles →
+   Identifiers → creá un "Pass Type ID" (ej. `pass.app.zertoo.loyalty`)
+   → ese valor es `APPLE_PASS_TYPE_IDENTIFIER`
+2. Generá el certificado para ese Pass Type ID, descargalo, y con
+   OpenSSL separalo en 2 archivos PEM:
+   ```bash
+   openssl pkcs12 -in Certificates.p12 -clcerts -nokeys -out cert.pem
+   openssl pkcs12 -in Certificates.p12 -nocerts -out key.pem
+   ```
+   Cada uno, convertido a base64 (`base64 -i cert.pem`), va en
+   `APPLE_PASS_SIGNER_CERT_BASE64` y `APPLE_PASS_SIGNER_KEY_BASE64`
+3. `APPLE_TEAM_IDENTIFIER` — tu Team ID, visible en la esquina
+   superior derecha del portal de Apple Developer
+4. `APPLE_WWDR_CERT_BASE64` — el certificado intermedio de Apple
+   (Apple Worldwide Developer Relations), se descarga público desde
+   Apple, convertido a base64 igual que los anteriores
+5. Para las notificaciones push (que el sello se sume solo, sin
+   recargar nada): en developer.apple.com → Keys → creá una nueva
+   clave con "Apple Push Notifications service (APNs)" habilitado.
+   Descargás un archivo `.p8` — convertido a base64 va en
+   `APPLE_APNS_KEY_BASE64`. El "Key ID" que te muestra ahí es
+   `APPLE_APNS_KEY_ID`
+
+**Google Wallet**:
+1. En Google Cloud Console → creá o elegí un proyecto → habilitá
+   "Google Wallet API"
+2. Pedí acceso como "issuer" en
+   [Google Wallet Business Console](https://pay.google.com/business/console)
+   — te da un número, ese es `GOOGLE_WALLET_ISSUER_ID`
+3. Creá una cuenta de servicio (Service Account) con permiso sobre
+   Wallet API, descargá su clave en formato JSON
+4. Del JSON: el campo `client_email` es
+   `GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL`, y el campo `private_key`
+   (convertido a base64) es `GOOGLE_WALLET_PRIVATE_KEY_BASE64`
+
+Sin estas variables configuradas, los botones de "Agregar a Wallet"
+muestran un error controlado (503) en vez de romper el resto de la
+página — todo el sistema de sellos con toque de NFC funciona
+perfectamente sin necesitar ningún Wallet configurado, es una capa
+opcional encima.
+
 ## Estadísticas de pedidos en el dashboard de menú
 
 El usuario preguntó si era posible mostrar más que solo vistas de

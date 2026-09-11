@@ -12,7 +12,14 @@ export async function GET(req: NextRequest) {
 
   const tenant = await db.tenant.findUnique({
     where: { slug },
-    select: { id: true, name: true, loyaltyEnabled: true, loyaltyVisitsNeeded: true, loyaltyReward: true },
+    select: {
+      id: true,
+      name: true,
+      logoUrl: true,
+      loyaltyEnabled: true,
+      loyaltyVisitsNeeded: true,
+      loyaltyReward: true,
+    },
   });
   if (!tenant || !tenant.loyaltyEnabled) {
     return NextResponse.json({ error: "No disponible" }, { status: 404 });
@@ -20,11 +27,13 @@ export async function GET(req: NextRequest) {
 
   const card = await db.loyaltyCard.findUnique({
     where: { tenantId_customerEmail: { tenantId: tenant.id, customerEmail: email.toLowerCase().trim() } },
-    select: { stamps: true },
+    select: { id: true, stamps: true },
   });
 
   return NextResponse.json({
+    cardId: card?.id ?? null,
     businessName: tenant.name,
+    logoUrl: tenant.logoUrl,
     stamps: card?.stamps ?? 0,
     visitsNeeded: tenant.loyaltyVisitsNeeded,
     reward: tenant.loyaltyReward,

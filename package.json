@@ -17,6 +17,8 @@
     "@aws-sdk/s3-request-presigner": "^3.658.0",
     "@prisma/client": "^5.20.0",
     "bcryptjs": "^2.4.3",
+    "passkit-generator": "^3.3.0",
+    "sharp": "^0.33.5",
     "framer-motion": "^11.11.9",
     "jsonwebtoken": "^9.0.2",
     "lucide-react": "^0.446.0",

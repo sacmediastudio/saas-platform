@@ -4,11 +4,14 @@ import { useEffect, useState } from "react";
 import { Stamp, Gift } from "lucide-react";
 import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
 import { publicTranslations } from "@/lib/i18n-public";
+import LoyaltyStampProgress from "@/components/loyalty-stamp-progress";
 
 export default function LoyaltyLookup({ slug }: { slug: string }) {
   const [email, setEmail] = useState("");
   const [result, setResult] = useState<{
+    cardId: string | null;
     businessName: string;
+    logoUrl: string | null;
     stamps: number;
     visitsNeeded: number;
     reward: string;
@@ -23,6 +26,8 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
     setStoredLang(l);
   }
   const t = publicTranslations[lang].loyalty;
+  const addToWalletLabel = publicTranslations[lang].loyaltyTap.addToAppleWallet;
+  const addToGoogleWalletLabel = publicTranslations[lang].loyaltyTap.addToGoogleWallet;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -89,30 +94,50 @@ export default function LoyaltyLookup({ slug }: { slug: string }) {
 
       {result && (
         <div className="w-full mt-8 border border-neutral-200 rounded-xl p-5 text-center">
+          {result.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={result.logoUrl}
+              alt={result.businessName}
+              className="w-14 h-14 rounded-xl object-cover mx-auto mb-3"
+            />
+          )}
           <p className="text-sm opacity-60 mb-1">{result.businessName}</p>
           <p className="text-3xl font-extrabold mb-1">
             {result.stamps} / {result.visitsNeeded}
           </p>
           <p className="text-sm opacity-60 mb-4">{t.stamps}</p>
 
-          <div className="flex justify-center gap-1.5 flex-wrap mb-4">
-            {Array.from({ length: result.visitsNeeded }).map((_, i) => (
-              <span
-                key={i}
-                className={`w-6 h-6 rounded-full border ${
-                  i < result.stamps ? "bg-[#E7FF00] border-[#E7FF00]" : "border-neutral-300"
-                }`}
-              />
-            ))}
+          <div className="mb-4">
+            <LoyaltyStampProgress stamps={result.stamps} visitsNeeded={result.visitsNeeded} />
           </div>
 
           {hasReward ? (
-            <div className="flex items-center justify-center gap-1.5 text-sm font-semibold bg-[#E7FF00] text-[#002D09] rounded-lg py-2.5 px-3">
-              <Gift size={15} aria-hidden />
-              {t.won} {result.reward}
+            <div className="flex flex-col items-center gap-1.5 text-sm font-semibold bg-[#E7FF00] text-[#002D09] rounded-lg py-3 px-3">
+              <Gift size={18} aria-hidden />
+              <span>
+                {t.won} {result.reward}
+              </span>
             </div>
           ) : (
             <p className="text-xs opacity-60">{t.missingVisits(result.visitsNeeded - result.stamps, result.reward)}</p>
+          )}
+
+          {result.cardId && (
+            <>
+              <a
+                href={`/api/public/loyalty/${result.cardId}/apple-pass`}
+                className="w-full mt-4 py-2.5 rounded-lg border border-neutral-300 text-sm font-semibold text-center block"
+              >
+                {addToWalletLabel}
+              </a>
+              <a
+                href={`/api/public/loyalty/${result.cardId}/google-pass`}
+                className="w-full mt-2 py-2.5 rounded-lg border border-neutral-300 text-sm font-semibold text-center block"
+              >
+                {addToGoogleWalletLabel}
+              </a>
+            </>
           )}
         </div>
       )}

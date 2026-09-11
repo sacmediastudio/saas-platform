@@ -12,6 +12,8 @@ interface Customer {
   fromBooking: boolean;
   fromReview: boolean;
   fromMenuLead: boolean;
+  fromOrder: boolean;
+  loyaltyStamps: number | null;
   lastSeenAt: string;
 }
 
@@ -20,6 +22,7 @@ function sourceLabel(c: Customer, t: ReturnType<typeof useDashboardLang>["t"]): 
   if (c.fromBooking) parts.push(t.customers.sourceBookings);
   if (c.fromReview) parts.push(t.customers.sourceReviews);
   if (c.fromMenuLead) parts.push(t.customers.sourceMenu);
+  if (c.fromOrder) parts.push(t.customers.sourceOrder);
   return parts.join(" · ") || "—";
 }
 
@@ -31,6 +34,7 @@ function exportCsv(customers: Customer[], t: ReturnType<typeof useDashboardLang>
       c.email,
       c.phone ?? "",
       sourceLabel(c, t),
+      c.loyaltyStamps !== null ? String(c.loyaltyStamps) : "",
       new Date(c.lastSeenAt).toLocaleDateString(lang),
     ]),
   ];
@@ -79,6 +83,11 @@ export default function CustomersView({ customers }: { customers: Customer[] }) 
                 </p>
               </div>
               <span className="text-xs px-2 py-1 rounded-md bg-[#F7F8F4] shrink-0">{sourceLabel(c, t)}</span>
+              {c.loyaltyStamps !== null && (
+                <span className="text-xs px-2 py-1 rounded-md bg-amber-50 text-amber-700 shrink-0">
+                  ★ {t.customers.loyaltyStamps(c.loyaltyStamps)}
+                </span>
+              )}
               <span className="text-xs text-[#343233]/50 shrink-0">
                 {new Date(c.lastSeenAt).toLocaleDateString(lang, { day: "numeric", month: "short" })}
               </span>

@@ -530,11 +530,35 @@ model LoyaltyCard {
   rewardsRedeemed Int      @default(0)
   lastVisitAt     DateTime @default(now())
   createdAt       DateTime @default(now())
+  // Apple necesita saber SI y CUÁNDO cambió cada pase para decidir a
+  // qué dispositivos avisarles que hay una actualización pendiente —
+  // sin esto no hay forma de responder bien al protocolo de PassKit.
+  updatedAt       DateTime @updatedAt
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  walletDevices WalletDeviceRegistration[]
 
   @@unique([tenantId, customerEmail])
   @@map("loyalty_cards")
+}
+
+// Un dispositivo (iPhone) que agregó un pase a su Wallet, registrado
+// para recibir avisos push cuando ese pase cambie — así el sello
+// nuevo aparece solo, sin que el cliente tenga que volver a descargar
+// nada. Este es el mecanismo que exige el protocolo de PassKit de
+// Apple, no algo que se pueda simplificar.
+model WalletDeviceRegistration {
+  id                       String   @id @default(cuid())
+  deviceLibraryIdentifier  String
+  pushToken                String
+  loyaltyCardId            String
+  createdAt                DateTime @default(now())
+
+  loyaltyCard LoyaltyCard @relation(fields: [loyaltyCardId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceLibraryIdentifier, loyaltyCardId])
+  @@index([loyaltyCardId])
+  @@map("wallet_device_registrations")
 }
 
 // Un cliente que reclamó el premio de "postre gratis" (o el que sea)
