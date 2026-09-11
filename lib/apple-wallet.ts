@@ -55,6 +55,19 @@ function escapeXml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
+// El nombre del negocio ya se escapaba antes de insertarse en el SVG,
+// pero los colores del negocio (backgroundColorHex/textColorHex) se
+// insertaban DIRECTO en los atributos, sin validar — si algún tenant
+// tuviera guardado un valor que no sea un hex limpio (por los motivos
+// que sea: un bug viejo, una edición manual de la base de datos),
+// ese valor se cuela tal cual dentro de un atributo de SVG y puede
+// romper el XML (esto es lo que causaba el "Couldn't find end of
+// Start Tag" al generar el pase para uno de los negocios). Cualquier
+// valor que no sea EXACTAMENTE #RRGGBB cae al color de respaldo.
+function sanitizeHexColor(color: string, fallback: string): string {
+  return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : fallback;
+}
+
 interface StripContent {
   tenantName: string;
   logoUrl: string | null;
@@ -94,6 +107,8 @@ function checkmarkPath(cx: number, cy: number, r: number): string {
 // sharp/librsvg + DejaVu Sans localmente antes de este cambio.
 function buildBaseSvg(content: StripContent, width: number, height: number): Buffer {
   const scale = width / 1125; // todas las medidas están pensadas para el ancho @3x, y se escalan para 1x/2x
+  const bgColor = sanitizeHexColor(content.backgroundColorHex, "#E7FF00");
+  const textColor = sanitizeHexColor(content.textColorHex, "#002D09");
 
   const sideMargin = 60 * scale;
   const usableWidth = width - sideMargin * 2;
@@ -122,9 +137,12 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   // Grilla de sellos: hasta 5 columnas por fila, tantas filas como
   // hagan falta (antes todo iba en una sola fila apretada). Si la
   // última fila queda incompleta, se centra en vez de quedar pegada
-  // a la izquierda.
-  const total = Math.min(content.visitsNeeded, 12); // más de 12 sellos ya no entra con un tamaño legible
-  const columns = Math.min(total, 5);
+  // a la izquierda. Math.max(..., 1) evita una división por cero si
+  // loyaltyVisitsNeeded llegara a estar en 0 — sin esto, colSpacing
+  // se vuelve Infinity y arrastra ese valor a cada círculo de la
+  // grilla.
+  const total = Math.max(Math.min(content.visitsNeeded, 12), 1); // más de 12 sellos ya no entra con un tamaño legible
+  const columns = Math.max(Math.min(total, 5), 1);
   const rows = Math.ceil(total / columns);
   const colSpacing = usableWidth / columns;
   const iconRadius = Math.min(colSpacing * 0.26, 29 * scale);
@@ -143,10 +161,10 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
     const filled = i < content.stamps;
 
     if (filled) {
-      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${content.textColorHex}" stroke-width="${4 * scale}" />`;
-      stampIcons += `<path d="${checkmarkPath(cx, cy, iconRadius)}" fill="none" stroke="${content.textColorHex}" stroke-width="${5 * scale}" stroke-linecap="round" stroke-linejoin="round" />`;
+      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${textColor}" stroke-width="${4 * scale}" />`;
+      stampIcons += `<path d="${checkmarkPath(cx, cy, iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${5 * scale}" stroke-linecap="round" stroke-linejoin="round" />`;
     } else {
-      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${content.textColorHex}" stroke-width="${3.5 * scale}" opacity="0.35" />`;
+      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${textColor}" stroke-width="${3.5 * scale}" opacity="0.35" />`;
     }
   }
 
@@ -156,12 +174,12 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
 
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${width}" height="${height}" fill="${content.backgroundColorHex}" />
+      <rect width="${width}" height="${height}" fill="${bgColor}" />
       <text x="${width - sideMargin}" y="${nameY}" text-anchor="end" font-family="DejaVu Sans"
-            font-size="${nameFontSize}" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
+            font-size="${nameFontSize}" font-weight="bold" fill="${textColor}">${escapeXml(content.tenantName)}</text>
       ${stampIcons}
       <text x="${width / 2}" y="${labelY}" text-anchor="middle" font-family="DejaVu Sans"
-            font-size="${labelFontSize}" font-weight="bold" fill="${content.textColorHex}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
+            font-size="${labelFontSize}" font-weight="bold" fill="${textColor}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
     </svg>
   `;
 
