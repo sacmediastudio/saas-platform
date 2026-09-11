@@ -53,17 +53,22 @@ export async function POST(req: NextRequest) {
   if (!tenant || !tenant.loyaltyEnabled) return NextResponse.json({ error: "No disponible" }, { status: 404 });
 
   let card;
+  let isNewRegistration = false;
   if (body.cardId) {
     card = await db.loyaltyCard.findUnique({ where: { id: body.cardId } });
     if (!card || card.tenantId !== tenant.id) return NextResponse.json({ error: "No encontrada" }, { status: 404 });
   } else {
     if (!body.name || !body.email) return NextResponse.json({ error: "Faltan datos" }, { status: 400 });
     const email = String(body.email).toLowerCase().trim();
-    card = await db.loyaltyCard.upsert({
+    const existing = await db.loyaltyCard.findUnique({
       where: { tenantId_customerEmail: { tenantId: tenant.id, customerEmail: email } },
-      update: {},
-      create: { tenantId: tenant.id, customerEmail: email, customerName: body.name },
     });
+    isNewRegistration = !existing;
+    card =
+      existing ??
+      (await db.loyaltyCard.create({
+        data: { tenantId: tenant.id, customerEmail: email, customerName: body.name },
+      }));
     await upsertCustomer({ tenantId: tenant.id, email, name: body.name, source: "menuLead" });
   }
 
@@ -71,10 +76,14 @@ export async function POST(req: NextRequest) {
   // podría intentar tocar "confirmar" varias veces seguidas sin
   // volver a visitar de verdad — un sello por tarjeta cada 20 horas,
   // sin usar límites de día calendario para no complicarse con husos
-  // horarios cerca de la medianoche.
-  const hoursSinceLastVisit = (Date.now() - card.lastVisitAt.getTime()) / (1000 * 60 * 60);
-  if (hoursSinceLastVisit < 20) {
-    return NextResponse.json({ error: "already_stamped_today" }, { status: 429 });
+  // horarios cerca de la medianoche. No aplica en un registro nuevo:
+  // no hay ninguna visita previa contra la cual comparar, y esta
+  // primera vez tiene que sumar su sello sí o sí.
+  if (!isNewRegistration) {
+    const hoursSinceLastVisit = (Date.now() - card.lastVisitAt.getTime()) / (1000 * 60 * 60);
+    if (hoursSinceLastVisit < 20) {
+      return NextResponse.json({ error: "already_stamped_today" }, { status: 429 });
+    }
   }
 
   const updated = await db.loyaltyCard.update({
