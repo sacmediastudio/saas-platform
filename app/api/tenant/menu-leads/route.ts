@@ -9,7 +9,12 @@ export async function GET() {
   const [tenant, leads] = await Promise.all([
     db.tenant.findUnique({
       where: { id: session.tenantId },
-      select: { menuLeadEnabled: true, menuLeadButtonLabel: true, menuLeadRewardText: true },
+      select: {
+        menuLeadEnabled: true,
+        menuLeadButtonLabel: true,
+        menuLeadRewardText: true,
+        menuLeadDailyLimit: true,
+      },
     }),
     db.menuLead.findMany({ where: { tenantId: session.tenantId }, orderBy: { createdAt: "desc" } }),
   ]);
@@ -18,6 +23,7 @@ export async function GET() {
     enabled: tenant?.menuLeadEnabled ?? false,
     buttonLabel: tenant?.menuLeadButtonLabel ?? "Postre gratis 🎁",
     rewardText: tenant?.menuLeadRewardText ?? "un postre gratis en tu próxima visita",
+    dailyLimit: tenant?.menuLeadDailyLimit ?? 20,
     leads,
   });
 }
@@ -26,6 +32,7 @@ const schema = z.object({
   enabled: z.boolean(),
   buttonLabel: z.string().min(1).max(60),
   rewardText: z.string().min(1).max(200),
+  dailyLimit: z.number().int().min(1).max(1000),
 });
 
 export async function PUT(req: NextRequest) {
@@ -41,6 +48,7 @@ export async function PUT(req: NextRequest) {
       menuLeadEnabled: parsed.data.enabled,
       menuLeadButtonLabel: parsed.data.buttonLabel,
       menuLeadRewardText: parsed.data.rewardText,
+      menuLeadDailyLimit: parsed.data.dailyLimit,
     },
   });
 

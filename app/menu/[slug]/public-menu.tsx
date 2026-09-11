@@ -851,6 +851,20 @@ function LeadClaimModal({
   const [errorMsg, setErrorMsg] = useState("");
   const [alreadyClaimed, setAlreadyClaimed] = useState(false);
 
+  // Un identificador propio del navegador, generado una sola vez y
+  // reusado siempre — no depende de ningún dato personal, solo sirve
+  // para reconocer "este mismo aparato ya reclamó antes", sin importar
+  // qué correo haya escrito cada vez.
+  function getDeviceToken(): string {
+    const key = "zertoo_device_id";
+    let token = window.localStorage.getItem(key);
+    if (!token) {
+      token = crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      window.localStorage.setItem(key, token);
+    }
+    return token;
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setStatus("sending");
@@ -858,7 +872,7 @@ function LeadClaimModal({
       const res = await fetch("/api/public/menu-leads", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ slug, ...form, lang }),
+        body: JSON.stringify({ slug, ...form, lang, deviceToken: getDeviceToken() }),
       });
       const body = await res.json();
       if (!res.ok) {

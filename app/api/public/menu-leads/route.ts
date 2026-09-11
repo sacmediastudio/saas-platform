@@ -11,6 +11,7 @@ const schema = z.object({
   email: z.string().email(),
   phone: z.string().min(6).max(30),
   lang: z.enum(["es", "en"]).optional(),
+  deviceToken: z.string().optional(),
 });
 
 function generateClaimCode(): string {
@@ -40,11 +41,21 @@ export async function POST(req: NextRequest) {
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
-  const { slug, name, email, phone, lang } = parsed.data;
+  const { slug, name, email, phone, lang, deviceToken } = parsed.data;
 
   const tenant = await db.tenant.findUnique({ where: { slug } });
   if (!tenant || !tenant.menuLeadEnabled) {
     return NextResponse.json({ error: "No disponible" }, { status: 404 });
+  }
+
+  // Mismo dispositivo, sin importar qué correo haya escrito esta vez —
+  // si ya reclamó antes desde acá, le devolvemos SU código de esa vez,
+  // no uno nuevo con el correo distinto que puso ahora.
+  if (deviceToken) {
+    const byDevice = await db.menuLead.findFirst({ where: { tenantId: tenant.id, deviceToken } });
+    if (byDevice) {
+      return NextResponse.json({ claimCode: byDevice.claimCode, alreadyClaimed: true });
+    }
   }
 
   // Evita que la misma persona (mismo correo) reclame el premio varias
@@ -56,6 +67,21 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ claimCode: existing.claimCode, alreadyClaimed: true });
   }
 
+  // Tope diario total del negocio — la última red de seguridad, sin
+  // importar cuántos correos o dispositivos distintos se usen para
+  // intentar evadir los 2 chequeos de arriba.
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0);
+  const todayCount = await db.menuLead.count({
+    where: { tenantId: tenant.id, createdAt: { gte: startOfDay } },
+  });
+  if (todayCount >= tenant.menuLeadDailyLimit) {
+    return NextResponse.json(
+      { error: "No hay más códigos disponibles por hoy — probá de nuevo mañana." },
+      { status: 429 }
+    );
+  }
+
   let claimCode = generateClaimCode();
   // Diferencia prácticamente nula de choque (32^6 combinaciones), pero
   // por las dudas reintenta si justo coincide con uno ya existente.
@@ -64,7 +90,7 @@ export async function POST(req: NextRequest) {
   }
 
   const lead = await db.menuLead.create({
-    data: { tenantId: tenant.id, name, email: email.toLowerCase().trim(), phone, claimCode },
+    data: { tenantId: tenant.id, name, email: email.toLowerCase().trim(), phone, claimCode, deviceToken },
   });
 
   await upsertCustomer({

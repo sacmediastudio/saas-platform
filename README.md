@@ -1335,6 +1335,29 @@ contenido de todo el dashboard.
   combinada de los 3 patrones en el archivo no encuentra nada más
   suelto.
 
+## Protección anti-abuso en "Postre gratis" (menu leads)
+
+El usuario notó que cualquiera con el link del menú público podía
+pedir un código de canje sin haber visitado nunca el negocio — a
+diferencia de los sellos, esto es a propósito así (es un anzuelo para
+atraer gente nueva, no un premio por lealtad), pero eso no significa
+que no tenga que tener ningún límite.
+
+Se confirmó que ya existía un límite de 5 por hora por IP (armado en
+una sesión anterior) — no partía de cero. Se agregaron 2 capas más:
+
+- **Identificador de dispositivo** — mismo patrón que ya usan
+  favoritos y sellos. Si el mismo aparato ya reclamó antes, se le
+  devuelve SU código de esa vez, sin importar qué correo nuevo
+  escriba — evita que alguien junte varios códigos rotando entre
+  correos inventados desde el mismo celular.
+- **Tope diario configurable por negocio** (`Tenant.menuLeadDailyLimit`,
+  default 20) — la red de seguridad de fondo: sin importar cuántos
+  correos o dispositivos distintos se usen para evadir lo de arriba,
+  el negocio nunca pierde más de X premios por día. Configurable en
+  Postre gratis → Ajustes, para que cada negocio elija su propio
+  número según su presupuesto.
+
 ## Sistema de sellos con toque de NFC + Apple/Google Wallet
 
 El usuario vio en otro restaurante un sistema de sellos con "tap para

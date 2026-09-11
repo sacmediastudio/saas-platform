@@ -6,7 +6,7 @@ export default async function MenuLeadsPage() {
   const session = await requireTenant();
   const tenant = await db.tenant.findUnique({
     where: { id: session.tenantId },
-    select: { menuLeadEnabled: true, menuLeadButtonLabel: true, menuLeadRewardText: true },
+    select: { menuLeadEnabled: true, menuLeadButtonLabel: true, menuLeadRewardText: true, menuLeadDailyLimit: true },
   });
   const leads = await db.menuLead.findMany({
     where: { tenantId: session.tenantId },
@@ -18,6 +18,7 @@ export default async function MenuLeadsPage() {
       initialEnabled={tenant?.menuLeadEnabled ?? false}
       initialButtonLabel={tenant?.menuLeadButtonLabel ?? "Postre gratis 🎁"}
       initialRewardText={tenant?.menuLeadRewardText ?? "un postre gratis en tu próxima visita"}
+      initialDailyLimit={tenant?.menuLeadDailyLimit ?? 20}
       initialLeads={leads.map((l) => ({
         id: l.id,
         name: l.name,

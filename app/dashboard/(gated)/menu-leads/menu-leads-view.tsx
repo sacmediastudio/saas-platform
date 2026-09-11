@@ -18,17 +18,20 @@ export default function MenuLeadsView({
   initialEnabled,
   initialButtonLabel,
   initialRewardText,
+  initialDailyLimit,
   initialLeads,
 }: {
   initialEnabled: boolean;
   initialButtonLabel: string;
   initialRewardText: string;
+  initialDailyLimit: number;
   initialLeads: Lead[];
 }) {
   const { t } = useDashboardLang();
   const [enabled, setEnabled] = useState(initialEnabled);
   const [buttonLabel, setButtonLabel] = useState(initialButtonLabel);
   const [rewardText, setRewardText] = useState(initialRewardText);
+  const [dailyLimit, setDailyLimit] = useState(initialDailyLimit);
   const [leads, setLeads] = useState(initialLeads);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -43,7 +46,7 @@ export default function MenuLeadsView({
     const res = await fetch("/api/tenant/menu-leads", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled, buttonLabel, rewardText }),
+      body: JSON.stringify({ enabled, buttonLabel, rewardText, dailyLimit }),
     });
     if (res.ok) {
       setSaved(true);
@@ -114,6 +117,17 @@ export default function MenuLeadsView({
                 placeholder={t.menuLeads.rewardPlaceholder}
                 className="flex-1 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-1.5 text-sm outline-none"
               />
+            </label>
+            <label className="flex items-center gap-3 mb-4">
+              <span className="text-sm w-40 shrink-0">{t.menuLeads.dailyLimit}</span>
+              <input
+                type="number"
+                min={1}
+                value={dailyLimit}
+                onChange={(e) => setDailyLimit(Number(e.target.value))}
+                className="w-24 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-1.5 text-sm outline-none"
+              />
+              <span className="text-xs text-[#343233]/50">{t.menuLeads.dailyLimitHint}</span>
             </label>
           </>
         )}

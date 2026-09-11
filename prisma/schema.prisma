@@ -168,6 +168,10 @@ model Tenant {
   menuLeadEnabled     Boolean @default(false)
   menuLeadButtonLabel String  @default("Postre gratis 🎁")
   menuLeadRewardText  String  @default("un postre gratis en tu próxima visita")
+  // Tope de códigos nuevos por día — sin esto, alguien decidido podría
+  // ir generando códigos con correos inventados sin ningún límite real
+  // más que la ventana de 1 hora del rate limit por IP.
+  menuLeadDailyLimit  Int     @default(20)
   menuLeads           MenuLead[]
   customers           Customer[]
   moduleActivationRequests ModuleActivationRequest[]
@@ -565,18 +569,24 @@ model WalletDeviceRegistration {
 // desde el menú público — nombre/correo/WhatsApp, y un código corto que
 // se le manda por WhatsApp para canjear en el local.
 model MenuLead {
-  id         String    @id @default(cuid())
-  tenantId   String
-  name       String
-  email      String
-  phone      String
-  claimCode  String    @unique
-  redeemedAt DateTime?
-  createdAt  DateTime  @default(now())
+  id           String    @id @default(cuid())
+  tenantId     String
+  name         String
+  email        String
+  phone        String
+  claimCode    String    @unique
+  redeemedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  // Identificador guardado en el dispositivo de quien reclama — evita
+  // que la misma persona junte varios códigos rotando entre correos
+  // inventados desde el mismo celular. Nulo en leads viejos, de antes
+  // de que existiera esto.
+  deviceToken  String?
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
+  @@index([tenantId, deviceToken])
   @@map("menu_leads")
 }
 
