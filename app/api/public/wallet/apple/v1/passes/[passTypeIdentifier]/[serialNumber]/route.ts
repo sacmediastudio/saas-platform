@@ -32,7 +32,7 @@ export async function GET(
     tenant
   );
 
-  return new NextResponse(buffer, {
+  return new NextResponse(buffer as any, {
     headers: {
       "Content-Type": "application/vnd.apple.pkpass",
       "Last-Modified": card.updatedAt.toUTCString(),

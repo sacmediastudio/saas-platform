@@ -32,7 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: { cardId: str
     tenant
   );
 
-  return new NextResponse(buffer, {
+  return new NextResponse(buffer as any, {
     headers: {
       "Content-Type": "application/vnd.apple.pkpass",
       "Content-Disposition": `attachment; filename="${tenant.name.replace(/[^a-zA-Z0-9]/g, "")}.pkpass"`,
