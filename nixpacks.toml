@@ -1,0 +1,14 @@
+[phases.setup]
+# Sin esto, el servidor no tiene NINGUNA fuente instalada — y cuando
+# sharp (por dentro, usa librsvg/Pango) intenta convertir a PNG un SVG
+# que contiene texto, sin una fuente real disponible, el resultado es
+# texto roto o directamente rectángulos vacíos en su lugar. Esto NO
+# tiene que ver con el diseño en sí (posiciones, tamaños, colores) —
+# es la causa técnica real de que el pase de Apple Wallet se vea mal,
+# encontrada después de varios intentos de ajuste que no daban en el
+# clavo por estar atacando el síntoma equivocado.
+#
+# dejavu_fonts: familia de fuentes libre y completa (cubre latín,
+# griego, cirílico, etc.), elegida específicamente porque es la
+# recomendada para este tipo de renderizado del lado del servidor.
+nixPkgs = ["fontconfig", "dejavu_fonts"]

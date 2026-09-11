@@ -1358,6 +1358,28 @@ una sesión anterior) — no partía de cero. Se agregaron 2 capas más:
   Postre gratis → Ajustes, para que cada negocio elija su propio
   número según su presupuesto.
 
+## La causa real de que el pase se viera mal: faltaban fuentes en el servidor
+
+Después de varios intentos de ajustar posiciones y proporciones sin
+que el usuario viera mejoras, se encontró la causa de fondo: **el
+servidor de Railway no tiene ninguna fuente de texto instalada**. El
+código genera el diseño del pase como un SVG con texto (nombre del
+negocio, "te faltan X sellos"), que después se convierte a imagen —
+pero esa conversión, por dentro, usa una librería (`librsvg`/Pango)
+que necesita una fuente real disponible en el sistema para dibujar
+las letras. Sin eso, el texto sale roto o como rectángulos vacíos,
+sin importar qué tan bien esté calculado el resto del diseño — se
+estaba atacando el síntoma equivocado en los intentos anteriores.
+
+**El arreglo**: `nixpacks.toml` en la raíz del proyecto, un archivo
+de configuración que le dice a Railway qué paquetes de sistema
+instalar además de Node.js. Se agregó `fontconfig` (el sistema que
+permite que las aplicaciones encuentren fuentes instaladas) y
+`dejavu_fonts` (una familia de fuentes libre y completa). El SVG que
+genera el pase ahora pide específicamente "DejaVu Sans" en vez de
+"Helvetica, Arial, sans-serif" — nombres que probablemente nunca
+existieron en el servidor.
+
 ## Rediseño visual del pase de Apple Wallet
 
 El usuario probó el pase en su propio iPhone y no le gustó el

@@ -96,10 +96,10 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <rect width="${width}" height="${height}" fill="${content.backgroundColorHex}" />
-      <text x="${width - 36 * scale}" y="${100 * scale}" text-anchor="end" font-family="Helvetica, Arial, sans-serif"
+      <text x="${width - 36 * scale}" y="${100 * scale}" text-anchor="end" font-family="DejaVu Sans"
             font-size="${52 * scale}" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
       ${stampIcons}
-      <text x="${width / 2}" y="${320 * scale}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+      <text x="${width / 2}" y="${320 * scale}" text-anchor="middle" font-family="DejaVu Sans"
             font-size="${34 * scale}" fill="${content.textColorHex}" opacity="0.85">${escapeXml(content.remainingLabel)}</text>
     </svg>
   `;
