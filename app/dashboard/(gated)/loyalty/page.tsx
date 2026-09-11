@@ -6,7 +6,13 @@ export default async function LoyaltyPage() {
   const session = await requireTenant();
   const tenant = await db.tenant.findUnique({
     where: { id: session.tenantId },
-    select: { loyaltyEnabled: true, loyaltyVisitsNeeded: true, loyaltyReward: true, slug: true },
+    select: {
+      loyaltyEnabled: true,
+      loyaltyVisitsNeeded: true,
+      loyaltyReward: true,
+      walletLogoUrl: true,
+      slug: true,
+    },
   });
   const cards = await db.loyaltyCard.findMany({
     where: { tenantId: session.tenantId },
@@ -18,6 +24,7 @@ export default async function LoyaltyPage() {
       initialEnabled={tenant?.loyaltyEnabled ?? false}
       initialVisitsNeeded={tenant?.loyaltyVisitsNeeded ?? 6}
       initialReward={tenant?.loyaltyReward ?? "Tu próxima visita es gratis"}
+      initialWalletLogoUrl={tenant?.walletLogoUrl ?? null}
       slug={tenant?.slug ?? ""}
       initialCards={cards}
     />

@@ -1358,6 +1358,48 @@ una sesión anterior) — no partía de cero. Se agregaron 2 capas más:
   Postre gratis → Ajustes, para que cada negocio elija su propio
   número según su presupuesto.
 
+## Rediseño visual del pase de Apple Wallet
+
+El usuario probó el pase en su propio iPhone y no le gustó el
+resultado visual — el logo se veía en un cuadro blanco pegado en una
+esquina, y el texto se sentía desordenado. Pidió: logo propio con
+transparencia real, sellos como íconos que se llenan (igual que en la
+web), nombre del negocio en negrita alineado a la derecha, y un texto
+debajo indicando cuántos sellos faltan.
+
+**El cambio de enfoque**: los campos de texto que ofrece Apple
+(`primaryFields`, `secondaryFields`) no permiten elegir negrita,
+alineación, ni dibujar íconos — son simples pares de etiqueta/valor
+con un estilo fijo que decide el propio sistema operativo. Para tener
+control real sobre el diseño, `lib/apple-wallet.ts` ahora **compone
+todo el diseño visible a mano, como una sola imagen**: se arma un SVG
+con el logo, el nombre en negrita a la derecha, los sellos como
+círculos llenos/vacíos, y el texto de cuántos faltan — y ESO se
+convierte a PNG (usando `sharp`, que sabe renderizar SVG) para
+usarlo como el "strip" (la imagen ancha y visible del pase). Se
+compone una sola vez a la resolución más alta y se achica para las
+otras 2 densidades, para que las 3 coincidan exactas entre sí.
+
+Los campos de texto de Apple (`primaryFields`/`backFields`) se
+mantuvieron, pero ahora solo como respaldo de accesibilidad — lo que
+lee VoiceOver, no lo que ve la mayoría de la gente.
+
+**Campo nuevo**: `Tenant.walletLogoUrl` — separado del logo normal a
+propósito. El logo del dashboard/menú casi siempre tiene fondo blanco
+de fábrica; este campo es para que el negocio suba, si quiere, una
+versión en PNG con transparencia real, pensada específicamente para
+Wallet. Sin esto cargado, se sigue usando el logo normal como
+respaldo (con el mismo problema de fondo blanco que motivó este
+cambio, pero al menos ahora hay una salida para quien quiera
+solucionarlo del todo).
+
+**Una limitación que no pude resolver, y se lo dije así al usuario**:
+no hay forma de "quitarle" el fondo blanco a un logo que ya lo tiene
+— eso requeriría una herramienta de IA específica para remover
+fondos, que no está disponible en este entorno. El campo de logo
+dedicado es la solución real; sin cargarlo, el fondo blanco original
+va a seguir apareciendo.
+
 ## Sistema de sellos con toque de NFC + Apple/Google Wallet
 
 El usuario vio en otro restaurante un sistema de sellos con "tap para

@@ -33,6 +33,7 @@ interface LoyaltyCardData {
 interface TenantBrandData {
   name: string;
   logoUrl: string | null;
+  walletLogoUrl: string | null;
   buttonColor: string;
   themeTextColor: string;
   loyaltyVisitsNeeded: number;
@@ -50,17 +51,90 @@ function isApplePassConfigured(): boolean {
   );
 }
 
-// Genera las imágenes del pase — un ícono chico (obligatorio, uso
-// interno de Apple en notificaciones, nunca se ve prominente) y un
-// "strip" (el banner ancho que sí se ve, con el color de marca del
-// negocio de fondo y el logo compuesto arriba). Componer el logo
-// sobre un fondo SÓLIDO en vez de dejarlo suelto sobre transparencia
-// evita el problema del "cuadro blanco": si el logo original tiene su
-// propio fondo blanco, ese blanco va a quedar ahí de cualquier forma,
-// pero al menos queda dentro de un diseño intencional, no flotando
-// solo en una esquina.
-async function buildImageBuffers(logoUrl: string | null, brandColorHex: string): Promise<Record<string, Buffer>> {
-  const clean = brandColorHex.replace("#", "");
+function escapeXml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+}
+
+// Baja una imagen y la devuelve como "data URI" en base64, lista para
+// insertar directo dentro de un <image> de SVG — así el SVG queda
+// autocontenido, sin depender de que sharp salga a buscar la imagen
+// por su cuenta durante la conversión a PNG.
+async function fetchAsDataUri(url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const buffer = Buffer.from(await res.arrayBuffer());
+    const contentType = res.headers.get("content-type") || "image/png";
+    return `data:${contentType};base64,${buffer.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+interface StripContent {
+  tenantName: string;
+  logoUrl: string | null;
+  backgroundColorHex: string;
+  textColorHex: string;
+  stamps: number;
+  visitsNeeded: number;
+  remainingLabel: string;
+}
+
+// Compone TODO el diseño visible del pase como una sola imagen — en
+// vez de depender de los campos de texto de Apple (que no permiten
+// elegir negrita, alineación, ni dibujar íconos de sello reales), se
+// dibuja a mano con SVG: el logo, el nombre del negocio en negrita a
+// la derecha, los sellos como círculos llenos/vacíos (mismo criterio
+// visual que la versión web), y cuánto falta para el premio.
+// Se compone una sola vez a la resolución más alta (@3x) y se achica
+// para las otras 2 densidades, para que las 3 se vean idénticas entre
+// sí — dibujar 3 veces por separado arriesgaría que no coincidan.
+async function buildStripSvg(content: StripContent): Promise<Buffer> {
+  const W = 1125;
+  const H = 369;
+
+  const logoDataUri = content.logoUrl ? await fetchAsDataUri(content.logoUrl) : null;
+  const logoBlock = logoDataUri
+    ? `<image x="36" y="36" width="180" height="120" href="${logoDataUri}" preserveAspectRatio="xMidYMid meet" />`
+    : "";
+
+  // Los sellos van en una fila pareja, con margen a los costados —
+  // llenos (color de marca) para los que ya tiene, solo el contorno
+  // para los que faltan.
+  const maxIcons = Math.min(content.visitsNeeded, 12); // más de 12 en una fila se vería amontonado
+  const sideMargin = 80;
+  const usableWidth = W - sideMargin * 2;
+  const spacing = usableWidth / maxIcons;
+  const radius = Math.min(spacing * 0.32, 46);
+  const iconsY = 210;
+
+  let stampIcons = "";
+  for (let i = 0; i < maxIcons; i++) {
+    const cx = sideMargin + spacing * (i + 0.5);
+    const filled = i < content.stamps;
+    stampIcons += filled
+      ? `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="${content.textColorHex}" />`
+      : `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="none" stroke="${content.textColorHex}" stroke-width="4" opacity="0.4" />`;
+  }
+
+  const svg = `
+    <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${W}" height="${H}" fill="${content.backgroundColorHex}" />
+      ${logoBlock}
+      <text x="${W - 36}" y="100" text-anchor="end" font-family="Helvetica, Arial, sans-serif"
+            font-size="52" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
+      ${stampIcons}
+      <text x="${W / 2}" y="320" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="34" fill="${content.textColorHex}" opacity="0.85">${escapeXml(content.remainingLabel)}</text>
+    </svg>
+  `;
+
+  return sharp(Buffer.from(svg)).png().toBuffer();
+}
+
+async function buildImageBuffers(content: StripContent): Promise<Record<string, Buffer>> {
+  const clean = content.backgroundColorHex.replace("#", "");
   const bg = {
     r: parseInt(clean.substring(0, 2), 16),
     g: parseInt(clean.substring(2, 4), 16),
@@ -68,32 +142,16 @@ async function buildImageBuffers(logoUrl: string | null, brandColorHex: string):
     alpha: 1,
   };
 
-  async function buildStrip(width: number, height: number): Promise<Buffer> {
-    const base = sharp({ create: { width, height, channels: 4, background: bg } });
-    if (!logoUrl) return base.png().toBuffer();
-    try {
-      const res = await fetch(logoUrl);
-      if (!res.ok) return base.png().toBuffer();
-      const original = Buffer.from(await res.arrayBuffer());
-      // El logo ocupa como el 55% de la altura del banner, centrado —
-      // deja aire arriba y abajo en vez de estirarse de punta a punta.
-      const logoHeight = Math.round(height * 0.55);
-      const logo = await sharp(original)
-        .resize({ height: logoHeight, fit: "inside", withoutEnlargement: true })
-        .toBuffer();
-      const logoMeta = await sharp(logo).metadata();
-      const left = Math.max(0, Math.round((width - (logoMeta.width ?? 0)) / 2));
-      const top = Math.round((height - logoHeight) / 2);
-      return base.composite([{ input: logo, left, top }]).png().toBuffer();
-    } catch {
-      return base.png().toBuffer();
-    }
-  }
+  const strip3x = await buildStripSvg(content);
+  const [strip1x, strip2x] = await Promise.all([
+    sharp(strip3x).resize(375, 123).png().toBuffer(),
+    sharp(strip3x).resize(750, 246).png().toBuffer(),
+  ]);
 
   async function buildIcon(size: number): Promise<Buffer> {
-    if (!logoUrl) return sharp({ create: { width: size, height: size, channels: 4, background: bg } }).png().toBuffer();
+    if (!content.logoUrl) return sharp({ create: { width: size, height: size, channels: 4, background: bg } }).png().toBuffer();
     try {
-      const res = await fetch(logoUrl);
+      const res = await fetch(content.logoUrl);
       if (!res.ok) throw new Error("logo no disponible");
       const original = Buffer.from(await res.arrayBuffer());
       return sharp(original).resize(size, size, { fit: "cover" }).png().toBuffer();
@@ -102,14 +160,7 @@ async function buildImageBuffers(logoUrl: string | null, brandColorHex: string):
     }
   }
 
-  const [strip1x, strip2x, strip3x, icon1x, icon2x, icon3x] = await Promise.all([
-    buildStrip(375, 123),
-    buildStrip(750, 246),
-    buildStrip(1125, 369),
-    buildIcon(29),
-    buildIcon(58),
-    buildIcon(87),
-  ]);
+  const [icon1x, icon2x, icon3x] = await Promise.all([buildIcon(29), buildIcon(58), buildIcon(87)]);
 
   return {
     "strip.png": strip1x,
@@ -130,7 +181,21 @@ export async function generateLoyaltyPass(card: LoyaltyCardData, tenant: TenantB
   const signerCert = Buffer.from(process.env.APPLE_PASS_SIGNER_CERT_BASE64!, "base64");
   const signerKey = Buffer.from(process.env.APPLE_PASS_SIGNER_KEY_BASE64!, "base64");
 
-  const imageBuffers = await buildImageBuffers(tenant.logoUrl, tenant.buttonColor);
+  const remaining = Math.max(tenant.loyaltyVisitsNeeded - card.stamps, 0);
+  const remainingLabel =
+    remaining === 0
+      ? "¡Completaste tus sellos!"
+      : `Te ${remaining === 1 ? "falta" : "faltan"} ${remaining} ${remaining === 1 ? "sello" : "sellos"} más`;
+
+  const imageBuffers = await buildImageBuffers({
+    tenantName: tenant.name,
+    logoUrl: tenant.walletLogoUrl || tenant.logoUrl,
+    backgroundColorHex: tenant.buttonColor,
+    textColorHex: tenant.themeTextColor,
+    stamps: card.stamps,
+    visitsNeeded: tenant.loyaltyVisitsNeeded,
+    remainingLabel,
+  });
 
   const passJson = {
     formatVersion: 1,
@@ -145,6 +210,10 @@ export async function generateLoyaltyPass(card: LoyaltyCardData, tenant: TenantB
     backgroundColor: hexToRgb(tenant.buttonColor),
     barcodes: [{ message: card.id, format: "PKBarcodeFormatQR", messageEncoding: "iso-8859-1" }],
     storeCard: {
+      // El diseño visible en sí ya está compuesto en el strip.png —
+      // este campo queda solo como respaldo de accesibilidad (lo que
+      // lee VoiceOver, y lo que se ve en vistas compactas donde Apple
+      // no muestra la imagen del strip).
       primaryFields: [
         {
           key: "stamps",

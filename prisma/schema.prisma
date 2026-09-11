@@ -71,6 +71,14 @@ model Tenant {
 
   // Perfil público del negocio (usado en /menu/[slug] y /book/[slug])
   logoUrl       String?
+  // Logo dedicado para los pases de Apple/Google Wallet — separado
+  // del logo normal a propósito. El logo del dashboard/menú casi
+  // siempre tiene fondo blanco de fábrica, y sobre el color de marca
+  // del pase eso se ve como un cuadro pegado encima; acá el negocio
+  // puede subir una versión en PNG con transparencia de verdad,
+  // pensada específicamente para este uso. Si no la carga, se sigue
+  // usando el logo normal como respaldo.
+  walletLogoUrl String?
   heroImageUrl  String?
   heroTagline   String?
   // Solo aplica al módulo de Menú: si se muestra la foto de cada plato

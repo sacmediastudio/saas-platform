@@ -18,6 +18,7 @@ export async function GET(
     select: {
       name: true,
       logoUrl: true,
+      walletLogoUrl: true,
       buttonColor: true,
       themeTextColor: true,
       loyaltyEnabled: true,

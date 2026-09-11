@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Stamp, Gift, Check } from "lucide-react";
+import { Stamp, Gift, Check, Upload } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import { uploadImage } from "@/lib/upload-image";
 
 interface Card {
   id: string;
@@ -17,12 +18,14 @@ export default function LoyaltyView({
   initialEnabled,
   initialVisitsNeeded,
   initialReward,
+  initialWalletLogoUrl,
   slug,
   initialCards,
 }: {
   initialEnabled: boolean;
   initialVisitsNeeded: number;
   initialReward: string;
+  initialWalletLogoUrl: string | null;
   slug: string;
   initialCards: Card[];
 }) {
@@ -30,10 +33,25 @@ export default function LoyaltyView({
   const [enabled, setEnabled] = useState(initialEnabled);
   const [visitsNeeded, setVisitsNeeded] = useState(initialVisitsNeeded);
   const [reward, setReward] = useState(initialReward);
+  const [walletLogoUrl, setWalletLogoUrl] = useState(initialWalletLogoUrl);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
   const [cards, setCards] = useState(initialCards);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [redeeming, setRedeeming] = useState<string | null>(null);
+
+  async function handleWalletLogoUpload(file: File) {
+    setUploadingLogo(true);
+    try {
+      const publicUrl = await uploadImage(file, 400);
+      setWalletLogoUrl(publicUrl);
+    } catch {
+      // Si falla, se queda con el logo anterior (o sin ninguno) — no
+      // bloquea el resto de la pantalla por esto.
+    } finally {
+      setUploadingLogo(false);
+    }
+  }
 
   const publicUrl = typeof window !== "undefined" ? `${window.location.origin}/loyalty/${slug}` : `/loyalty/${slug}`;
 
@@ -43,7 +61,7 @@ export default function LoyaltyView({
     const res = await fetch("/api/tenant/loyalty", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ enabled, visitsNeeded, reward }),
+      body: JSON.stringify({ enabled, visitsNeeded, reward, walletLogoUrl }),
     });
     if (res.ok) {
       setSaved(true);
@@ -104,6 +122,36 @@ export default function LoyaltyView({
                 className="flex-1 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-1.5 text-sm outline-none"
               />
             </label>
+
+            <div className="flex items-start gap-3 mb-4">
+              <span className="text-sm w-40 shrink-0 pt-1.5">{t.loyalty.walletLogo}</span>
+              <div className="flex-1 flex items-center gap-3">
+                {walletLogoUrl && (
+                  <div
+                    className="w-14 h-14 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: "#e5e5e5" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={walletLogoUrl} alt="" className="max-w-full max-h-full object-contain" />
+                  </div>
+                )}
+                <div>
+                  <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer inline-block">
+                    {uploadingLogo ? t.loyalty.uploadingLogo : t.loyalty.uploadWalletLogo}
+                    <input
+                      type="file"
+                      accept="image/png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleWalletLogoUpload(file);
+                      }}
+                    />
+                  </label>
+                  <p className="text-xs text-[#343233]/50 mt-1 max-w-xs">{t.loyalty.walletLogoHint}</p>
+                </div>
+              </div>
+            </div>
 
             <div className="flex items-center gap-2 bg-[#F7F8F4] rounded-lg px-3 py-2 mb-4">
               <span className="text-sm text-[#002D09] truncate flex-1">{publicUrl}</span>
