@@ -55,22 +55,6 @@ function escapeXml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
 }
 
-// Baja una imagen y la devuelve como "data URI" en base64, lista para
-// insertar directo dentro de un <image> de SVG — así el SVG queda
-// autocontenido, sin depender de que sharp salga a buscar la imagen
-// por su cuenta durante la conversión a PNG.
-async function fetchAsDataUri(url: string): Promise<string | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const buffer = Buffer.from(await res.arrayBuffer());
-    const contentType = res.headers.get("content-type") || "image/png";
-    return `data:${contentType};base64,${buffer.toString("base64")}`;
-  } catch {
-    return null;
-  }
-}
-
 interface StripContent {
   tenantName: string;
   logoUrl: string | null;
@@ -81,33 +65,24 @@ interface StripContent {
   remainingLabel: string;
 }
 
-// Compone TODO el diseño visible del pase como una sola imagen — en
-// vez de depender de los campos de texto de Apple (que no permiten
-// elegir negrita, alineación, ni dibujar íconos de sello reales), se
-// dibuja a mano con SVG: el logo, el nombre del negocio en negrita a
-// la derecha, los sellos como círculos llenos/vacíos (mismo criterio
-// visual que la versión web), y cuánto falta para el premio.
-// Se compone una sola vez a la resolución más alta (@3x) y se achica
-// para las otras 2 densidades, para que las 3 se vean idénticas entre
-// sí — dibujar 3 veces por separado arriesgaría que no coincidan.
-async function buildStripSvg(content: StripContent): Promise<Buffer> {
-  const W = 1125;
-  const H = 369;
+// Fondo, nombre del negocio y sellos — TODO lo que se puede dibujar
+// con formas y texto plano. El logo se deja afuera a propósito: antes
+// se insertaba como imagen incrustada dentro del propio texto del
+// SVG, y ese camino (SVG → PNG vía librsvg, la librería que usa sharp
+// por dentro) no respeta bien la transparencia de imágenes
+// incrustadas así — el resultado terminaba con fondo negro en vez de
+// transparente. Componer el logo aparte, con sharp.composite(),
+// evita ese problema de raíz porque usa un camino distinto que sí
+// respeta el canal alfa correctamente.
+function buildBaseSvg(content: StripContent, width: number, height: number): Buffer {
+  const scale = width / 1125; // todas las medidas están pensadas para el ancho @3x, y se escalan para 1x/2x
 
-  const logoDataUri = content.logoUrl ? await fetchAsDataUri(content.logoUrl) : null;
-  const logoBlock = logoDataUri
-    ? `<image x="36" y="36" width="180" height="120" href="${logoDataUri}" preserveAspectRatio="xMidYMid meet" />`
-    : "";
-
-  // Los sellos van en una fila pareja, con margen a los costados —
-  // llenos (color de marca) para los que ya tiene, solo el contorno
-  // para los que faltan.
   const maxIcons = Math.min(content.visitsNeeded, 12); // más de 12 en una fila se vería amontonado
-  const sideMargin = 80;
-  const usableWidth = W - sideMargin * 2;
+  const sideMargin = 80 * scale;
+  const usableWidth = width - sideMargin * 2;
   const spacing = usableWidth / maxIcons;
-  const radius = Math.min(spacing * 0.32, 46);
-  const iconsY = 210;
+  const radius = Math.min(spacing * 0.32, 46 * scale);
+  const iconsY = 210 * scale;
 
   let stampIcons = "";
   for (let i = 0; i < maxIcons; i++) {
@@ -115,22 +90,56 @@ async function buildStripSvg(content: StripContent): Promise<Buffer> {
     const filled = i < content.stamps;
     stampIcons += filled
       ? `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="${content.textColorHex}" />`
-      : `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="none" stroke="${content.textColorHex}" stroke-width="4" opacity="0.4" />`;
+      : `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="none" stroke="${content.textColorHex}" stroke-width="${4 * scale}" opacity="0.4" />`;
   }
 
   const svg = `
-    <svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${W}" height="${H}" fill="${content.backgroundColorHex}" />
-      ${logoBlock}
-      <text x="${W - 36}" y="100" text-anchor="end" font-family="Helvetica, Arial, sans-serif"
-            font-size="52" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
+    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${width}" height="${height}" fill="${content.backgroundColorHex}" />
+      <text x="${width - 36 * scale}" y="${100 * scale}" text-anchor="end" font-family="Helvetica, Arial, sans-serif"
+            font-size="${52 * scale}" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
       ${stampIcons}
-      <text x="${W / 2}" y="320" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
-            font-size="34" fill="${content.textColorHex}" opacity="0.85">${escapeXml(content.remainingLabel)}</text>
+      <text x="${width / 2}" y="${320 * scale}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif"
+            font-size="${34 * scale}" fill="${content.textColorHex}" opacity="0.85">${escapeXml(content.remainingLabel)}</text>
     </svg>
   `;
 
-  return sharp(Buffer.from(svg)).png().toBuffer();
+  return Buffer.from(svg);
+}
+
+// Baja el logo UNA sola vez a su tamaño natural, respetando su propia
+// transparencia — se reutiliza para las 3 densidades, redimensionando
+// nada más que el tamaño final de composición en cada una.
+async function fetchLogoBuffer(logoUrl: string): Promise<Buffer | null> {
+  try {
+    const res = await fetch(logoUrl);
+    if (!res.ok) return null;
+    return Buffer.from(await res.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+async function buildStrip(content: StripContent, width: number, height: number, logo: Buffer | null): Promise<Buffer> {
+  const base = sharp(buildBaseSvg(content, width, height));
+  if (!logo) return base.png().toBuffer();
+
+  const scale = width / 1125;
+  const logoWidth = Math.round(180 * scale);
+  const logoHeight = Math.round(120 * scale);
+  const left = Math.round(36 * scale);
+  const top = Math.round(36 * scale);
+
+  try {
+    const resizedLogo = await sharp(logo)
+      .resize({ width: logoWidth, height: logoHeight, fit: "inside", withoutEnlargement: true })
+      .toBuffer();
+    return base.composite([{ input: resizedLogo, left, top }]).png().toBuffer();
+  } catch {
+    // Si el logo no se puede procesar (formato raro, corrupto, etc.),
+    // el pase igual se genera sin él — mejor sin logo que sin pase.
+    return base.png().toBuffer();
+  }
 }
 
 async function buildImageBuffers(content: StripContent): Promise<Record<string, Buffer>> {
@@ -142,19 +151,18 @@ async function buildImageBuffers(content: StripContent): Promise<Record<string, 
     alpha: 1,
   };
 
-  const strip3x = await buildStripSvg(content);
-  const [strip1x, strip2x] = await Promise.all([
-    sharp(strip3x).resize(375, 123).png().toBuffer(),
-    sharp(strip3x).resize(750, 246).png().toBuffer(),
+  const logo = content.logoUrl ? await fetchLogoBuffer(content.logoUrl) : null;
+
+  const [strip1x, strip2x, strip3x] = await Promise.all([
+    buildStrip(content, 375, 123, logo),
+    buildStrip(content, 750, 246, logo),
+    buildStrip(content, 1125, 369, logo),
   ]);
 
   async function buildIcon(size: number): Promise<Buffer> {
-    if (!content.logoUrl) return sharp({ create: { width: size, height: size, channels: 4, background: bg } }).png().toBuffer();
+    if (!logo) return sharp({ create: { width: size, height: size, channels: 4, background: bg } }).png().toBuffer();
     try {
-      const res = await fetch(content.logoUrl);
-      if (!res.ok) throw new Error("logo no disponible");
-      const original = Buffer.from(await res.arrayBuffer());
-      return sharp(original).resize(size, size, { fit: "cover" }).png().toBuffer();
+      return sharp(logo).resize(size, size, { fit: "cover" }).png().toBuffer();
     } catch {
       return sharp({ create: { width: size, height: size, channels: 4, background: bg } }).png().toBuffer();
     }
