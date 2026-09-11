@@ -65,6 +65,16 @@ interface StripContent {
   remainingLabel: string;
 }
 
+// El "check" de cada sello se dibuja como 3 segmentos relativos al
+// radio del círculo, en vez de un ícono de fuente — así no depende
+// para nada de qué fuentes/emoji estén instalados en el servidor.
+function checkmarkPath(cx: number, cy: number, r: number): string {
+  const x1 = cx - r * 0.5, y1 = cy + r * 0.02;
+  const x2 = cx - r * 0.12, y2 = cy + r * 0.38;
+  const x3 = cx + r * 0.55, y3 = cy - r * 0.32;
+  return `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3}`;
+}
+
 // Fondo, nombre del negocio y sellos — TODO lo que se puede dibujar
 // con formas y texto plano. El logo se deja afuera a propósito: antes
 // se insertaba como imagen incrustada dentro del propio texto del
@@ -74,37 +84,99 @@ interface StripContent {
 // transparente. Componer el logo aparte, con sharp.composite(),
 // evita ese problema de raíz porque usa un camino distinto que sí
 // respeta el canal alfa correctamente.
+//
+// Distribución (logo circular arriba a la izquierda, nombre arriba a
+// la derecha, sellos en una grilla de hasta 5 columnas por fila, y el
+// texto de "cuántos faltan" debajo) sigue el layout de referencia del
+// diseño aprobado — adaptado al aspect ratio real y angosto que Apple
+// exige para el "strip" de un storeCard (~375x123pt @1x), que es
+// mucho más bajo que un mockup cuadrado. Verificado renderizando con
+// sharp/librsvg + DejaVu Sans localmente antes de este cambio.
 function buildBaseSvg(content: StripContent, width: number, height: number): Buffer {
   const scale = width / 1125; // todas las medidas están pensadas para el ancho @3x, y se escalan para 1x/2x
 
-  const maxIcons = Math.min(content.visitsNeeded, 12); // más de 12 en una fila se vería amontonado
-  const sideMargin = 80 * scale;
+  const sideMargin = 60 * scale;
   const usableWidth = width - sideMargin * 2;
-  const spacing = usableWidth / maxIcons;
-  const radius = Math.min(spacing * 0.32, 46 * scale);
-  const iconsY = 210 * scale;
+
+  const logoDiameter = 112 * scale;
+  const logoLeft = 45 * scale;
+  const logoTop = 24 * scale;
+  const logoCenterY = logoTop + logoDiameter / 2;
+
+  // Nombre del negocio, alineado verticalmente con el logo. El
+  // tamaño se reduce para nombres largos para que el texto nunca
+  // invada el círculo del logo (con el tamaño fijo anterior, un
+  // nombre largo se dibujaba literalmente encima del logo).
+  const baseNameFontSize = 50 * scale;
+  const minNameFontSize = 26 * scale;
+  const nameLeftBoundary = logoLeft + logoDiameter + 24 * scale;
+  const maxNameWidth = width - sideMargin - nameLeftBoundary;
+  const avgCharWidthFactor = 0.58; // aproximación para DejaVu Sans Bold
+  const nameLen = Math.max(content.tenantName.length, 1);
+  const nameFontSize = Math.max(
+    minNameFontSize,
+    Math.min(baseNameFontSize, maxNameWidth / (nameLen * avgCharWidthFactor))
+  );
+  const nameY = logoCenterY + nameFontSize * 0.35;
+
+  // Grilla de sellos: hasta 5 columnas por fila, tantas filas como
+  // hagan falta (antes todo iba en una sola fila apretada). Si la
+  // última fila queda incompleta, se centra en vez de quedar pegada
+  // a la izquierda.
+  const total = Math.min(content.visitsNeeded, 12); // más de 12 sellos ya no entra con un tamaño legible
+  const columns = Math.min(total, 5);
+  const rows = Math.ceil(total / columns);
+  const colSpacing = usableWidth / columns;
+  const iconRadius = Math.min(colSpacing * 0.26, 29 * scale);
+  const rowSpacing = iconRadius * 2.25;
+  const gridTop = logoTop + logoDiameter + 18 * scale;
+  const firstRowCenterY = gridTop + iconRadius;
 
   let stampIcons = "";
-  for (let i = 0; i < maxIcons; i++) {
-    const cx = sideMargin + spacing * (i + 0.5);
+  for (let i = 0; i < total; i++) {
+    const row = Math.floor(i / columns);
+    const col = i % columns;
+    const itemsInRow = row === rows - 1 ? total - columns * (rows - 1) : columns;
+    const rowOffset = (usableWidth - itemsInRow * colSpacing) / 2;
+    const cx = sideMargin + rowOffset + colSpacing * (col + 0.5);
+    const cy = firstRowCenterY + rowSpacing * row;
     const filled = i < content.stamps;
-    stampIcons += filled
-      ? `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="${content.textColorHex}" />`
-      : `<circle cx="${cx}" cy="${iconsY}" r="${radius}" fill="none" stroke="${content.textColorHex}" stroke-width="${4 * scale}" opacity="0.4" />`;
+
+    if (filled) {
+      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${content.textColorHex}" stroke-width="${4 * scale}" />`;
+      stampIcons += `<path d="${checkmarkPath(cx, cy, iconRadius)}" fill="none" stroke="${content.textColorHex}" stroke-width="${5 * scale}" stroke-linecap="round" stroke-linejoin="round" />`;
+    } else {
+      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${content.textColorHex}" stroke-width="${3.5 * scale}" opacity="0.35" />`;
+    }
   }
+
+  const lastRowBottom = firstRowCenterY + rowSpacing * (rows - 1) + iconRadius;
+  const labelFontSize = 27 * scale;
+  const labelY = Math.min(lastRowBottom + labelFontSize * 1.25, height - 16 * scale);
 
   const svg = `
     <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
       <rect width="${width}" height="${height}" fill="${content.backgroundColorHex}" />
-      <text x="${width - 36 * scale}" y="${100 * scale}" text-anchor="end" font-family="DejaVu Sans"
-            font-size="${52 * scale}" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
+      <text x="${width - sideMargin}" y="${nameY}" text-anchor="end" font-family="DejaVu Sans"
+            font-size="${nameFontSize}" font-weight="bold" fill="${content.textColorHex}">${escapeXml(content.tenantName)}</text>
       ${stampIcons}
-      <text x="${width / 2}" y="${320 * scale}" text-anchor="middle" font-family="DejaVu Sans"
-            font-size="${34 * scale}" fill="${content.textColorHex}" opacity="0.85">${escapeXml(content.remainingLabel)}</text>
+      <text x="${width / 2}" y="${labelY}" text-anchor="middle" font-family="DejaVu Sans"
+            font-size="${labelFontSize}" font-weight="bold" fill="${content.textColorHex}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
     </svg>
   `;
 
   return Buffer.from(svg);
+}
+
+// Recorta el logo a un círculo (coincide con el badge circular del
+// diseño de referencia). Se hace con una máscara SVG + blend
+// "dest-in" en vez de border-radius CSS porque estamos component-
+// iendo con sharp directamente, no en un navegador.
+async function circularLogo(logo: Buffer, diameter: number): Promise<Buffer> {
+  const size = Math.round(diameter);
+  const resized = await sharp(logo).resize(size, size, { fit: "cover" }).toBuffer();
+  const mask = Buffer.from(`<svg><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="#fff"/></svg>`);
+  return sharp(resized).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
 }
 
 // Baja el logo UNA sola vez a su tamaño natural, respetando su propia
@@ -124,17 +196,18 @@ async function buildStrip(content: StripContent, width: number, height: number, 
   const base = sharp(buildBaseSvg(content, width, height));
   if (!logo) return base.png().toBuffer();
 
+  // Estas medidas tienen que coincidir exactamente con logoDiameter/
+  // logoLeft/logoTop usadas dentro de buildBaseSvg para el layout del
+  // nombre del negocio (si se desalinean, el nombre queda calculado
+  // para un logo que no es el que termina componiéndose).
   const scale = width / 1125;
-  const logoWidth = Math.round(180 * scale);
-  const logoHeight = Math.round(120 * scale);
-  const left = Math.round(36 * scale);
-  const top = Math.round(36 * scale);
+  const logoDiameter = 112 * scale;
+  const left = Math.round(45 * scale);
+  const top = Math.round(24 * scale);
 
   try {
-    const resizedLogo = await sharp(logo)
-      .resize({ width: logoWidth, height: logoHeight, fit: "inside", withoutEnlargement: true })
-      .toBuffer();
-    return base.composite([{ input: resizedLogo, left, top }]).png().toBuffer();
+    const circular = await circularLogo(logo, logoDiameter);
+    return base.composite([{ input: circular, left, top }]).png().toBuffer();
   } catch {
     // Si el logo no se puede procesar (formato raro, corrupto, etc.),
     // el pase igual se genera sin él — mejor sin logo que sin pase.
@@ -222,7 +295,16 @@ export async function generateLoyaltyPass(card: LoyaltyCardData, tenant: TenantB
       // este campo queda solo como respaldo de accesibilidad (lo que
       // lee VoiceOver, y lo que se ve en vistas compactas donde Apple
       // no muestra la imagen del strip).
-      primaryFields: [
+      //
+      // Va en secondaryFields y NO en primaryFields a propósito: en
+      // un storeCard, Apple dibuja los primaryFields como texto
+      // grande SUPERPUESTO sobre la propia imagen del strip (así se
+      // veía el "1/10" + "SELLOS" enorme tapando el diseño en la
+      // captura reportada). Los secondaryFields, en cambio, se
+      // muestran en una fila aparte debajo del strip, sin pisar el
+      // diseño — logran el mismo respaldo de accesibilidad sin
+      // duplicar visualmente lo que el strip ya muestra.
+      secondaryFields: [
         {
           key: "stamps",
           label: "SELLOS",

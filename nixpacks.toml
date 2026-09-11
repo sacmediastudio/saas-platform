@@ -2,13 +2,25 @@
 # Sin esto, el servidor no tiene NINGUNA fuente instalada — y cuando
 # sharp (por dentro, usa librsvg/Pango) intenta convertir a PNG un SVG
 # que contiene texto, sin una fuente real disponible, el resultado es
-# texto roto o directamente rectángulos vacíos en su lugar. Esto NO
-# tiene que ver con el diseño en sí (posiciones, tamaños, colores) —
-# es la causa técnica real de que el pase de Apple Wallet se vea mal,
-# encontrada después de varios intentos de ajuste que no daban en el
-# clavo por estar atacando el síntoma equivocado.
+# texto roto o directamente rectángulos vacíos en su lugar (los
+# cuadritos "tofu" que se ven en la captura). Esto NO tiene que ver
+# con el diseño en sí (posiciones, tamaños, colores) — es la causa
+# técnica real de que el pase de Apple Wallet se vea mal.
 #
-# dejavu_fonts: familia de fuentes libre y completa (cubre latín,
-# griego, cirílico, etc.), elegida específicamente porque es la
-# recomendada para este tipo de renderizado del lado del servidor.
-nixPkgs = ["fontconfig", "dejavu_fonts"]
+# Antes esto estaba como nixPkgs = ["fontconfig", "dejavu_fonts"], y
+# el problema seguía sin resolverse: los paquetes de Nix quedan
+# instalados en el store, pero nada dispara la regeneración del cache
+# de fontconfig (fc-cache) para que Pango/librsvg los vea en tiempo de
+# ejecución — a diferencia de un paquete .deb, instalar un paquete Nix
+# no corre ningún post-install hook. Cambiar a aptPkgs resuelve esto
+# de raíz: dpkg SÍ corre fc-cache automáticamente al instalar un
+# paquete de fuentes, así que fontconfig las encuentra sin pasos
+# manuales extra.
+#
+# fonts-dejavu-core: familia de fuentes libre (cubre acentos y ñ del
+# español, y buena cobertura latina en general), la misma que ya se
+# usa por nombre ("DejaVu Sans") en lib/apple-wallet.ts.
+aptPkgs = ["fontconfig", "fonts-dejavu-core"]
+# Por si el hook de dpkg no alcanza a correr antes de la fase
+# siguiente, se fuerza la regeneración del cache explícitamente.
+cmds = ["fc-cache -f -v"]
