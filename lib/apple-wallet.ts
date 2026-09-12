@@ -130,7 +130,7 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   // angosto y ya está ajustado para que la grilla de sellos entre sin
   // pisar el texto de abajo.
   const marginX = 110 * scale;
-  const marginY = 45 * scale;
+  const marginY = 42 * scale;
   const tenantName = stripIllegalXmlChars(content.tenantName);
   const remainingLabel = stripIllegalXmlChars(content.remainingLabel);
 
@@ -156,22 +156,20 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   const nameY = logoCenterY + nameFontSize * 0.35;
   const namePath = textToPath(tenantName, nameX, nameY, nameFontSize).pathData;
 
-  // El alto del strip es angosto (~123pt @1x) y tiene que entrar
-  // TODO: logo, nombre, la grilla de sellos, y el texto de abajo. Con
-  // 2 filas hay bastante menos margen vertical que con 1 sola, así
-  // que el tope de tamaño del sello es distinto en cada caso — mejor
-  // aprovechar el espacio real disponible que usar el mismo tope fijo
-  // para los 2 casos (eso fue lo que causó que el texto de abajo
-  // quedara pisado por la segunda fila en un intento anterior).
+  // El tamaño del sello ahora es FIJO según la cantidad de filas (ya
+  // no depende de cuánto espacio quede por columna) — antes, al ir
+  // agregando sellos a una misma fila, colSpacing se reducía y con
+  // él el tamaño del ícono, dando la sensación de que "se achicaban"
+  // a medida que se sumaban más. Ahora el tamaño se mantiene
+  // constante, y lo que varía es el espacio entre columnas.
   const usableWidth = width - marginX * 2;
   const total = Math.max(Math.min(content.visitsNeeded, 14), 1); // más de 14 sellos ya no entra con un tamaño legible
   const rows = total <= 7 ? 1 : 2;
   const columns = Math.ceil(total / rows);
   const colSpacing = usableWidth / columns;
-  const maxRadiusByRows = rows === 1 ? 52 * scale : 25 * scale;
-  const iconRadius = Math.min(colSpacing * 0.32, maxRadiusByRows);
+  const iconRadius = rows === 1 ? 52 * scale : 25 * scale;
   const rowSpacing = iconRadius * 2.2;
-  const gridTop = logoTop + logoBoxHeight + 18 * scale;
+  const gridTop = logoTop + logoBoxHeight + 24 * scale;
   const firstRowCenterY = gridTop + iconRadius;
 
   let stampIcons = "";
@@ -307,7 +305,7 @@ async function buildStrip(content: StripContent, width: number, height: number, 
   // componiéndose).
   const scale = width / 1125;
   const marginX = 110 * scale;
-  const marginY = 45 * scale;
+  const marginY = 42 * scale;
   const logoBoxWidth = 280 * scale;
   const logoBoxHeight = 100 * scale;
 
