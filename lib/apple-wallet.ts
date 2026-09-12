@@ -224,8 +224,13 @@ async function circularLogo(logo: Buffer, diameter: number): Promise<Buffer> {
 // de los negocios, y no tiene nada que ver con el SVG que este mismo
 // archivo genera para el diseño del pase.
 function looksLikeSvg(buffer: Buffer): boolean {
-  const head = buffer.subarray(0, 256).toString("utf-8").trimStart().toLowerCase();
-  return head.startsWith("<svg") || head.startsWith("<?xml");
+  // No alcanza con mirar si el archivo EMPIEZA con "<svg" — muchos
+  // exportadores (Illustrator entre ellos) anteponen un comentario
+  // ("<!-- Generator: Adobe Illustrator ... -->") o un DOCTYPE antes
+  // de la etiqueta svg real. Se busca la marca en cualquier parte de
+  // los primeros bytes, no solo al principio exacto.
+  const head = buffer.subarray(0, 512).toString("utf-8").toLowerCase();
+  return head.includes("<svg") || head.includes("<?xml");
 }
 
 // Baja el logo UNA sola vez a su tamaño natural, respetando su propia
@@ -235,6 +240,9 @@ async function fetchLogoBuffer(logoUrl: string): Promise<Buffer | null> {
   try {
     const res = await fetch(logoUrl);
     if (!res.ok) return null;
+    // Chequeo barato antes de leer el archivo entero — si el propio
+    // servidor ya dice que es SVG, ni hace falta mirar el contenido.
+    if ((res.headers.get("content-type") || "").toLowerCase().includes("svg")) return null;
     const buffer = Buffer.from(await res.arrayBuffer());
     // Mejor un pase sin logo que un pase que ni se genera porque el
     // SVG subido tiene algún detalle que rompe el parser.
