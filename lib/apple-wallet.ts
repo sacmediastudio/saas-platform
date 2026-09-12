@@ -84,6 +84,16 @@ function sanitizeHexColor(color: string, fallback: string): string {
   return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : fallback;
 }
 
+// Números en JavaScript pueden convertirse a texto con precisión
+// excesiva (183.00000000000003) o notación científica para valores
+// muy chicos — nada de esto rompería XML por sí solo, pero como no se
+// pudo reproducir el error con los datos exactos que sí fallan en
+// producción, se redondea todo por las dudas: es una limpieza sin
+// costo real que descarta esa clase entera de sospechosos.
+function num(n: number): string {
+  return Number.isFinite(n) ? n.toFixed(2) : "0";
+}
+
 interface StripContent {
   tenantName: string;
   logoUrl: string | null;
@@ -101,7 +111,7 @@ function checkmarkPath(cx: number, cy: number, r: number): string {
   const x1 = cx - r * 0.5, y1 = cy + r * 0.02;
   const x2 = cx - r * 0.12, y2 = cy + r * 0.38;
   const x3 = cx + r * 0.55, y3 = cy - r * 0.32;
-  return `M ${x1} ${y1} L ${x2} ${y2} L ${x3} ${y3}`;
+  return `M ${num(x1)} ${num(y1)} L ${num(x2)} ${num(y2)} L ${num(x3)} ${num(y3)}`;
 }
 
 // Fondo, nombre del negocio y sellos — TODO lo que se puede dibujar
@@ -177,10 +187,10 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
     const filled = i < content.stamps;
 
     if (filled) {
-      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${textColor}" stroke-width="${4 * scale}" />`;
-      stampIcons += `<path d="${checkmarkPath(cx, cy, iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${5 * scale}" stroke-linecap="round" stroke-linejoin="round" />`;
+      stampIcons += `<circle cx="${num(cx)}" cy="${num(cy)}" r="${num(iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${num(4 * scale)}" />`;
+      stampIcons += `<path d="${checkmarkPath(cx, cy, iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${num(5 * scale)}" stroke-linecap="round" stroke-linejoin="round" />`;
     } else {
-      stampIcons += `<circle cx="${cx}" cy="${cy}" r="${iconRadius}" fill="none" stroke="${textColor}" stroke-width="${3.5 * scale}" opacity="0.35" />`;
+      stampIcons += `<circle cx="${num(cx)}" cy="${num(cy)}" r="${num(iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${num(3.5 * scale)}" opacity="0.35" />`;
     }
   }
 
@@ -189,13 +199,13 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   const labelY = Math.min(lastRowBottom + labelFontSize * 1.25, height - 16 * scale);
 
   const svg = `
-    <svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${width}" height="${height}" fill="${bgColor}" />
-      <text x="${width - sideMargin}" y="${nameY}" text-anchor="end" font-family="DejaVu Sans"
-            font-size="${nameFontSize}" font-weight="bold" fill="${textColor}">${escapeXml(content.tenantName)}</text>
+    <svg width="${num(width)}" height="${num(height)}" xmlns="http://www.w3.org/2000/svg">
+      <rect width="${num(width)}" height="${num(height)}" fill="${bgColor}" />
+      <text x="${num(width - sideMargin)}" y="${num(nameY)}" text-anchor="end" font-family="DejaVu Sans"
+            font-size="${num(nameFontSize)}" font-weight="bold" fill="${textColor}">${escapeXml(content.tenantName)}</text>
       ${stampIcons}
-      <text x="${width / 2}" y="${labelY}" text-anchor="middle" font-family="DejaVu Sans"
-            font-size="${labelFontSize}" font-weight="bold" fill="${textColor}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
+      <text x="${num(width / 2)}" y="${num(labelY)}" text-anchor="middle" font-family="DejaVu Sans"
+            font-size="${num(labelFontSize)}" font-weight="bold" fill="${textColor}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
     </svg>
   `;
 
@@ -260,7 +270,7 @@ async function fetchLogoBuffer(logoUrl: string): Promise<Buffer | null> {
 // se quede sin poder agregar su tarjeta a Wallet.
 function buildFallbackSvg(bgColorHex: string, width: number, height: number): Buffer {
   const bgColor = sanitizeHexColor(bgColorHex, "#E7FF00");
-  return Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${height}" fill="${bgColor}"/></svg>`);
+  return Buffer.from(`<svg width="${num(width)}" height="${num(height)}" xmlns="http://www.w3.org/2000/svg"><rect width="${num(width)}" height="${num(height)}" fill="${bgColor}"/></svg>`);
 }
 
 async function buildStrip(content: StripContent, width: number, height: number, logo: Buffer | null): Promise<Buffer> {
@@ -324,11 +334,16 @@ async function buildImageBuffers(content: StripContent): Promise<Record<string, 
 
   const logo = content.logoUrl ? await fetchLogoBuffer(content.logoUrl) : null;
 
-  const [strip1x, strip2x, strip3x] = await Promise.all([
-    buildStrip(content, 375, 123, logo),
-    buildStrip(content, 750, 246, logo),
-    buildStrip(content, 1125, 369, logo),
-  ]);
+  // Secuencial a propósito, no Promise.all: no se pudo confirmar la
+  // causa exacta del error de XML pese a probar con los datos reales
+  // que sí fallan en producción — correr las 3 conversiones de SVG a
+  // PNG al mismo tiempo es un sospechoso razonable (una posible
+  // interferencia a nivel de la librería nativa que usa sharp por
+  // dentro), y evitarlo cuesta poco dado que esto no es una ruta de
+  // alto tráfico.
+  const strip1x = await buildStrip(content, 375, 123, logo);
+  const strip2x = await buildStrip(content, 750, 246, logo);
+  const strip3x = await buildStrip(content, 1125, 369, logo);
 
   async function buildIcon(size: number): Promise<Buffer> {
     if (!logo) return sharp({ create: { width: size, height: size, channels: 4, background: bg } }).png().toBuffer();
