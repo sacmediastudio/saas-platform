@@ -51,8 +51,24 @@ function isApplePassConfigured(): boolean {
   );
 }
 
+// XML prohíbe ciertos caracteres de control incluso escapados con
+// entidades (&amp; etc. no alcanza para estos) — si un nombre de
+// negocio se copió y pegó desde Word, un PDF, o algún teclado que
+// dejó un caracter invisible de este tipo, se cuela sin que ninguno
+// de los 5 reemplazos de abajo lo detecte. Se los quita directamente
+// antes de escapar el resto.
+function stripIllegalXmlChars(s: string): string {
+  // eslint-disable-next-line no-control-regex
+  return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+}
+
 function escapeXml(s: string): string {
-  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  return stripIllegalXmlChars(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&apos;");
 }
 
 // El nombre del negocio ya se escapaba antes de insertarse en el SVG,
@@ -197,6 +213,21 @@ async function circularLogo(logo: Buffer, diameter: number): Promise<Buffer> {
   return sharp(resized).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
 }
 
+// El campo de logo normal (a diferencia del dedicado a Wallet) acepta
+// cualquier tipo de imagen, SVG incluido — y un SVG es, en el fondo,
+// texto XML que el propio negocio (o su diseñador) pudo haber
+// exportado con Illustrator, Figma, Canva, etc. Cualquier detalle
+// raro de esa exportación (una etiqueta mal cerrada, algo que ese
+// programa considera válido pero no lo es estrictamente) hace que el
+// parser XML que usa sharp por dentro (glib) rompa con un error real
+// al intentar redimensionarlo — esto fue justo lo que le pasó a uno
+// de los negocios, y no tiene nada que ver con el SVG que este mismo
+// archivo genera para el diseño del pase.
+function looksLikeSvg(buffer: Buffer): boolean {
+  const head = buffer.subarray(0, 256).toString("utf-8").trimStart().toLowerCase();
+  return head.startsWith("<svg") || head.startsWith("<?xml");
+}
+
 // Baja el logo UNA sola vez a su tamaño natural, respetando su propia
 // transparencia — se reutiliza para las 3 densidades, redimensionando
 // nada más que el tamaño final de composición en cada una.
@@ -204,7 +235,11 @@ async function fetchLogoBuffer(logoUrl: string): Promise<Buffer | null> {
   try {
     const res = await fetch(logoUrl);
     if (!res.ok) return null;
-    return Buffer.from(await res.arrayBuffer());
+    const buffer = Buffer.from(await res.arrayBuffer());
+    // Mejor un pase sin logo que un pase que ni se genera porque el
+    // SVG subido tiene algún detalle que rompe el parser.
+    if (looksLikeSvg(buffer)) return null;
+    return buffer;
   } catch {
     return null;
   }
