@@ -253,8 +253,41 @@ async function fetchLogoBuffer(logoUrl: string): Promise<Buffer | null> {
   }
 }
 
+// Un respaldo mínimo — sin nombre, sin sellos, solo el color de
+// fondo — para cuando ni siquiera el SVG base se puede generar. Esto
+// nunca debería usarse en la práctica, pero es preferible entregar
+// ALGO (un pase liso) a que la generación entera falle y el cliente
+// se quede sin poder agregar su tarjeta a Wallet.
+function buildFallbackSvg(bgColorHex: string, width: number, height: number): Buffer {
+  const bgColor = sanitizeHexColor(bgColorHex, "#E7FF00");
+  return Buffer.from(`<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><rect width="${width}" height="${height}" fill="${bgColor}"/></svg>`);
+}
+
 async function buildStrip(content: StripContent, width: number, height: number, logo: Buffer | null): Promise<Buffer> {
-  const base = sharp(buildBaseSvg(content, width, height));
+  let base: sharp.Sharp;
+  try {
+    base = sharp(buildBaseSvg(content, width, height));
+    // sharp no valida el SVG hasta que se ejecuta de verdad — se
+    // fuerza acá para detectar un SVG roto ANTES de intentar
+    // componer el logo encima, en vez de que el error aparezca recién
+    // más adelante mezclado con el resto del proceso.
+    await sharp(buildBaseSvg(content, width, height)).png().toBuffer();
+  } catch (err) {
+    // Si esto pasa, algo en buildBaseSvg produjo un SVG inválido para
+    // ESTOS datos puntuales — se deja registrado completo para poder
+    // diagnosticar la próxima vez que ocurra, en vez de perder la
+    // información apenas se cae en el respaldo.
+    console.error(
+      "buildBaseSvg produjo un SVG inválido — usando respaldo mínimo. Datos:",
+      JSON.stringify({ tenantName: content.tenantName, backgroundColorHex: content.backgroundColorHex, textColorHex: content.textColorHex, stamps: content.stamps, visitsNeeded: content.visitsNeeded, remainingLabel: content.remainingLabel, width, height }),
+      "Error:",
+      err instanceof Error ? err.message : err,
+      "SVG generado:",
+      buildBaseSvg(content, width, height).toString("utf-8")
+    );
+    base = sharp(buildFallbackSvg(content.backgroundColorHex, width, height));
+  }
+
   if (!logo) return base.png().toBuffer();
 
   // Estas medidas tienen que coincidir exactamente con logoDiameter/
@@ -269,9 +302,13 @@ async function buildStrip(content: StripContent, width: number, height: number, 
   try {
     const circular = await circularLogo(logo, logoDiameter);
     return base.composite([{ input: circular, left, top }]).png().toBuffer();
-  } catch {
+  } catch (err) {
     // Si el logo no se puede procesar (formato raro, corrupto, etc.),
     // el pase igual se genera sin él — mejor sin logo que sin pase.
+    console.error(
+      "No se pudo componer el logo sobre el strip — se genera sin él. Error:",
+      err instanceof Error ? err.message : err
+    );
     return base.png().toBuffer();
   }
 }
