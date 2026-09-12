@@ -124,13 +124,19 @@ function stampIconGroup(cx: number, cy: number, size: number, color: string): st
 // reparten en 2 filas parejas (ej. 8 → 4+4, 12 → 6+6).
 function buildBaseSvg(content: StripContent, width: number, height: number): Buffer {
   const scale = width / 1125; // todas las medidas están pensadas para el ancho @3x, y se escalan para 1x/2x
-  const margin = 55 * scale; // margen parejo en los 4 lados, para que nada quede pegado al borde
+  // Márgenes separados: más generoso a los costados (pedido explícito
+  // de "que no se vea pegado a los lados", y el nombre se cortaba
+  // justo ahí), más moderado arriba/abajo porque el alto del strip es
+  // angosto y ya está ajustado para que la grilla de sellos entre sin
+  // pisar el texto de abajo.
+  const marginX = 85 * scale;
+  const marginY = 45 * scale;
   const tenantName = stripIllegalXmlChars(content.tenantName);
   const remainingLabel = stripIllegalXmlChars(content.remainingLabel);
 
-  const logoBoxWidth = 220 * scale;
-  const logoBoxHeight = 85 * scale;
-  const logoTop = margin;
+  const logoBoxWidth = 280 * scale;
+  const logoBoxHeight = 100 * scale;
+  const logoTop = marginY;
   const logoCenterY = logoTop + logoBoxHeight / 2;
 
   // Nombre del negocio, alineado verticalmente con el logo. El
@@ -139,14 +145,14 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   // (textToPath/measureTextWidth), no una aproximación.
   const baseNameFontSize = 52 * scale;
   const minNameFontSize = 26 * scale;
-  const nameLeftBoundary = margin + logoBoxWidth + 28 * scale;
-  const maxNameWidth = width - margin - nameLeftBoundary;
+  const nameLeftBoundary = marginX + logoBoxWidth + 28 * scale;
+  const maxNameWidth = width - marginX - nameLeftBoundary;
   let nameFontSize = baseNameFontSize;
   while (nameFontSize > minNameFontSize && measureTextWidth(tenantName, nameFontSize) > maxNameWidth) {
     nameFontSize -= 2 * scale;
   }
   const nameWidth = measureTextWidth(tenantName, nameFontSize);
-  const nameX = width - margin - nameWidth;
+  const nameX = width - marginX - nameWidth;
   const nameY = logoCenterY + nameFontSize * 0.35;
   const namePath = textToPath(tenantName, nameX, nameY, nameFontSize).pathData;
 
@@ -156,16 +162,16 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   // que el tope de tamaño del sello es distinto en cada caso — mejor
   // aprovechar el espacio real disponible que usar el mismo tope fijo
   // para los 2 casos (eso fue lo que causó que el texto de abajo
-  // quedara pisado por la segunda fila en el primer intento).
-  const usableWidth = width - margin * 2;
+  // quedara pisado por la segunda fila en un intento anterior).
+  const usableWidth = width - marginX * 2;
   const total = Math.max(Math.min(content.visitsNeeded, 14), 1); // más de 14 sellos ya no entra con un tamaño legible
   const rows = total <= 7 ? 1 : 2;
   const columns = Math.ceil(total / rows);
   const colSpacing = usableWidth / columns;
-  const maxRadiusByRows = rows === 1 ? 46 * scale : 25 * scale;
+  const maxRadiusByRows = rows === 1 ? 52 * scale : 25 * scale;
   const iconRadius = Math.min(colSpacing * 0.32, maxRadiusByRows);
   const rowSpacing = iconRadius * 2.2;
-  const gridTop = logoTop + logoBoxHeight + 20 * scale;
+  const gridTop = logoTop + logoBoxHeight + 18 * scale;
   const firstRowCenterY = gridTop + iconRadius;
 
   let stampIcons = "";
@@ -174,7 +180,7 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
     const col = i % columns;
     const itemsInRow = row === rows - 1 ? total - columns * (rows - 1) : columns;
     const rowOffset = (usableWidth - itemsInRow * colSpacing) / 2;
-    const cx = margin + rowOffset + colSpacing * (col + 0.5);
+    const cx = marginX + rowOffset + colSpacing * (col + 0.5);
     const cy = firstRowCenterY + rowSpacing * row;
     const filled = i < content.stamps;
     const circleColor = filled ? STAMP_ACTIVE_COLOR : STAMP_INACTIVE_COLOR;
@@ -188,7 +194,7 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   const labelFontSize = 26 * scale;
   const labelWidth = measureTextWidth(remainingLabel, labelFontSize);
   const labelX = (width - labelWidth) / 2;
-  const labelY = Math.min(lastRowBottom + labelFontSize * 1.15, height - margin);
+  const labelY = Math.min(lastRowBottom + labelFontSize * 1.15, height - marginY);
   const labelPath = textToPath(remainingLabel, labelX, labelY, labelFontSize).pathData;
 
   const svg = `
@@ -295,17 +301,22 @@ async function buildStrip(content: StripContent, width: number, height: number, 
   if (!logo) return base.png().toBuffer();
 
   // Estas medidas tienen que coincidir exactamente con logoBoxWidth/
-  // logoBoxHeight/margin usadas dentro de buildBaseSvg para el layout
-  // del nombre del negocio (si se desalinean, el nombre queda
-  // calculado para un logo que no es el que termina componiéndose).
+  // logoBoxHeight/marginX/marginY usadas dentro de buildBaseSvg para
+  // el layout del nombre del negocio (si se desalinean, el nombre
+  // queda calculado para un logo que no es el que termina
+  // componiéndose).
   const scale = width / 1125;
-  const margin = 55 * scale;
-  const logoBoxWidth = 220 * scale;
-  const logoBoxHeight = 85 * scale;
+  const marginX = 85 * scale;
+  const marginY = 45 * scale;
+  const logoBoxWidth = 280 * scale;
+  const logoBoxHeight = 100 * scale;
 
   try {
     const fitted = await fitLogo(logo, logoBoxWidth, logoBoxHeight);
-    return base.composite([{ input: fitted, left: Math.round(margin), top: Math.round(margin) }]).png().toBuffer();
+    return base
+      .composite([{ input: fitted, left: Math.round(marginX), top: Math.round(marginY) }])
+      .png()
+      .toBuffer();
   } catch (err) {
     // Si el logo no se puede procesar (formato raro, corrupto, etc.),
     // el pase igual se genera sin él — mejor sin logo que sin pase.
