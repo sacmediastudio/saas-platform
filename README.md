@@ -1358,6 +1358,33 @@ una sesión anterior) — no partía de cero. Se agregaron 2 capas más:
   Postre gratis → Ajustes, para que cada negocio elija su propio
   número según su presupuesto.
 
+## El fondo negro del logo no era el código del pase — era la subida de imágenes
+
+Después de aumentar el tamaño del logo, el usuario reportó que el
+fondo negro seguía ahí, y planteó una hipótesis correcta: capaz la
+plataforma convertía la imagen a otro formato al subirla. Se
+confirmó revisando `lib/upload-image.ts` — la función que procesa
+**cualquier** imagen subida en toda la plataforma convertía todo a
+JPEG (`canvas.toBlob(..., "image/jpeg", ...)`), sin importar el
+formato original. JPEG no soporta transparencia — al exportar un PNG
+transparente a través de un canvas hacia JPEG, el navegador rellena
+esas zonas con negro automáticamente. El código de generación del
+pase nunca tuvo la culpa; para cuando la imagen le llegaba, ya había
+perdido la transparencia en el paso de subida.
+
+**El arreglo**: `uploadImage()` ahora acepta un formato opcional
+(`"jpeg"` por default, sin cambiar el comportamiento de las subidas
+existentes; `"png"` para preservar transparencia). El campo "Logo
+para el pase de Wallet" en Sellos ahora pide específicamente `"png"`.
+
+Verificado con un logo de prueba circular (que no ocupa toda su caja
+rectangular) — el área transparente alrededor del círculo muestra el
+color de fondo del pase por debajo, confirmando que la composición sí
+respeta el canal alfa correctamente.
+
+También se aumentó el margen lateral de 85 a 110, después de que el
+usuario indicara que el anterior seguía sin ser suficiente.
+
 ## Ajustes de layout: logo sin círculo, sellos más grandes, márgenes
 
 Junto con el arreglo de fuentes, se hicieron los demás cambios

@@ -129,7 +129,7 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   // justo ahí), más moderado arriba/abajo porque el alto del strip es
   // angosto y ya está ajustado para que la grilla de sellos entre sin
   // pisar el texto de abajo.
-  const marginX = 85 * scale;
+  const marginX = 110 * scale;
   const marginY = 45 * scale;
   const tenantName = stripIllegalXmlChars(content.tenantName);
   const remainingLabel = stripIllegalXmlChars(content.remainingLabel);
@@ -306,7 +306,7 @@ async function buildStrip(content: StripContent, width: number, height: number, 
   // queda calculado para un logo que no es el que termina
   // componiéndose).
   const scale = width / 1125;
-  const marginX = 85 * scale;
+  const marginX = 110 * scale;
   const marginY = 45 * scale;
   const logoBoxWidth = 280 * scale;
   const logoBoxHeight = 100 * scale;

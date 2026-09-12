@@ -43,7 +43,7 @@ export default function LoyaltyView({
   async function handleWalletLogoUpload(file: File) {
     setUploadingLogo(true);
     try {
-      const publicUrl = await uploadImage(file, 400);
+      const publicUrl = await uploadImage(file, 400, "png");
       setWalletLogoUrl(publicUrl);
     } catch {
       // Si falla, se queda con el logo anterior (o sin ninguno) — no
