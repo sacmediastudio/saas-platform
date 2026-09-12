@@ -55,7 +55,7 @@ export function textToPath(text: string, x: number, y: number, fontSize: number)
   for (const char of text) {
     const glyph = font.charToGlyph(char);
     combined.extend(glyph.getPath(cursorX, y, fontSize));
-    cursorX += glyph.advanceWidth * scale;
+    cursorX += (glyph.advanceWidth ?? 0) * scale;
   }
   return { pathData: combined.toPathData(2), width: cursorX - x };
 }
@@ -68,7 +68,7 @@ export function measureTextWidth(text: string, fontSize: number): number {
   const scale = fontSize / font.unitsPerEm;
   let width = 0;
   for (const char of text) {
-    width += font.charToGlyph(char).advanceWidth * scale;
+    width += (font.charToGlyph(char).advanceWidth ?? 0) * scale;
   }
   return width;
 }
