@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
   const tenant = await db.tenant.findUnique({
     where: { slug },
-    select: { id: true, name: true, logoUrl: true, buttonColor: true, themeTextColor: true, loyaltyEnabled: true, loyaltyVisitsNeeded: true, loyaltyReward: true },
+    select: { id: true, name: true, logoUrl: true, walletLogoUrl: true, buttonColor: true, themeTextColor: true, loyaltyEnabled: true, loyaltyVisitsNeeded: true, loyaltyReward: true },
   });
   if (!tenant || !tenant.loyaltyEnabled) return NextResponse.json({ error: "No disponible" }, { status: 404 });
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
 
   const tenant = await db.tenant.findUnique({
     where: { slug: body.slug },
-    select: { id: true, name: true, logoUrl: true, buttonColor: true, themeTextColor: true, loyaltyEnabled: true, loyaltyVisitsNeeded: true, loyaltyReward: true },
+    select: { id: true, name: true, logoUrl: true, walletLogoUrl: true, buttonColor: true, themeTextColor: true, loyaltyEnabled: true, loyaltyVisitsNeeded: true, loyaltyReward: true },
   });
   if (!tenant || !tenant.loyaltyEnabled) return NextResponse.json({ error: "No disponible" }, { status: 404 });
 

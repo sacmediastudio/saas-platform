@@ -19,6 +19,7 @@ export async function GET(_req: NextRequest, { params }: { params: { cardId: str
       id: true,
       name: true,
       logoUrl: true,
+      walletLogoUrl: true,
       buttonColor: true,
       themeTextColor: true,
       loyaltyEnabled: true,

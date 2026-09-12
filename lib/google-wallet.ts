@@ -54,11 +54,15 @@ interface TenantBrandData {
   id: string;
   name: string;
   logoUrl: string | null;
-  buttonColor: string;
-  themeTextColor: string;
+  walletLogoUrl: string | null;
   loyaltyVisitsNeeded: number;
   loyaltyReward: string;
 }
+
+// Mismos colores fijos que se usan en el pase de Apple Wallet — ver
+// la explicación completa en apple-wallet.ts sobre por qué se dejó
+// de usar el color de marca de cada negocio.
+const BG_COLOR = "#e4f73e";
 
 function classIdFor(tenantId: string): string {
   return `${process.env.GOOGLE_WALLET_ISSUER_ID}.tenant_${tenantId}`;
@@ -76,13 +80,14 @@ function objectIdFor(loyaltyCardId: string): string {
 async function ensureLoyaltyClass(tenant: TenantBrandData): Promise<void> {
   const accessToken = await getAccessToken();
   const classId = classIdFor(tenant.id);
+  const logoUrl = tenant.walletLogoUrl || tenant.logoUrl;
 
   const classPayload = {
     id: classId,
     issuerName: tenant.name,
     programName: tenant.name,
-    programLogo: tenant.logoUrl ? { sourceUri: { uri: tenant.logoUrl } } : undefined,
-    hexBackgroundColor: tenant.buttonColor,
+    programLogo: logoUrl ? { sourceUri: { uri: logoUrl } } : undefined,
+    hexBackgroundColor: BG_COLOR,
     reviewStatus: "UNDER_REVIEW",
   };
 
