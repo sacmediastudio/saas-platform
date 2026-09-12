@@ -71,19 +71,6 @@ function escapeXml(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-// El nombre del negocio ya se escapaba antes de insertarse en el SVG,
-// pero los colores del negocio (backgroundColorHex/textColorHex) se
-// insertaban DIRECTO en los atributos, sin validar — si algún tenant
-// tuviera guardado un valor que no sea un hex limpio (por los motivos
-// que sea: un bug viejo, una edición manual de la base de datos),
-// ese valor se cuela tal cual dentro de un atributo de SVG y puede
-// romper el XML (esto es lo que causaba el "Couldn't find end of
-// Start Tag" al generar el pase para uno de los negocios). Cualquier
-// valor que no sea EXACTAMENTE #RRGGBB cae al color de respaldo.
-function sanitizeHexColor(color: string, fallback: string): string {
-  return /^#[0-9A-Fa-f]{6}$/.test(color) ? color : fallback;
-}
-
 // Números en JavaScript pueden convertirse a texto con precisión
 // excesiva (183.00000000000003) o notación científica para valores
 // muy chicos — nada de esto rompería XML por sí solo, pero como no se
@@ -97,21 +84,39 @@ function num(n: number): string {
 interface StripContent {
   tenantName: string;
   logoUrl: string | null;
-  backgroundColorHex: string;
-  textColorHex: string;
   stamps: number;
   visitsNeeded: number;
   remainingLabel: string;
 }
 
-// El "check" de cada sello se dibuja como 3 segmentos relativos al
-// radio del círculo, en vez de un ícono de fuente — así no depende
-// para nada de qué fuentes/emoji estén instalados en el servidor.
-function checkmarkPath(cx: number, cy: number, r: number): string {
-  const x1 = cx - r * 0.5, y1 = cy + r * 0.02;
-  const x2 = cx - r * 0.12, y2 = cy + r * 0.38;
-  const x3 = cx + r * 0.55, y3 = cy - r * 0.32;
-  return `M ${num(x1)} ${num(y1)} L ${num(x2)} ${num(y2)} L ${num(x3)} ${num(y3)}`;
+// Plantilla única para todos los negocios — colores fijos, ya no
+// configurables por tenant. Se decidió así después de no poder
+// reproducir, pese a mucho esfuerzo, la causa exacta de un error de
+// XML que solo aparecía con los colores dinámicos de un negocio en
+// particular; quitar esa variable de la ecuación por completo es más
+// confiable que seguir buscando la causa exacta.
+const BG_COLOR = "#e4f73e";
+const TEXT_COLOR = "#0a2808";
+const STAMP_ACTIVE_COLOR = "#dd5152";
+const STAMP_INACTIVE_COLOR = "#c0d8bf";
+
+// El path real del ícono "Stamp" de Lucide (la misma librería que ya
+// usa la versión web) — copiado tal cual de su definición oficial,
+// en su sistema de coordenadas nativo de 24x24. Se posiciona y
+// escala con un <g transform="...">, no recalculando cada punto a
+// mano, para no arriesgarse a introducir un error de transcripción.
+const STAMP_ICON_PATHS = [
+  "M14 13V8.5C14 7 15 7 15 5a3 3 0 0 0-6 0c0 2 1 2 1 3.5V13",
+  "M20 15.5a2.5 2.5 0 0 0-2.5-2.5h-11A2.5 2.5 0 0 0 4 15.5V17a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1z",
+  "M5 22h14",
+];
+
+function stampIconGroup(cx: number, cy: number, size: number, color: string): string {
+  const s = size / 24;
+  const tx = cx - size / 2;
+  const ty = cy - size / 2;
+  const paths = STAMP_ICON_PATHS.map((d) => `<path d="${d}" />`).join("");
+  return `<g transform="translate(${num(tx)}, ${num(ty)}) scale(${num(s)})" fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${paths}</g>`;
 }
 
 // Fondo, nombre del negocio y sellos — TODO lo que se puede dibujar
@@ -124,17 +129,11 @@ function checkmarkPath(cx: number, cy: number, r: number): string {
 // evita ese problema de raíz porque usa un camino distinto que sí
 // respeta el canal alfa correctamente.
 //
-// Distribución (logo circular arriba a la izquierda, nombre arriba a
-// la derecha, sellos en una grilla de hasta 5 columnas por fila, y el
-// texto de "cuántos faltan" debajo) sigue el layout de referencia del
-// diseño aprobado — adaptado al aspect ratio real y angosto que Apple
-// exige para el "strip" de un storeCard (~375x123pt @1x), que es
-// mucho más bajo que un mockup cuadrado. Verificado renderizando con
-// sharp/librsvg + DejaVu Sans localmente antes de este cambio.
+// Filas de sellos: 5 o menos entran en una sola fila; 6 o más se
+// reparten en 2 filas parejas (ej. 6 → 3+3, 10 → 5+5) en vez de
+// amontonar todo en una fila larga.
 function buildBaseSvg(content: StripContent, width: number, height: number): Buffer {
   const scale = width / 1125; // todas las medidas están pensadas para el ancho @3x, y se escalan para 1x/2x
-  const bgColor = sanitizeHexColor(content.backgroundColorHex, "#E7FF00");
-  const textColor = sanitizeHexColor(content.textColorHex, "#002D09");
 
   const sideMargin = 60 * scale;
   const usableWidth = width - sideMargin * 2;
@@ -146,8 +145,7 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
 
   // Nombre del negocio, alineado verticalmente con el logo. El
   // tamaño se reduce para nombres largos para que el texto nunca
-  // invada el círculo del logo (con el tamaño fijo anterior, un
-  // nombre largo se dibujaba literalmente encima del logo).
+  // invada el círculo del logo.
   const baseNameFontSize = 50 * scale;
   const minNameFontSize = 26 * scale;
   const nameLeftBoundary = logoLeft + logoDiameter + 24 * scale;
@@ -160,16 +158,11 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   );
   const nameY = logoCenterY + nameFontSize * 0.35;
 
-  // Grilla de sellos: hasta 5 columnas por fila, tantas filas como
-  // hagan falta (antes todo iba en una sola fila apretada). Si la
-  // última fila queda incompleta, se centra en vez de quedar pegada
-  // a la izquierda. Math.max(..., 1) evita una división por cero si
-  // loyaltyVisitsNeeded llegara a estar en 0 — sin esto, colSpacing
-  // se vuelve Infinity y arrastra ese valor a cada círculo de la
-  // grilla.
+  // Math.max(..., 1) evita una división por cero si
+  // loyaltyVisitsNeeded llegara a estar en 0.
   const total = Math.max(Math.min(content.visitsNeeded, 12), 1); // más de 12 sellos ya no entra con un tamaño legible
-  const columns = Math.max(Math.min(total, 5), 1);
-  const rows = Math.ceil(total / columns);
+  const rows = total <= 5 ? 1 : 2;
+  const columns = Math.ceil(total / rows);
   const colSpacing = usableWidth / columns;
   const iconRadius = Math.min(colSpacing * 0.26, 29 * scale);
   const rowSpacing = iconRadius * 2.25;
@@ -185,13 +178,11 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
     const cx = sideMargin + rowOffset + colSpacing * (col + 0.5);
     const cy = firstRowCenterY + rowSpacing * row;
     const filled = i < content.stamps;
+    const circleColor = filled ? STAMP_ACTIVE_COLOR : STAMP_INACTIVE_COLOR;
+    const iconColor = filled ? BG_COLOR : "#ffffff";
 
-    if (filled) {
-      stampIcons += `<circle cx="${num(cx)}" cy="${num(cy)}" r="${num(iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${num(4 * scale)}" />`;
-      stampIcons += `<path d="${checkmarkPath(cx, cy, iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${num(5 * scale)}" stroke-linecap="round" stroke-linejoin="round" />`;
-    } else {
-      stampIcons += `<circle cx="${num(cx)}" cy="${num(cy)}" r="${num(iconRadius)}" fill="none" stroke="${textColor}" stroke-width="${num(3.5 * scale)}" opacity="0.35" />`;
-    }
+    stampIcons += `<circle cx="${num(cx)}" cy="${num(cy)}" r="${num(iconRadius)}" fill="${circleColor}" />`;
+    stampIcons += stampIconGroup(cx, cy, iconRadius * 1.15, iconColor);
   }
 
   const lastRowBottom = firstRowCenterY + rowSpacing * (rows - 1) + iconRadius;
@@ -200,12 +191,12 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
 
   const svg = `
     <svg width="${num(width)}" height="${num(height)}" xmlns="http://www.w3.org/2000/svg">
-      <rect width="${num(width)}" height="${num(height)}" fill="${bgColor}" />
+      <rect width="${num(width)}" height="${num(height)}" fill="${BG_COLOR}" />
       <text x="${num(width - sideMargin)}" y="${num(nameY)}" text-anchor="end" font-family="DejaVu Sans"
-            font-size="${num(nameFontSize)}" font-weight="bold" fill="${textColor}">${escapeXml(content.tenantName)}</text>
+            font-size="${num(nameFontSize)}" font-weight="bold" fill="${TEXT_COLOR}">${escapeXml(content.tenantName)}</text>
       ${stampIcons}
       <text x="${num(width / 2)}" y="${num(labelY)}" text-anchor="middle" font-family="DejaVu Sans"
-            font-size="${num(labelFontSize)}" font-weight="bold" fill="${textColor}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
+            font-size="${num(labelFontSize)}" font-weight="bold" fill="${TEXT_COLOR}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
     </svg>
   `;
 
@@ -268,9 +259,8 @@ async function fetchLogoBuffer(logoUrl: string): Promise<Buffer | null> {
 // nunca debería usarse en la práctica, pero es preferible entregar
 // ALGO (un pase liso) a que la generación entera falle y el cliente
 // se quede sin poder agregar su tarjeta a Wallet.
-function buildFallbackSvg(bgColorHex: string, width: number, height: number): Buffer {
-  const bgColor = sanitizeHexColor(bgColorHex, "#E7FF00");
-  return Buffer.from(`<svg width="${num(width)}" height="${num(height)}" xmlns="http://www.w3.org/2000/svg"><rect width="${num(width)}" height="${num(height)}" fill="${bgColor}"/></svg>`);
+function buildFallbackSvg(width: number, height: number): Buffer {
+  return Buffer.from(`<svg width="${num(width)}" height="${num(height)}" xmlns="http://www.w3.org/2000/svg"><rect width="${num(width)}" height="${num(height)}" fill="${BG_COLOR}"/></svg>`);
 }
 
 async function buildStrip(content: StripContent, width: number, height: number, logo: Buffer | null): Promise<Buffer> {
@@ -289,13 +279,13 @@ async function buildStrip(content: StripContent, width: number, height: number, 
     // información apenas se cae en el respaldo.
     console.error(
       "buildBaseSvg produjo un SVG inválido — usando respaldo mínimo. Datos:",
-      JSON.stringify({ tenantName: content.tenantName, backgroundColorHex: content.backgroundColorHex, textColorHex: content.textColorHex, stamps: content.stamps, visitsNeeded: content.visitsNeeded, remainingLabel: content.remainingLabel, width, height }),
+      JSON.stringify({ tenantName: content.tenantName, stamps: content.stamps, visitsNeeded: content.visitsNeeded, remainingLabel: content.remainingLabel, width, height }),
       "Error:",
       err instanceof Error ? err.message : err,
       "SVG generado:",
       buildBaseSvg(content, width, height).toString("utf-8")
     );
-    base = sharp(buildFallbackSvg(content.backgroundColorHex, width, height));
+    base = sharp(buildFallbackSvg(width, height));
   }
 
   if (!logo) return base.png().toBuffer();
@@ -324,7 +314,7 @@ async function buildStrip(content: StripContent, width: number, height: number, 
 }
 
 async function buildImageBuffers(content: StripContent): Promise<Record<string, Buffer>> {
-  const clean = content.backgroundColorHex.replace("#", "");
+  const clean = BG_COLOR.replace("#", "");
   const bg = {
     r: parseInt(clean.substring(0, 2), 16),
     g: parseInt(clean.substring(2, 4), 16),
@@ -384,8 +374,6 @@ export async function generateLoyaltyPass(card: LoyaltyCardData, tenant: TenantB
   const imageBuffers = await buildImageBuffers({
     tenantName: tenant.name,
     logoUrl: tenant.walletLogoUrl || tenant.logoUrl,
-    backgroundColorHex: tenant.buttonColor,
-    textColorHex: tenant.themeTextColor,
     stamps: card.stamps,
     visitsNeeded: tenant.loyaltyVisitsNeeded,
     remainingLabel,
@@ -400,8 +388,8 @@ export async function generateLoyaltyPass(card: LoyaltyCardData, tenant: TenantB
     authenticationToken: authTokenFor(card.id),
     organizationName: tenant.name,
     description: `${tenant.name} — tarjeta de sellos`,
-    foregroundColor: hexToRgb(tenant.themeTextColor),
-    backgroundColor: hexToRgb(tenant.buttonColor),
+    foregroundColor: hexToRgb(TEXT_COLOR),
+    backgroundColor: hexToRgb(BG_COLOR),
     barcodes: [{ message: card.id, format: "PKBarcodeFormatQR", messageEncoding: "iso-8859-1" }],
     storeCard: {
       // El diseño visible en sí ya está compuesto en el strip.png —

@@ -1358,6 +1358,40 @@ una sesión anterior) — no partía de cero. Se agregaron 2 capas más:
   Postre gratis → Ajustes, para que cada negocio elija su propio
   número según su presupuesto.
 
+## Plantilla única de colores para todos los negocios
+
+Después de mucho esfuerzo sin poder reproducir la causa exacta de un
+error de XML que solo pasaba con los colores dinámicos de un negocio
+puntual (se probó exhaustivamente con sus datos reales, hasta con el
+archivo del proyecto sin modificar, sin éxito), el usuario decidió
+quitar esa variable del todo: **todos los negocios comparten ahora
+los mismos colores** en el pase de Apple Wallet, en vez de usar el
+color de marca de cada uno.
+
+- Fondo: `#e4f73e`
+- Texto: `#0a2808`
+- Sellos activos: `#dd5152`
+- Sellos inactivos: `#c0d8bf`
+
+De paso, se cambiaron 2 cosas más pedidas junto con esto:
+
+- **El ícono de cada sello** ahora es el mismo ícono "Stamp" de
+  Lucide que ya se usa en la versión web — se copió su path SVG
+  oficial tal cual (en vez de aproximarlo con formas simples) y se
+  posiciona con un `<g transform="...">`, sin recalcular cada punto a
+  mano.
+- **Las filas de sellos**: 5 o menos entran en una sola fila; 6 o más
+  se reparten en 2 filas parejas (6 → 3+3, 10 → 5+5), en vez de
+  amontonar todo en una fila larga.
+
+El logo del negocio (`walletLogoUrl` o `logoUrl` como respaldo) sigue
+siendo por tenant, arriba a la izquierda — lo único que se
+estandarizó fue la paleta de colores y el estilo de los sellos.
+
+**Verificado visualmente** (no solo "sin errores") generando y
+mirando el resultado con 3 combinaciones distintas de sellos/filas
+antes de dar el cambio por terminado.
+
 ## La causa real de que el pase se viera mal: faltaban fuentes en el servidor
 
 Después de varios intentos de ajustar posiciones y proporciones sin
