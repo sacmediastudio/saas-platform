@@ -1,4 +1,5 @@
 import fs from "fs";
+import path from "path";
 import opentype from "opentype.js";
 
 // El texto de los pases de Wallet se venía dibujando con <text> +
@@ -10,6 +11,15 @@ import opentype from "opentype.js";
 // una fuente que viaja empaquetada con el propio proyecto — así no
 // depende de nada externo al código, nunca.
 //
+// El archivo .woff vive copiado en lib/fonts/ (no se lee desde
+// node_modules de @fontsource vía require.resolve) porque Webpack, al
+// compilar las rutas de la API, intenta "empaquetar" cualquier
+// archivo al que apunte un require.resolve() — y al no tener un
+// loader configurado para .woff, el build entero fallaba. Leerlo con
+// fs + una ruta armada en tiempo de ejecución (process.cwd(), no un
+// literal que Webpack pueda analizar de forma estática) evita que
+// Webpack se entere de este archivo en absoluto.
+//
 // La fuente se carga una sola vez y se reutiliza en cada pase que se
 // genera después — leerla de disco en cada request sería un
 // desperdicio, dado que el archivo no cambia entre pedidos.
@@ -17,7 +27,7 @@ let cachedFont: opentype.Font | null = null;
 
 function loadFont(): opentype.Font {
   if (cachedFont) return cachedFont;
-  const fontPath = require.resolve("@fontsource/roboto/files/roboto-latin-700-normal.woff");
+  const fontPath = path.join(process.cwd(), "lib", "fonts", "roboto-bold.woff");
   const buffer = fs.readFileSync(fontPath);
   const arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
   cachedFont = opentype.parse(arrayBuffer);
