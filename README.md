@@ -1358,6 +1358,64 @@ una sesión anterior) — no partía de cero. Se agregaron 2 capas más:
   Postre gratis → Ajustes, para que cada negocio elija su propio
   número según su presupuesto.
 
+## Ajustes de layout: logo sin círculo, sellos más grandes, márgenes
+
+Junto con el arreglo de fuentes, se hicieron los demás cambios
+pedidos sobre el mismo diseño:
+
+- **Logo sin recorte circular** — antes se recortaba a un círculo
+  (`circularLogo`, ahora reemplazada por `fitLogo`), lo que dejaba
+  ver mayormente el fondo del PNG en vez del logo completo. Ahora se
+  redimensiona respetando su propia forma y transparencia, sin
+  recortar nada.
+- **Sellos más grandes**, y **nueva regla de filas**: 7 o menos en
+  una sola línea, 8 o más en 2 filas parejas (antes era 5/6).
+- **Márgenes parejos en los 4 lados**, para que nada quede pegado al
+  borde como en la captura de referencia.
+
+**Un bug propio que apareció al agrandar los sellos**: el texto de
+abajo ("Te faltan X sellos más") quedaba tapado por la segunda fila —
+el alto disponible del strip es angosto y sellos grandes en 2 filas
+no dejaban lugar para el texto de abajo. Se resolvió con un tope de
+tamaño de sello distinto según la cantidad de filas (mucho más grande
+permitido con 1 sola fila, más moderado con 2), en vez de un tope fijo
+para ambos casos — encontrado y corregido generando y mirando el
+resultado antes de darlo por bueno, no solo calculando en papel.
+
+## La causa real de que el nombre nunca apareciera: texto convertido a trazos
+
+Después del cambio a la plantilla de colores fijos, el usuario reportó
+que el nombre del negocio seguía sin verse — y con eso se confirmó
+algo importante: el intento anterior de instalar fuentes en Railway
+(`apt` + `fc-cache`) **tampoco funcionó**. Los círculos de los sellos
+y su ícono se veían bien porque son formas dibujadas (no dependen de
+ninguna fuente); el nombre y el texto de "cuántos faltan" sí, y por
+eso eran invisibles — sin ningún error, el texto simplemente no se
+dibujaba.
+
+**La solución definitiva**: en vez de seguir peleando con qué fuentes
+tiene o no tiene instaladas el servidor, el texto se convierte
+directo a trazos vectoriales — los mismos `<path>` que ya se usan
+para dibujar el ícono de cada sello. Nuevo archivo,
+`lib/text-to-path.ts`, usa `opentype.js` junto con una fuente que
+viaja empaquetada con el propio proyecto (`@fontsource/roboto`) para
+generar esos trazos letra por letra. Con esto, el texto ya NO depende
+de absolutamente nada instalado en el servidor — se comporta exacto
+igual que un ícono dibujado a mano.
+
+Un detalle técnico que salió en el camino: la función normal de la
+librería para esto (`font.getPath()`) falla con las tablas de
+sustitución tipográfica avanzada que traen las fuentes modernas
+(Inter, Roboto) — un límite conocido de esta versión de la librería,
+no algo específico de una fuente. La solución fue armar el trazo
+letra por letra con una función de más bajo nivel
+(`font.charToGlyph()`), que no pasa por ese problema y alcanza de
+sobra para texto simple en español.
+
+Verificado generando el trazo de textos con ñ, acentos, y el símbolo
+"¡" antes de integrarlo — y de nuevo, viendo el resultado final en 4
+combinaciones distintas antes de darlo por terminado.
+
 ## Plantilla única de colores para todos los negocios
 
 Después de mucho esfuerzo sin poder reproducir la causa exacta de un

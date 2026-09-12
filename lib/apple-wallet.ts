@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import sharp from "sharp";
 import { PKPass } from "passkit-generator";
+import { textToPath, measureTextWidth } from "./text-to-path";
 
 // Apple pide los colores como "rgb(r, g, b)", pero en toda la
 // plataforma los colores del negocio se guardan en hex (#RRGGBB) —
@@ -51,24 +52,13 @@ function isApplePassConfigured(): boolean {
   );
 }
 
-// XML prohíbe ciertos caracteres de control incluso escapados con
-// entidades (&amp; etc. no alcanza para estos) — si un nombre de
-// negocio se copió y pegó desde Word, un PDF, o algún teclado que
-// dejó un caracter invisible de este tipo, se cuela sin que ninguno
-// de los 5 reemplazos de abajo lo detecte. Se los quita directamente
-// antes de escapar el resto.
+// Los textos vienen de datos del negocio (nombre) o generados por el
+// propio código (el de "cuántos faltan") — de cualquier forma, se
+// limpian caracteres de control antes de convertirlos a trazos, por
+// si alguno se coló al copiar/pegar desde Word, un PDF, etc.
 function stripIllegalXmlChars(s: string): string {
   // eslint-disable-next-line no-control-regex
   return s.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
-}
-
-function escapeXml(s: string): string {
-  return stripIllegalXmlChars(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
 
 // Números en JavaScript pueden convertirse a texto con precisión
@@ -120,53 +110,62 @@ function stampIconGroup(cx: number, cy: number, size: number, color: string): st
 }
 
 // Fondo, nombre del negocio y sellos — TODO lo que se puede dibujar
-// con formas y texto plano. El logo se deja afuera a propósito: antes
-// se insertaba como imagen incrustada dentro del propio texto del
-// SVG, y ese camino (SVG → PNG vía librsvg, la librería que usa sharp
-// por dentro) no respeta bien la transparencia de imágenes
-// incrustadas así — el resultado terminaba con fondo negro en vez de
-// transparente. Componer el logo aparte, con sharp.composite(),
-// evita ese problema de raíz porque usa un camino distinto que sí
-// respeta el canal alfa correctamente.
+// con formas y trazos. El logo se compone aparte (ver buildStrip),
+// porque necesita respetar su propia transparencia — algo que
+// insertarlo como imagen dentro del texto del SVG no lograba hacer
+// bien.
 //
-// Filas de sellos: 5 o menos entran en una sola fila; 6 o más se
-// reparten en 2 filas parejas (ej. 6 → 3+3, 10 → 5+5) en vez de
-// amontonar todo en una fila larga.
+// El nombre y el texto de "cuántos faltan" se dibujan como trazos
+// (con textToPath), no como elementos <text> — evita depender de que
+// el servidor tenga alguna fuente instalada, que resultó no ser
+// confiable en Railway pese a varios intentos.
+//
+// Filas de sellos: 7 o menos entran en una sola fila; 8 o más se
+// reparten en 2 filas parejas (ej. 8 → 4+4, 12 → 6+6).
 function buildBaseSvg(content: StripContent, width: number, height: number): Buffer {
   const scale = width / 1125; // todas las medidas están pensadas para el ancho @3x, y se escalan para 1x/2x
+  const margin = 55 * scale; // margen parejo en los 4 lados, para que nada quede pegado al borde
+  const tenantName = stripIllegalXmlChars(content.tenantName);
+  const remainingLabel = stripIllegalXmlChars(content.remainingLabel);
 
-  const sideMargin = 60 * scale;
-  const usableWidth = width - sideMargin * 2;
-
-  const logoDiameter = 112 * scale;
-  const logoLeft = 45 * scale;
-  const logoTop = 24 * scale;
-  const logoCenterY = logoTop + logoDiameter / 2;
+  const logoBoxWidth = 220 * scale;
+  const logoBoxHeight = 85 * scale;
+  const logoTop = margin;
+  const logoCenterY = logoTop + logoBoxHeight / 2;
 
   // Nombre del negocio, alineado verticalmente con el logo. El
   // tamaño se reduce para nombres largos para que el texto nunca
-  // invada el círculo del logo.
-  const baseNameFontSize = 50 * scale;
+  // invada el logo — ahora medido con el ancho real de la fuente
+  // (textToPath/measureTextWidth), no una aproximación.
+  const baseNameFontSize = 52 * scale;
   const minNameFontSize = 26 * scale;
-  const nameLeftBoundary = logoLeft + logoDiameter + 24 * scale;
-  const maxNameWidth = width - sideMargin - nameLeftBoundary;
-  const avgCharWidthFactor = 0.58; // aproximación para DejaVu Sans Bold
-  const nameLen = Math.max(content.tenantName.length, 1);
-  const nameFontSize = Math.max(
-    minNameFontSize,
-    Math.min(baseNameFontSize, maxNameWidth / (nameLen * avgCharWidthFactor))
-  );
+  const nameLeftBoundary = margin + logoBoxWidth + 28 * scale;
+  const maxNameWidth = width - margin - nameLeftBoundary;
+  let nameFontSize = baseNameFontSize;
+  while (nameFontSize > minNameFontSize && measureTextWidth(tenantName, nameFontSize) > maxNameWidth) {
+    nameFontSize -= 2 * scale;
+  }
+  const nameWidth = measureTextWidth(tenantName, nameFontSize);
+  const nameX = width - margin - nameWidth;
   const nameY = logoCenterY + nameFontSize * 0.35;
+  const namePath = textToPath(tenantName, nameX, nameY, nameFontSize).pathData;
 
-  // Math.max(..., 1) evita una división por cero si
-  // loyaltyVisitsNeeded llegara a estar en 0.
-  const total = Math.max(Math.min(content.visitsNeeded, 12), 1); // más de 12 sellos ya no entra con un tamaño legible
-  const rows = total <= 5 ? 1 : 2;
+  // El alto del strip es angosto (~123pt @1x) y tiene que entrar
+  // TODO: logo, nombre, la grilla de sellos, y el texto de abajo. Con
+  // 2 filas hay bastante menos margen vertical que con 1 sola, así
+  // que el tope de tamaño del sello es distinto en cada caso — mejor
+  // aprovechar el espacio real disponible que usar el mismo tope fijo
+  // para los 2 casos (eso fue lo que causó que el texto de abajo
+  // quedara pisado por la segunda fila en el primer intento).
+  const usableWidth = width - margin * 2;
+  const total = Math.max(Math.min(content.visitsNeeded, 14), 1); // más de 14 sellos ya no entra con un tamaño legible
+  const rows = total <= 7 ? 1 : 2;
   const columns = Math.ceil(total / rows);
   const colSpacing = usableWidth / columns;
-  const iconRadius = Math.min(colSpacing * 0.26, 29 * scale);
-  const rowSpacing = iconRadius * 2.25;
-  const gridTop = logoTop + logoDiameter + 18 * scale;
+  const maxRadiusByRows = rows === 1 ? 46 * scale : 25 * scale;
+  const iconRadius = Math.min(colSpacing * 0.32, maxRadiusByRows);
+  const rowSpacing = iconRadius * 2.2;
+  const gridTop = logoTop + logoBoxHeight + 20 * scale;
   const firstRowCenterY = gridTop + iconRadius;
 
   let stampIcons = "";
@@ -175,7 +174,7 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
     const col = i % columns;
     const itemsInRow = row === rows - 1 ? total - columns * (rows - 1) : columns;
     const rowOffset = (usableWidth - itemsInRow * colSpacing) / 2;
-    const cx = sideMargin + rowOffset + colSpacing * (col + 0.5);
+    const cx = margin + rowOffset + colSpacing * (col + 0.5);
     const cy = firstRowCenterY + rowSpacing * row;
     const filled = i < content.stamps;
     const circleColor = filled ? STAMP_ACTIVE_COLOR : STAMP_INACTIVE_COLOR;
@@ -186,32 +185,37 @@ function buildBaseSvg(content: StripContent, width: number, height: number): Buf
   }
 
   const lastRowBottom = firstRowCenterY + rowSpacing * (rows - 1) + iconRadius;
-  const labelFontSize = 27 * scale;
-  const labelY = Math.min(lastRowBottom + labelFontSize * 1.25, height - 16 * scale);
+  const labelFontSize = 26 * scale;
+  const labelWidth = measureTextWidth(remainingLabel, labelFontSize);
+  const labelX = (width - labelWidth) / 2;
+  const labelY = Math.min(lastRowBottom + labelFontSize * 1.15, height - margin);
+  const labelPath = textToPath(remainingLabel, labelX, labelY, labelFontSize).pathData;
 
   const svg = `
     <svg width="${num(width)}" height="${num(height)}" xmlns="http://www.w3.org/2000/svg">
       <rect width="${num(width)}" height="${num(height)}" fill="${BG_COLOR}" />
-      <text x="${num(width - sideMargin)}" y="${num(nameY)}" text-anchor="end" font-family="DejaVu Sans"
-            font-size="${num(nameFontSize)}" font-weight="bold" fill="${TEXT_COLOR}">${escapeXml(content.tenantName)}</text>
+      <path d="${namePath}" fill="${TEXT_COLOR}" />
       ${stampIcons}
-      <text x="${num(width / 2)}" y="${num(labelY)}" text-anchor="middle" font-family="DejaVu Sans"
-            font-size="${num(labelFontSize)}" font-weight="bold" fill="${TEXT_COLOR}" opacity="0.95">${escapeXml(content.remainingLabel)}</text>
+      <path d="${labelPath}" fill="${TEXT_COLOR}" opacity="0.95" />
     </svg>
   `;
 
   return Buffer.from(svg);
 }
 
-// Recorta el logo a un círculo (coincide con el badge circular del
-// diseño de referencia). Se hace con una máscara SVG + blend
-// "dest-in" en vez de border-radius CSS porque estamos component-
-// iendo con sharp directamente, no en un navegador.
-async function circularLogo(logo: Buffer, diameter: number): Promise<Buffer> {
-  const size = Math.round(diameter);
-  const resized = await sharp(logo).resize(size, size, { fit: "cover" }).toBuffer();
-  const mask = Buffer.from(`<svg><circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="#fff"/></svg>`);
-  return sharp(resized).composite([{ input: mask, blend: "dest-in" }]).png().toBuffer();
+// Redimensiona el logo para que entre en su caja disponible,
+// preservando su propia forma y transparencia — a diferencia de la
+// versión anterior, ya no se recorta a un círculo. "contain" deja
+// aire (relleno transparente) en vez de recortar o estirar el logo
+// para forzarlo a un tamaño exacto.
+async function fitLogo(logo: Buffer, boxWidth: number, boxHeight: number): Promise<Buffer> {
+  return sharp(logo)
+    .resize(Math.round(boxWidth), Math.round(boxHeight), {
+      fit: "contain",
+      background: { r: 0, g: 0, b: 0, alpha: 0 },
+    })
+    .png()
+    .toBuffer();
 }
 
 // El campo de logo normal (a diferencia del dedicado a Wallet) acepta
@@ -290,18 +294,18 @@ async function buildStrip(content: StripContent, width: number, height: number, 
 
   if (!logo) return base.png().toBuffer();
 
-  // Estas medidas tienen que coincidir exactamente con logoDiameter/
-  // logoLeft/logoTop usadas dentro de buildBaseSvg para el layout del
-  // nombre del negocio (si se desalinean, el nombre queda calculado
-  // para un logo que no es el que termina componiéndose).
+  // Estas medidas tienen que coincidir exactamente con logoBoxWidth/
+  // logoBoxHeight/margin usadas dentro de buildBaseSvg para el layout
+  // del nombre del negocio (si se desalinean, el nombre queda
+  // calculado para un logo que no es el que termina componiéndose).
   const scale = width / 1125;
-  const logoDiameter = 112 * scale;
-  const left = Math.round(45 * scale);
-  const top = Math.round(24 * scale);
+  const margin = 55 * scale;
+  const logoBoxWidth = 220 * scale;
+  const logoBoxHeight = 85 * scale;
 
   try {
-    const circular = await circularLogo(logo, logoDiameter);
-    return base.composite([{ input: circular, left, top }]).png().toBuffer();
+    const fitted = await fitLogo(logo, logoBoxWidth, logoBoxHeight);
+    return base.composite([{ input: fitted, left: Math.round(margin), top: Math.round(margin) }]).png().toBuffer();
   } catch (err) {
     // Si el logo no se puede procesar (formato raro, corrupto, etc.),
     // el pase igual se genera sin él — mejor sin logo que sin pase.
