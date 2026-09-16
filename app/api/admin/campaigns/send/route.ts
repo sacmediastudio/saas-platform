@@ -65,10 +65,11 @@ export async function POST(req: NextRequest) {
         // campo del formulario se reusa tal cual, ya no hace falta un
         // idioma aparte porque cada Content SID de Twilio ya es
         // específico de un idioma.
+        // "whatsappTemplateName" contiene el Content SID de Twilio
+        // (empieza con HX...), no un nombre de plantilla.
         await sendMarketingMessage({
           toPhone: customer.phone,
-          templateName: data.whatsappTemplateName!,
-          languageCode: data.whatsappTemplateLang || "es_CO",
+          contentSid: data.whatsappTemplateName!,
           bodyParams: [customer.name || "cliente", data.whatsappCustomParam || ""],
         });
       }

@@ -1,84 +1,93 @@
 /**
- * Envía mensajes de WhatsApp usando la API de Meta directamente (Cloud
- * API) — se volvió a este camino después de que la verificación de
- * negocio en Twilio también fuera rechazada. La app de Meta (ZERTOO)
- * ya está publicada y con las 4 plantillas aprobadas:
- * booking_reminder, order_confirmation, new_order_alert,
- * menu_lead_reward — cada una en español (es_CO) e inglés (en_US).
+ * Envía mensajes de WhatsApp usando Twilio — se volvió a este camino
+ * después de que la verificación directa con Meta quedara bloqueada
+ * definitivamente por el requisito de ser "Tech Provider" (un status
+ * irreversible que no tiene sentido para este proyecto). Twilio ya es
+ * Tech Provider por su cuenta, así que no hace falta pasar por eso.
  *
- * Los nombres de plantilla son los mismos en ambos idiomas — lo que
- * cambia es el "language code" que se manda en cada llamada, no el
- * nombre de la plantilla en sí.
+ * Diferencias clave con la API directa de Meta:
+ * - Autenticación: Account SID + Auth Token (Basic Auth), no un
+ *   token Bearer.
+ * - El cuerpo del pedido va como form-urlencoded, no JSON.
+ * - Cada plantilla+idioma tiene su propio "Content SID" (empieza con
+ *   HX...) en vez de un nombre de plantilla + código de idioma
+ *   separados.
+ * - El número de destino y el de origen llevan el prefijo
+ *   "whatsapp:" antes del +código de país.
  */
 
-const ACCESS_TOKEN = process.env.WHATSAPP_ACCESS_TOKEN;
-const PHONE_NUMBER_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
+const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
+const WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER; // formato: +2977472770, sin "whatsapp:"
 
-const TEMPLATE_BOOKING_REMINDER = process.env.WHATSAPP_TEMPLATE_BOOKING_REMINDER || "booking_reminder";
-const TEMPLATE_ORDER_CONFIRMATION = process.env.WHATSAPP_TEMPLATE_ORDER_CONFIRMATION || "order_confirmation";
-const TEMPLATE_NEW_ORDER_ALERT = process.env.WHATSAPP_TEMPLATE_NEW_ORDER_ALERT || "new_order_alert";
-const TEMPLATE_MENU_LEAD_REWARD = process.env.WHATSAPP_TEMPLATE_MENU_LEAD_REWARD || "menu_lead_reward";
+const TEMPLATE_BOOKING_REMINDER_ES = process.env.TWILIO_TEMPLATE_BOOKING_REMINDER_ES || "";
+const TEMPLATE_BOOKING_REMINDER_EN = process.env.TWILIO_TEMPLATE_BOOKING_REMINDER_EN || "";
 
-const LANG_ES = process.env.WHATSAPP_TEMPLATE_LANG_ES || "es_CO";
-const LANG_EN = process.env.WHATSAPP_TEMPLATE_LANG_EN || "en_US";
+const TEMPLATE_LEAD_REWARD_ES = process.env.TWILIO_TEMPLATE_LEAD_REWARD_ES || "";
+const TEMPLATE_LEAD_REWARD_EN = process.env.TWILIO_TEMPLATE_LEAD_REWARD_EN || "";
+
+const TEMPLATE_ORDER_CONFIRMATION_ES = process.env.TWILIO_TEMPLATE_ORDER_CONFIRMATION_ES || "";
+const TEMPLATE_ORDER_CONFIRMATION_EN = process.env.TWILIO_TEMPLATE_ORDER_CONFIRMATION_EN || "";
+
+const TEMPLATE_NEW_ORDER_ALERT_ES = process.env.TWILIO_TEMPLATE_NEW_ORDER_ALERT_ES || "";
+const TEMPLATE_NEW_ORDER_ALERT_EN = process.env.TWILIO_TEMPLATE_NEW_ORDER_ALERT_EN || "";
 
 export function isWhatsAppConfigured(): boolean {
-  return Boolean(ACCESS_TOKEN && PHONE_NUMBER_ID);
+  return Boolean(ACCOUNT_SID && AUTH_TOKEN && WHATSAPP_NUMBER);
 }
 
 function normalizePhone(phone: string): string {
-  return phone.replace(/[^\d]/g, "");
+  const digits = phone.replace(/[^\d]/g, "");
+  return digits.startsWith("+") ? digits : `+${digits}`;
 }
 
 /**
  * Función base: manda cualquier plantilla aprobada con sus parámetros
- * en orden — el orden de bodyParams tiene que coincidir EXACTO con
- * las variables {{1}}, {{2}}, etc. de la plantilla ya aprobada en
- * Meta, no con lo que a uno le parezca lógico. Antes de tocar el
- * orden de una función de más abajo, confirmar el texto real de la
- * plantilla en el dashboard de Meta.
+ * en orden — recibe el Content SID YA RESUELTO (cada función de más
+ * abajo decide cuál es el correcto para SU plantilla e idioma).
  */
 async function sendTemplateMessage(params: {
   toPhone: string;
-  templateName: string;
-  languageCode: string;
+  contentSid: string;
   bodyParams: string[];
 }): Promise<void> {
   if (!isWhatsAppConfigured()) return;
+  if (!params.contentSid) {
+    throw new Error("Falta configurar el Content SID de esta plantilla en las variables de entorno");
+  }
 
-  const res = await fetch(`https://graph.facebook.com/v21.0/${PHONE_NUMBER_ID}/messages`, {
+  const contentVariables: Record<string, string> = {};
+  params.bodyParams.forEach((value, index) => {
+    contentVariables[String(index + 1)] = value;
+  });
+
+  const body = new URLSearchParams({
+    To: `whatsapp:${normalizePhone(params.toPhone)}`,
+    From: `whatsapp:${WHATSAPP_NUMBER}`,
+    ContentSid: params.contentSid,
+    ContentVariables: JSON.stringify(contentVariables),
+  });
+
+  const auth = Buffer.from(`${ACCOUNT_SID}:${AUTH_TOKEN}`).toString("base64");
+
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${ACCOUNT_SID}/Messages.json`, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${ACCESS_TOKEN}`,
-      "Content-Type": "application/json",
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
     },
-    body: JSON.stringify({
-      messaging_product: "whatsapp",
-      to: normalizePhone(params.toPhone),
-      type: "template",
-      template: {
-        name: params.templateName,
-        language: { code: params.languageCode },
-        components: [
-          {
-            type: "body",
-            parameters: params.bodyParams.map((text) => ({ type: "text", text })),
-          },
-        ],
-      },
-    }),
+    body: body.toString(),
   });
 
   if (!res.ok) {
     const responseBody = await res.text().catch(() => "");
-    throw new Error(`WhatsApp API respondió ${res.status}: ${responseBody}`);
+    throw new Error(`Twilio respondió ${res.status}: ${responseBody}`);
   }
 }
 
 /**
- * Recordatorio de cita. Plantilla real (en_US): "Hello {{1}}, this is
- * a reminder of your appointment for {{2}} on {{3}} at {{4}} at
- * {{5}}." — 5 variables: nombre, servicio, fecha, hora, negocio.
+ * Recordatorio de cita. bodyParams tiene que coincidir con el orden
+ * de variables de la plantilla real aprobada en Twilio.
  */
 export async function sendBookingReminder(params: {
   toPhone: string;
@@ -91,16 +100,15 @@ export async function sendBookingReminder(params: {
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
-    templateName: TEMPLATE_BOOKING_REMINDER,
-    languageCode: params.language === "en" ? LANG_EN : LANG_ES,
+    contentSid: params.language === "en" ? TEMPLATE_BOOKING_REMINDER_EN : TEMPLATE_BOOKING_REMINDER_ES,
     bodyParams: [params.customerName, params.serviceName, params.dateLabel, params.timeLabel, params.businessName],
   });
 }
 
 /**
- * Código de canje del premio del menú. Plantilla real (es_CO): "Hola
- * {{1}}, tu premio en {{2}} es: {{3}}. Tu código para canjearlo es
- * {{4}}." — 4 variables: nombre, negocio, premio, código.
+ * Código de canje del premio del menú. Plantilla: "Hola {{1}}, tu
+ * premio en {{2}} es: {{3}}. Tu código para canjearlo es {{4}}." — 4
+ * variables: nombre, negocio, premio, código.
  */
 export async function sendMenuLeadCode(params: {
   toPhone: string;
@@ -112,35 +120,32 @@ export async function sendMenuLeadCode(params: {
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
-    templateName: TEMPLATE_MENU_LEAD_REWARD,
-    languageCode: params.language === "en" ? LANG_EN : LANG_ES,
+    contentSid: params.language === "en" ? TEMPLATE_LEAD_REWARD_EN : TEMPLATE_LEAD_REWARD_ES,
     bodyParams: [params.customerName, params.businessName, params.rewardText, params.claimCode],
   });
 }
 
 /**
  * Mensaje de campaña de marketing (admin de Zertoo) — usa una
- * plantilla que el admin especifica por nombre + idioma directo,
- * ya que puede variar según la campaña.
+ * plantilla que el admin especifica en el momento por su Content SID
+ * directo.
  */
 export async function sendMarketingMessage(params: {
   toPhone: string;
-  templateName: string;
-  languageCode: string;
+  contentSid: string;
   bodyParams: string[];
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
-    templateName: params.templateName,
-    languageCode: params.languageCode,
+    contentSid: params.contentSid,
     bodyParams: params.bodyParams,
   });
 }
 
 /**
- * Confirmación de pedido al CLIENTE. Plantilla real (es_CO): "Hola
- * {{1}}, tu pedido en {{2}} fue confirmado. Total: {{3}}." — 3
- * variables: nombre, negocio, total.
+ * Confirmación de pedido al CLIENTE. Plantilla: "Hola {{1}}, tu
+ * pedido en {{2}} fue confirmado. Total: {{3}}." — 3 variables:
+ * nombre, negocio, total.
  */
 export async function sendOrderConfirmationWhatsApp(params: {
   toPhone: string;
@@ -151,20 +156,20 @@ export async function sendOrderConfirmationWhatsApp(params: {
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
-    templateName: TEMPLATE_ORDER_CONFIRMATION,
-    languageCode: params.language === "en" ? LANG_EN : LANG_ES,
+    contentSid: params.language === "en" ? TEMPLATE_ORDER_CONFIRMATION_EN : TEMPLATE_ORDER_CONFIRMATION_ES,
     bodyParams: [params.customerName, params.businessName, params.total],
   });
 }
 
 /**
- * Aviso de pedido nuevo al NEGOCIO. Plantilla real (es_CO): "🔔
- * Recibiste un pedido de {{1}}. Este es el pedido: {{2}}. Tipo de
- * pedido: {{3}}. El total es: {{4}}. Teléfono del cliente: {{5}}" — 5
- * variables: nombre del cliente, resumen del pedido, tipo de entrega,
- * total, teléfono del cliente. Ojo: esta plantilla cambió de 4 a 5
- * variables en algún momento (se le agregó el teléfono) — si vuelve a
- * editarse en el dashboard de Meta, confirmar de nuevo el orden acá.
+ * Aviso de pedido nuevo al NEGOCIO. Plantilla: "🔔 Recibiste un
+ * pedido de {{1}}. Este es el pedido: {{2}}. Tipo de pedido: {{3}}.
+ * El total es: {{4}}. Teléfono del cliente: {{5}}. ¡empezá a
+ * prepararlo cuanto antes!" — 5 variables. La causa real de los
+ * rechazos anteriores no era el teléfono como variable (como se
+ * sospechó en un principio) sino que a la plantilla le faltaba la
+ * frase final — terminaba justo en {{5}}, una variable suelta sin
+ * texto real después, algo que WhatsApp rechaza.
  */
 export async function sendNewOrderAlertWhatsApp(params: {
   toPhone: string;
@@ -177,8 +182,7 @@ export async function sendNewOrderAlertWhatsApp(params: {
 }): Promise<void> {
   await sendTemplateMessage({
     toPhone: params.toPhone,
-    templateName: TEMPLATE_NEW_ORDER_ALERT,
-    languageCode: params.language === "en" ? LANG_EN : LANG_ES,
+    contentSid: params.language === "en" ? TEMPLATE_NEW_ORDER_ALERT_EN : TEMPLATE_NEW_ORDER_ALERT_ES,
     bodyParams: [params.customerName, params.itemsSummary, params.fulfillmentInfo, params.total, params.customerPhone],
   });
 }
