@@ -60,10 +60,14 @@ export async function POST(req: NextRequest) {
           unsubscribeUrl: `${origin}/unsubscribe?customerId=${customer.id}`,
         });
       } else if (customer.phone) {
+        // "whatsappTemplateName" ahora contiene el Content SID de
+        // Twilio (empieza con HX...), no un nombre de plantilla — el
+        // campo del formulario se reusa tal cual, ya no hace falta un
+        // idioma aparte porque cada Content SID de Twilio ya es
+        // específico de un idioma.
         await sendMarketingMessage({
           toPhone: customer.phone,
-          templateName: data.whatsappTemplateName!,
-          languageCode: data.whatsappTemplateLang || "es",
+          contentSid: data.whatsappTemplateName!,
           bodyParams: [customer.name || "cliente", data.whatsappCustomParam || ""],
         });
       }
