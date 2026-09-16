@@ -19,8 +19,8 @@ const TEMPLATE_ORDER_CONFIRMATION = process.env.WHATSAPP_TEMPLATE_ORDER_CONFIRMA
 const TEMPLATE_NEW_ORDER_ALERT = process.env.WHATSAPP_TEMPLATE_NEW_ORDER_ALERT || "new_order_alert";
 const TEMPLATE_MENU_LEAD_REWARD = process.env.WHATSAPP_TEMPLATE_MENU_LEAD_REWARD || "menu_lead_reward";
 
-const LANG_ES = "es_CO";
-const LANG_EN = "en_US";
+const LANG_ES = process.env.WHATSAPP_TEMPLATE_LANG_ES || "es_CO";
+const LANG_EN = process.env.WHATSAPP_TEMPLATE_LANG_EN || "en_US";
 
 export function isWhatsAppConfigured(): boolean {
   return Boolean(ACCESS_TOKEN && PHONE_NUMBER_ID);
