@@ -27,7 +27,7 @@ export const translations = {
           name: "Restaurants",
           price: "39.90",
           desc: "Your restaurant's menu, always up to date.",
-          benefits: ["Photos for every dish, tap to zoom", "Unlimited categories, sold-out items", "Featured dishes section", "Bilingual menu (EN/ES)", "Customer wishlist (favorites)", "New-customer reward via WhatsApp", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "Custom branding & local currency"],
+          benefits: ["Photos for every dish, tap to zoom", "Unlimited categories, sold-out items", "Featured dishes section", "Bilingual menu (EN/ES)", "Customer wishlist (favorites)", "WhatsApp order confirmation for customers", "Instant WhatsApp alert when a new order comes in", "New-customer reward via WhatsApp", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "Custom branding & local currency"],
         },
         {
           id: "appointments",
@@ -82,7 +82,7 @@ export const translations = {
     },
     faq: {
       title: "Frequently asked questions",
-      subtitle: "Still have a question? Write to us at hola@zertoo.com and we'll reply the same day.",
+      subtitle: "Still have a question? Write to us at hello@zertoo.app and we'll reply the same day.",
       items: [
         { q: "Do I need technical knowledge to get started?", a: "No. You create your account, choose your business type and fill in your details. In under ten minutes your page is live and ready to share." },
         { q: "What does the 14-day trial include?", a: "Full access to every feature of the plan you choose, with no limits and no credit card required. If you don't continue, your page simply pauses." },
@@ -103,6 +103,7 @@ export const translations = {
       products: "Products",
       pricing: "Pricing",
       faq: "FAQ",
+      privacy: "Privacy",
       copyright: "A Certucce Digital LLC product. All rights reserved.",
     },
   },
@@ -131,7 +132,7 @@ export const translations = {
           name: "Restaurantes",
           price: "39.90",
           desc: "El menú de tu restaurante, siempre actualizado.",
-          benefits: ["Fotos de cada plato, toca para ampliar", "Categorías ilimitadas, agotados", "Sección de platos destacados", "Menú bilingüe (EN/ES)", "Lista de favoritos del cliente", "Premio de bienvenida por WhatsApp", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Marca y moneda local personalizables"],
+          benefits: ["Fotos de cada plato, toca para ampliar", "Categorías ilimitadas, agotados", "Sección de platos destacados", "Menú bilingüe (EN/ES)", "Lista de favoritos del cliente", "Confirmación de pedido por WhatsApp para el cliente", "Aviso instantáneo por WhatsApp cuando llega un pedido", "Premio de bienvenida por WhatsApp", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Marca y moneda local personalizables"],
         },
         {
           id: "citas",
@@ -186,7 +187,7 @@ export const translations = {
     },
     faq: {
       title: "Preguntas frecuentes",
-      subtitle: "¿Te queda alguna duda? Escríbenos a hola@zertoo.com y te respondemos el mismo día.",
+      subtitle: "¿Te queda alguna duda? Escríbenos a hello@zertoo.app y te respondemos el mismo día.",
       items: [
         { q: "¿Necesito conocimientos técnicos para empezar?", a: "No. Creas tu cuenta, eliges tu tipo de negocio y completas tu información. En menos de diez minutos tu página está publicada y lista para compartir." },
         { q: "¿Qué incluye la prueba de 14 días?", a: "Acceso completo a todas las funciones del plan que elijas, sin límites y sin pedirte tarjeta de crédito. Si no continúas, tu página simplemente se pausa." },
@@ -207,6 +208,7 @@ export const translations = {
       products: "Productos",
       pricing: "Precios",
       faq: "Preguntas",
+      privacy: "Privacidad",
       copyright: "Un producto de Certucce Digital LLC. Todos los derechos reservados.",
     },
   },
