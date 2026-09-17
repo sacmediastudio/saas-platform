@@ -272,10 +272,15 @@ model MenuItem {
   tenantId    String
   categoryId  String
   name        String
+  // Traducción manual opcional del nombre — mismo criterio que
+  // descriptionEn. Antes se dejaba sin traducir a propósito (podía
+  // ser una marca o un plato regional), pero ahora es opcional por
+  // pedido explícito: si no se completa, el menú en inglés sigue
+  // mostrando el nombre original tal cual.
+  nameEn      String?
   description String?
   // Traducción manual opcional de la descripción — mismo criterio que
-  // MenuCategory.nameEn. El nombre del plato nunca se traduce (puede
-  // ser cualquier cosa: una marca, un plato regional, etc.).
+  // MenuCategory.nameEn.
   descriptionEn String?
   price       Decimal        @db.Decimal(10, 2)
   // Para platos que se venden por peso/tamaño (ej. pescado entero) —

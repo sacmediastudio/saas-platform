@@ -9,6 +9,7 @@ const createSchema = z
   .object({
     categoryId: z.string(),
     name: z.string().min(1),
+    nameEn: z.string().nullable().optional(),
     description: z.string().optional(),
     descriptionEn: z.string().nullable().optional(),
     price: z.number().min(0),

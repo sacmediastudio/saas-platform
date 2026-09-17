@@ -23,6 +23,7 @@ interface MenuItemData {
   id: string;
   categoryId: string;
   name: string;
+  nameEn: string | null;
   description: string | null;
   descriptionEn: string | null;
   price: number;
@@ -63,6 +64,15 @@ interface TenantData {
   deliveryEnabled: boolean;
   deliveryFee: number | null;
   minDeliveryAmount: number | null;
+}
+
+// Función de módulo (no un método interno de PublicMenu) porque
+// CheckoutModal e ItemCustomizeModal, definidos más abajo en este
+// mismo archivo, también necesitan resolver el nombre del plato
+// según el idioma — y al ser componentes hermanos, no pueden ver
+// funciones declaradas dentro de PublicMenu.
+function resolveItemName(item: MenuItemData, lang: string) {
+  return lang === "en" && item.nameEn ? item.nameEn : item.name;
 }
 
 export default function PublicMenu({
@@ -445,7 +455,7 @@ export default function PublicMenu({
                   {item.imageUrl ? (
                     <SmartImage
                       src={item.imageUrl}
-                      alt={item.name}
+                      alt={resolveItemName(item, lang)}
                       fill
                       className="object-cover"
                       sizes="(min-width: 576px) 576px, 100vw"
@@ -455,7 +465,7 @@ export default function PublicMenu({
                       className="w-full h-full flex items-center justify-center text-4xl font-bold opacity-20"
                       style={{ backgroundColor: "currentColor" }}
                     >
-                      <span style={{ color: tenant.themeBgColor }}>{item.name.charAt(0)}</span>
+                      <span style={{ color: tenant.themeBgColor }}>{resolveItemName(item, lang).charAt(0)}</span>
                     </div>
                   )}
                   <span className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
@@ -479,7 +489,7 @@ export default function PublicMenu({
                 </div>
                 <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-xl font-bold leading-tight">{item.name}</p>
+                    <p className="text-xl font-bold leading-tight">{resolveItemName(item, lang)}</p>
                     <span className="text-xl font-bold text-red-600 shrink-0">
                       {priceLabel(item)}
                     </span>
@@ -546,7 +556,7 @@ export default function PublicMenu({
                           <div className="relative shrink-0">
                             <SmartImage
                               src={item.imageUrl}
-                              alt={item.name}
+                              alt={resolveItemName(item, lang)}
                               width={56}
                               height={56}
                               className="w-14 h-14 rounded-lg object-cover"
@@ -570,7 +580,7 @@ export default function PublicMenu({
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-3">
-                            <p className="text-base font-semibold">{item.name}</p>
+                            <p className="text-base font-semibold">{resolveItemName(item, lang)}</p>
                             {item.status === "SOLD_OUT" ? (
                               <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
                                 {lang === "en" ? "Sold out" : "Agotado"}
@@ -1102,7 +1112,7 @@ function CheckoutModal({
                   <div key={line.lineId} className="flex justify-between text-sm gap-2">
                     <div className="flex-1 min-w-0">
                       <p>
-                        {line.quantity}x {item.name}
+                        {line.quantity}x {resolveItemName(item, language)}
                       </p>
                       {selectedAddOns.length > 0 && (
                         <p className="text-xs opacity-60 pl-3">
@@ -1274,7 +1284,7 @@ function ItemCustomizeModal({
         className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-6 text-neutral-800 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <p className="text-lg font-semibold mb-1">{item.name}</p>
+        <p className="text-lg font-semibold mb-1">{resolveItemName(item, lang)}</p>
         <p className="text-sm opacity-60 mb-4">{formatCurrency(item.price, currency)}</p>
 
         {item.addOns.length > 0 && (

@@ -18,6 +18,7 @@ interface MenuItem {
   id: string;
   categoryId: string;
   name: string;
+  nameEn: string | null;
   description: string | null;
   descriptionEn: string | null;
   price: number;
@@ -378,6 +379,7 @@ function DishModal({
   const { t } = useDashboardLang();
   const [form, setForm] = useState({
     name: item?.name ?? "",
+    nameEn: item?.nameEn ?? "",
     description: item?.description ?? "",
     descriptionEn: item?.descriptionEn ?? "",
     price: item ? String(item.price) : "",
@@ -429,6 +431,7 @@ function DishModal({
         body: JSON.stringify({
           categoryId: form.categoryId,
           name: form.name,
+          nameEn: form.nameEn || null,
           description: form.description || undefined,
           descriptionEn: form.descriptionEn || null,
           price: form.variablePrice ? 0 : price,
@@ -499,6 +502,15 @@ function DishModal({
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
             placeholder={t.dishModal.namePlaceholder}
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label={t.dishModal.nameEn}>
+          <input
+            value={form.nameEn}
+            onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+            placeholder="Classic bruschetta"
             className={inputClass}
           />
         </Field>
