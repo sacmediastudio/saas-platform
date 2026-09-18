@@ -27,6 +27,7 @@ export async function GET(req: NextRequest) {
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const latParam = searchParams.get("lat");
   const lngParam = searchParams.get("lng");
+  const now = new Date();
 
   const allTenants = await db.tenant.findMany({
     where: {
@@ -34,7 +35,22 @@ export async function GET(req: NextRequest) {
       ...(category ? { nowCategory: category as NowCategory } : {}),
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
-    include: { reviews: { where: { status: "PUBLISHED" } } },
+    include: {
+      reviews: { where: { status: "PUBLISHED" } },
+      // Alcanza con saber si existe AL MENOS una promo vigente — el
+      // listado solo necesita el indicador "Promo" en la tarjeta, el
+      // detalle real de la promoción se pide aparte en
+      // /api/public/eats/promotions.
+      promotions: {
+        where: {
+          active: true,
+          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+          AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+        },
+        select: { id: true },
+        take: 1,
+      },
+    },
     orderBy: { nowFeatured: "desc" },
   });
 
@@ -66,6 +82,7 @@ export async function GET(req: NextRequest) {
       reviewCount: publishedReviews.length,
       distanceKm,
       nowFeatured: t.nowFeatured,
+      hasPromo: t.promotions.length > 0,
     };
   });
 
