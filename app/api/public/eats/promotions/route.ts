@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
+// Fuerza que esto se genere en cada visita (tiempo de ejecución), NO
+// durante `next build` — la base de datos solo es alcanzable en tiempo
+// de ejecución (red privada de Railway), mismo motivo por el que
+// zertoo-now/app/page.tsx necesitó este mismo fix. Sin esto, Next
+// intenta pre-generar esta ruta en build time porque no usa nada de la
+// request que la marque como dinámica por sí sola, y el build falla
+// porque no puede alcanzar `postgres.railway.internal` desde fuera de
+// Railway.
+export const dynamic = "force-dynamic";
+
 // GET /api/public/eats/promotions
 //
 // Endpoint público (sin autenticación) con las promociones activas de
