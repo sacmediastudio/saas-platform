@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag } from "lucide-react";
+import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone } from "lucide-react";
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 
@@ -61,6 +61,7 @@ export default function DashboardShell({
     { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star },
     { href: "/dashboard/customers", label: t.nav.customers, icon: Users },
     { href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion },
+    { href: "/dashboard/promotions", label: t.nav.promotions, icon: Megaphone },
     { href: "/dashboard/loyalty", label: t.nav.loyalty, icon: Stamp },
     { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks },
     { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard },

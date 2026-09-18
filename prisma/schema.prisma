@@ -145,6 +145,11 @@ model Tenant {
   // sistema de coordenadas de arriba como respaldo.
   googleMapsUrl String?
   moments      Moment[]
+  // Promociones que el negocio publica en Zertoo Eats (ej. "2x1 los
+  // martes") — el negocio las carga y desactiva él mismo, sin curación
+  // del admin (a diferencia de nowFeatured). Solo se muestran en la API
+  // pública mientras el negocio también tenga nowEnabled=true.
+  promotions   Promotion[]
 
   // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
   // libres después de cada cita antes de que se pueda reservar la
@@ -534,6 +539,29 @@ model FaqItem {
 
   @@index([tenantId])
   @@map("faq_items")
+}
+
+// Una promoción de un negocio para Zertoo Eats (ej. "2x1 los martes",
+// "20% de descuento en tu primera visita"). `active` es lo que el
+// negocio prende/apaga desde su dashboard sin borrar el historial —
+// borrar de verdad queda para cuando ya no quiere ni el registro.
+// startsAt/endsAt son opcionales: una promo sin fechas se entiende
+// "activa hasta que la apaguen a mano".
+model Promotion {
+  id          String    @id @default(cuid())
+  tenantId    String
+  title       String
+  description String?
+  imageUrl    String?
+  active      Boolean   @default(true)
+  startsAt    DateTime?
+  endsAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("promotions")
 }
 
 // Una "tarjeta" de sellos por cliente (identificado por correo) por
