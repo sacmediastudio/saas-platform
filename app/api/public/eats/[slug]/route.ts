@@ -56,6 +56,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     latitude: tenant.latitude,
     longitude: tenant.longitude,
     googleMapsUrl: tenant.googleMapsUrl,
+    reservationUrl: tenant.nowReservationUrl,
     avgRating,
     reviewCount: tenant.reviews.length,
     hoursStatus,

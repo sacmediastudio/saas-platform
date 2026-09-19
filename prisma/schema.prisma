@@ -152,6 +152,12 @@ model Tenant {
   // la puerta exacta). Opcional — si no está, se sigue usando el
   // sistema de coordenadas de arriba como respaldo.
   googleMapsUrl String?
+  // Link externo de reservas (OpenTable, Resy, su propio Calendly, etc.)
+  // que el negocio pega desde Ajustes. Cuando existe, la app de Zertoo
+  // Eats muestra un botón "Reservar ahora" en vez de "Compartir" en la
+  // ficha del negocio — opcional, si no está cargado se sigue mostrando
+  // "Compartir" como antes.
+  nowReservationUrl String?
   moments      Moment[]
   // Promociones que el negocio publica en Zertoo Eats (ej. "2x1 los
   // martes") — el negocio las carga y desactiva él mismo, sin curación

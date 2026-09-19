@@ -37,6 +37,7 @@ export default async function SettingsPage() {
         nowCategory: tenant.nowCategory,
         nowPriceRange: tenant.nowPriceRange,
         googleMapsUrl: tenant.googleMapsUrl,
+        nowReservationUrl: tenant.nowReservationUrl,
       }}
       enabledModules={getEnabledModules(tenant)}
     />

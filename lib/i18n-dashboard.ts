@@ -220,6 +220,9 @@ export const dashboardTranslations = {
       googleMapsLabel: "Google Maps link (optional)",
       googleMapsHint:
         'Find your business on Google Maps, tap "Share", and paste the link here. If you add it, the "Get directions" button on Zertoo Eats goes straight to your exact location, instead of calculating it from your address (which can get close to the area, but not always to the door).',
+      reservationUrlLabel: "Reservations link (optional)",
+      reservationUrlHint:
+        "Paste your OpenTable, Resy, Calendly, or any other booking link. When it's set, the Zertoo Eats app shows a \"Book now\" button instead of \"Share\" on your listing.",
       hoursLabel: "Hours",
       hoursHint:
         "Used to show Open / Closed / Opening soon / Closing soon next to your business on Zertoo Eats. Same hours as the Bookings module, if you have it active.",
@@ -761,6 +764,9 @@ export const dashboardTranslations = {
       googleMapsLabel: "Link de Google Maps (opcional)",
       googleMapsHint:
         'Buscá tu negocio en Google Maps, tocá "Compartir", y pegá el link acá. Si lo cargás, el botón "Cómo llegar" en Zertoo Eats lleva directo a tu ubicación exacta, en vez de calcularla desde tu dirección (que puede acercar a la zona, pero no siempre a la puerta).',
+      reservationUrlLabel: "Link de reservas (opcional)",
+      reservationUrlHint:
+        'Pegá tu link de OpenTable, Resy, Calendly o el que uses para reservas. Cuando está cargado, la app de Zertoo Eats muestra un botón "Reservar ahora" en vez de "Compartir" en tu ficha.',
       hoursLabel: "Horario",
       hoursHint:
         "Se usa para mostrar Abierto / Cerrado / Abre pronto / Cierra pronto al lado de tu negocio en Zertoo Eats. Es el mismo horario del módulo de Citas, si lo tenés activo.",

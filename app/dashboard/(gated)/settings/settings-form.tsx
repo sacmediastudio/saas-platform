@@ -36,6 +36,7 @@ interface TenantData {
   nowCategory: string | null;
   nowPriceRange: string | null;
   googleMapsUrl: string | null;
+  nowReservationUrl: string | null;
 }
 
 export default function SettingsForm({
@@ -425,6 +426,18 @@ export default function SettingsForm({
                   className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none max-w-md"
                 />
                 <span className="text-xs text-[#343233]/50">{t.settingsForm.googleMapsHint}</span>
+              </label>
+
+              <label className="flex flex-col gap-1.5">
+                <span className="text-xs text-[#343233]/70">{t.settingsForm.reservationUrlLabel}</span>
+                <input
+                  type="url"
+                  value={form.nowReservationUrl ?? ""}
+                  onChange={(e) => setForm({ ...form, nowReservationUrl: e.target.value || null })}
+                  placeholder="https://opentable.com/..."
+                  className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none max-w-md"
+                />
+                <span className="text-xs text-[#343233]/50">{t.settingsForm.reservationUrlHint}</span>
               </label>
 
               <div className="flex flex-col gap-1.5">
