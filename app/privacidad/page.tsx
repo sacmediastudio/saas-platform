@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
 
 const LAST_UPDATED: Record<Lang, string> = {
-  es: "16 de septiembre de 2026",
-  en: "September 16, 2026",
+  es: "19 de septiembre de 2026",
+  en: "September 19, 2026",
 };
 
 const CONTENT: Record<Lang, { title: string; sections: { heading: string; body: React.ReactNode }[] }> = {
@@ -113,7 +113,42 @@ const CONTENT: Record<Lang, { title: string; sections: { heading: string; body: 
         ),
       },
       {
-        heading: "9. Contacto",
+        heading: "9. App móvil Zertoo Eats",
+        body: (
+          <>
+            <p>
+              La app Zertoo Eats (el directorio de restaurantes de Aruba) recopila, además de lo
+              anterior:
+            </p>
+            <ul className="list-disc pl-6 space-y-1">
+              <li>
+                Ubicación del dispositivo, solo si activás "Cerca de mí" — se usa una sola vez por
+                consulta para ordenar los resultados por distancia real, y no se guarda ni se rastrea
+                en segundo plano.
+              </li>
+              <li>
+                Token de notificaciones push (Expo), solo si activás los avisos de promociones y
+                specials — se usa exclusivamente para enviarte esos avisos.
+              </li>
+              <li>
+                Los datos que dejes voluntariamente en la sección "Mis datos" de la app (nombre,
+                correo, teléfono) — son opcionales y solo se usan para identificarte al mandarte
+                avisos de promociones.
+              </li>
+            </ul>
+            <p>
+              Podés desactivar el permiso de ubicación o de notificaciones en cualquier momento desde
+              los ajustes de tu dispositivo, o pedirnos que borremos tus datos escribiendo a{" "}
+              <a href="mailto:privacidad@zertoo.app" className="text-forest underline">
+                privacidad@zertoo.app
+              </a>
+              .
+            </p>
+          </>
+        ),
+      },
+      {
+        heading: "10. Contacto",
         body: (
           <p>
             Para preguntas sobre esta política, escribinos a{" "}
@@ -229,7 +264,37 @@ const CONTENT: Record<Lang, { title: string; sections: { heading: string; body: 
         ),
       },
       {
-        heading: "9. Contact",
+        heading: "9. Zertoo Eats mobile app",
+        body: (
+          <>
+            <p>The Zertoo Eats app (Aruba's restaurant directory) collects, in addition to the above:</p>
+            <ul className="list-disc pl-6 space-y-1">
+              <li>
+                Device location, only if you turn on "Near me" — used once per search to sort results
+                by real distance, never stored or tracked in the background.
+              </li>
+              <li>
+                A push notification token (Expo), only if you opt in to promo and special alerts —
+                used exclusively to send you those alerts.
+              </li>
+              <li>
+                Whatever you voluntarily leave in the app's "My info" section (name, email, phone) —
+                all optional, used only to identify you when sending promo alerts.
+              </li>
+            </ul>
+            <p>
+              You can turn off location or notification permissions at any time from your device
+              settings, or ask us to delete your data by writing to{" "}
+              <a href="mailto:privacidad@zertoo.app" className="text-forest underline">
+                privacidad@zertoo.app
+              </a>
+              .
+            </p>
+          </>
+        ),
+      },
+      {
+        heading: "10. Contact",
         body: (
           <p>
             For questions about this policy, write to us at{" "}
