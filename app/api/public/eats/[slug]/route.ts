@@ -11,9 +11,21 @@ import { eatsCategoryLabel } from "@/lib/eats-categories";
 // que un negocio que el propio dueño desactivó del directorio no
 // quede igual accesible por este otro camino.
 export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
+  const now = new Date();
+
   const tenant = await db.tenant.findUnique({
     where: { slug: params.slug },
-    include: { reviews: { where: { status: "PUBLISHED" } } },
+    include: {
+      reviews: { where: { status: "PUBLISHED" } },
+      promotions: {
+        where: {
+          active: true,
+          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+          AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+        },
+        orderBy: { createdAt: "desc" },
+      },
+    },
   });
 
   if (!tenant || !tenant.nowEnabled) {
@@ -44,5 +56,11 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     // business-detail.tsx del sitio web (siempre zertoo.app/menu/slug,
     // nunca un campo aparte que se pueda desincronizar del slug real).
     menuUrl: `https://zertoo.app/menu/${tenant.slug}`,
+    promotions: tenant.promotions.map((p) => ({
+      id: p.id,
+      title: p.title,
+      description: p.description,
+      imageUrl: p.imageUrl,
+    })),
   });
 }
