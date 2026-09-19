@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { eatsCategoryLabel, eatsPriceRangeLabel } from "@/lib/eats-categories";
+import { eatsCategoryLabel, eatsPriceRangeLabel, eatsHoursStatusLabel } from "@/lib/eats-categories";
+import { getBusinessHours, computeHoursStatus } from "@/lib/availability";
 
 // GET /api/public/eats/[slug]
 //
@@ -37,6 +38,9 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
       ? tenant.reviews.reduce((sum, r) => sum + r.rating, 0) / tenant.reviews.length
       : null;
 
+  const hours = await getBusinessHours(tenant.id);
+  const hoursStatus = computeHoursStatus(hours, tenant.timezone, now);
+
   return NextResponse.json({
     slug: tenant.slug,
     name: tenant.name,
@@ -54,6 +58,9 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     googleMapsUrl: tenant.googleMapsUrl,
     avgRating,
     reviewCount: tenant.reviews.length,
+    hoursStatus,
+    hoursStatusLabelEs: eatsHoursStatusLabel(hoursStatus, "es"),
+    hoursStatusLabelEn: eatsHoursStatusLabel(hoursStatus, "en"),
     // Construido acá, no guardado — mismo criterio que
     // business-detail.tsx del sitio web (siempre zertoo.app/menu/slug,
     // nunca un campo aparte que se pueda desincronizar del slug real).

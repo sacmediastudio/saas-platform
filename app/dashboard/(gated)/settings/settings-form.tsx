@@ -8,6 +8,7 @@ import { TIMEZONES } from "@/lib/timezone";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import DashboardCard from "@/components/dashboard-card";
+import BusinessHoursEditor from "@/components/business-hours-editor";
 
 interface TenantData {
   name: string;
@@ -425,6 +426,14 @@ export default function SettingsForm({
                 />
                 <span className="text-xs text-[#343233]/50">{t.settingsForm.googleMapsHint}</span>
               </label>
+
+              <div className="flex flex-col gap-1.5">
+                <span className="text-xs text-[#343233]/70">{t.settingsForm.hoursLabel}</span>
+                <span className="text-xs text-[#343233]/50 mb-1">{t.settingsForm.hoursHint}</span>
+                <div className="border border-[#002D09]/10 rounded-xl p-4">
+                  <BusinessHoursEditor hideBuffer />
+                </div>
+              </div>
             </div>
           )}
         </Section>

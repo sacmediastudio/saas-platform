@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import type { NowCategory, NowPriceRange, Prisma } from "@prisma/client";
-import { eatsCategoryLabel, eatsPriceRangeLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
+import { eatsCategoryLabel, eatsPriceRangeLabel, eatsHoursStatusLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
+import { getBusinessHoursForTenants, computeHoursStatus, type HoursStatus } from "@/lib/availability";
 
 // Orden real de precio (no alfabético) — así el filtro y la lista de
 // opciones siempre van de más barato a más caro.
@@ -28,7 +29,8 @@ type TenantWithRatings = Prisma.TenantGetPayload<{ include: ReturnType<typeof te
 
 function mapTenant(
   t: TenantWithRatings,
-  opts: { nearMeActive: boolean; userLat: number | null; userLng: number | null }
+  opts: { nearMeActive: boolean; userLat: number | null; userLng: number | null },
+  hoursStatus: HoursStatus
 ) {
   const publishedReviews = t.reviews;
   const avgRating =
@@ -62,6 +64,9 @@ function mapTenant(
     nowFeatured: t.nowFeatured,
     hasPromo: t.promotions.length > 0,
     promoKind,
+    hoursStatus,
+    hoursStatusLabelEs: eatsHoursStatusLabel(hoursStatus, "es"),
+    hoursStatusLabelEn: eatsHoursStatusLabel(hoursStatus, "en"),
   };
 }
 
@@ -109,7 +114,30 @@ export async function GET(req: NextRequest) {
     orderBy: { nowFeatured: "desc" },
   });
 
-  const withRatings = allTenants.map((t) => mapTenant(t, mapOpts));
+  // El carrusel de portada (suscripción premium, cura el admin desde
+  // /admin/now) es SIEMPRE el mismo set de negocios, sin importar el
+  // filtro de categoría/precio/búsqueda que haya puesto el usuario —
+  // es una vidriera fija, no un resultado de búsqueda. Por eso es una
+  // consulta aparte, no un .filter() sobre allTenants. (Se trae acá
+  // arriba, no más abajo donde se usa, para poder incluir sus ids en
+  // el batch de horario de una sola vez.)
+  const spotlightTenants = await db.tenant.findMany({
+    where: { nowEnabled: true, nowSpotlight: true },
+    include: tenantWithRatingsInclude(now),
+    orderBy: { name: "asc" },
+  });
+
+  // El horario semanal es una consulta aparte (traído en batch para
+  // todos los negocios de una vez, no uno por uno) porque no depende
+  // del include de reviews/promociones de arriba — ver
+  // getBusinessHoursForTenants en lib/availability.ts.
+  const hoursByTenant = await getBusinessHoursForTenants(
+    Array.from(new Set([...allTenants.map((t) => t.id), ...spotlightTenants.map((t) => t.id)]))
+  );
+  const statusFor = (t: TenantWithRatings): HoursStatus =>
+    computeHoursStatus(hoursByTenant.get(t.id) ?? [], t.timezone, now);
+
+  const withRatings = allTenants.map((t) => mapTenant(t, mapOpts, statusFor(t)));
 
   // Igual criterio que el sitio web: con "cerca de mí" activo, un solo
   // listado ordenado por distancia real (destacado vs. resto no tiene
@@ -130,17 +158,7 @@ export async function GET(req: NextRequest) {
   const featured = withRatings.filter((t) => t.nowFeatured);
   const rest = withRatings.filter((t) => !t.nowFeatured);
 
-  // El carrusel de portada (suscripción premium, cura el admin desde
-  // /admin/now) es SIEMPRE el mismo set de negocios, sin importar el
-  // filtro de categoría/precio/búsqueda que haya puesto el usuario —
-  // es una vidriera fija, no un resultado de búsqueda. Por eso es una
-  // consulta aparte, no un .filter() sobre allTenants.
-  const spotlightTenants = await db.tenant.findMany({
-    where: { nowEnabled: true, nowSpotlight: true },
-    include: tenantWithRatingsInclude(now),
-    orderBy: { name: "asc" },
-  });
-  const spotlight = spotlightTenants.map((t) => mapTenant(t, mapOpts));
+  const spotlight = spotlightTenants.map((t) => mapTenant(t, mapOpts, statusFor(t)));
 
   // Categorías disponibles: solo las que de verdad tienen algún
   // negocio activo ahora mismo (sin el filtro de category/q aplicado,

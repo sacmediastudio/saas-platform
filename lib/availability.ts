@@ -32,6 +32,64 @@ export async function getBusinessHours(tenantId: string): Promise<DayHours[]> {
   });
 }
 
+export type HoursStatus = "OPEN" | "CLOSED" | "OPENING_SOON" | "CLOSING_SOON";
+
+// Qué tan cerca hay que estar de la apertura/cierre para mostrar "Abre
+// pronto"/"Cierra pronto" en vez de "Cerrado"/"Abierto" directo — 30
+// minutos alcanza para que alguien decida ir igual, sin ser tan amplio
+// que "pronto" se sienta engañoso.
+const SOON_THRESHOLD_MINUTES = 30;
+
+/**
+ * Estado de apertura de un negocio AHORA MISMO, para el badge de
+ * Zertoo Eats — usa el mismo horario semanal que ya arma
+ * getBusinessHours/getBusinessHoursForTenants, pero acá solo importa
+ * el día de hoy (en la zona horaria del negocio) y la hora actual.
+ */
+export function computeHoursStatus(hours: DayHours[], timezone: string, now: Date): HoursStatus {
+  const dayOfWeek = getDayOfWeekInTz(now, timezone);
+  const nowMinutes = getMinutesOfDayInTz(now, timezone);
+  const today = hours.find((h) => h.dayOfWeek === dayOfWeek);
+
+  if (!today || !today.isOpen) return "CLOSED";
+
+  const openMinutes = timeToMinutes(today.startTime);
+  const closeMinutes = timeToMinutes(today.endTime);
+
+  if (nowMinutes < openMinutes) {
+    return openMinutes - nowMinutes <= SOON_THRESHOLD_MINUTES ? "OPENING_SOON" : "CLOSED";
+  }
+  if (nowMinutes >= closeMinutes) return "CLOSED";
+  return closeMinutes - nowMinutes <= SOON_THRESHOLD_MINUTES ? "CLOSING_SOON" : "OPEN";
+}
+
+/**
+ * Igual que getBusinessHours, pero para varios negocios de una sola
+ * consulta — evita N+1 queries en /api/public/eats/listings, que trae
+ * docenas de negocios de una vez (a diferencia de /api/public/eats/
+ * [slug], que solo necesita uno y puede seguir usando la versión
+ * simple de arriba).
+ */
+export async function getBusinessHoursForTenants(tenantIds: string[]): Promise<Map<string, DayHours[]>> {
+  const rows = await db.businessHours.findMany({ where: { tenantId: { in: tenantIds } } });
+  const byTenant = new Map<string, DayHours[]>();
+  for (const tenantId of tenantIds) {
+    const tenantRows = rows.filter((r) => r.tenantId === tenantId);
+    byTenant.set(
+      tenantId,
+      tenantRows.length === 0
+        ? DEFAULT_HOURS
+        : DEFAULT_HOURS.map((def) => {
+            const row = tenantRows.find((r) => r.dayOfWeek === def.dayOfWeek);
+            return row
+              ? { dayOfWeek: row.dayOfWeek, isOpen: row.isOpen, startTime: row.startTime, endTime: row.endTime }
+              : { ...def, isOpen: false };
+          })
+    );
+  }
+  return byTenant;
+}
+
 function timeToMinutes(t: string): number {
   const [h, m] = t.split(":").map(Number);
   return h * 60 + m;

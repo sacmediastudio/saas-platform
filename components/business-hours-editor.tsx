@@ -12,7 +12,7 @@ interface DayRow {
 
 const DAY_LABELS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 
-export default function BusinessHoursEditor() {
+export default function BusinessHoursEditor({ hideBuffer = false }: { hideBuffer?: boolean } = {}) {
   const [days, setDays] = useState<DayRow[] | null>(null);
   const [bufferMinutes, setBufferMinutes] = useState(15);
   const [loading, setLoading] = useState(true);
@@ -107,19 +107,21 @@ export default function BusinessHoursEditor() {
           ))}
       </div>
 
-      <label className="flex items-center gap-3 mb-4">
-        <span className="text-sm">Espacio entre citas</span>
-        <input
-          type="number"
-          min="0"
-          max="120"
-          step="5"
-          value={bufferMinutes}
-          onChange={(e) => setBufferMinutes(Number(e.target.value))}
-          className="w-20 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-2.5 py-1.5 text-sm outline-none"
-        />
-        <span className="text-sm text-[#343233]/60">minutos</span>
-      </label>
+      {!hideBuffer && (
+        <label className="flex items-center gap-3 mb-4">
+          <span className="text-sm">Espacio entre citas</span>
+          <input
+            type="number"
+            min="0"
+            max="120"
+            step="5"
+            value={bufferMinutes}
+            onChange={(e) => setBufferMinutes(Number(e.target.value))}
+            className="w-20 bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-2.5 py-1.5 text-sm outline-none"
+          />
+          <span className="text-sm text-[#343233]/60">minutos</span>
+        </label>
+      )}
 
       <div className="flex items-center gap-3">
         <button

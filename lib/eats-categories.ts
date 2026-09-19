@@ -84,6 +84,29 @@ export function eatsPriceRangeLabel(range: string | null): string | null {
   return EATS_PRICE_RANGE_LABELS[range] ?? range;
 }
 
+// Etiquetas del estado de horario (ver lib/availability.ts para el
+// cálculo) — mismo criterio que EATS_CATEGORY_LABELS: se devuelve ya
+// traducido desde el server para que la app móvil no mantenga su
+// propia copia.
+export const EATS_HOURS_STATUS_LABELS: Record<"es" | "en", Record<string, string>> = {
+  es: {
+    OPEN: "Abierto",
+    CLOSED: "Cerrado",
+    OPENING_SOON: "Abre pronto",
+    CLOSING_SOON: "Cierra pronto",
+  },
+  en: {
+    OPEN: "Open",
+    CLOSED: "Closed",
+    OPENING_SOON: "Opening soon",
+    CLOSING_SOON: "Closing soon",
+  },
+};
+
+export function eatsHoursStatusLabel(status: string, lang: "es" | "en"): string {
+  return EATS_HOURS_STATUS_LABELS[lang][status] ?? status;
+}
+
 // Distancia entre dos puntos en la Tierra, en km — misma fórmula
 // exacta que ya usa el sitio web de Zertoo Eats (app/page.tsx de ese
 // proyecto), copiada tal cual para que "cerca de mí" dé el mismo
