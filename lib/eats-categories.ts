@@ -70,6 +70,20 @@ export function eatsCategoryLabel(category: string | null, lang: "es" | "en"): s
   return EATS_CATEGORY_LABELS[lang][category] ?? category;
 }
 
+// Símbolos de precio ($ a $$$$) — mismo signo en cualquier idioma, no
+// hace falta traducción por lang como con las categorías.
+export const EATS_PRICE_RANGE_LABELS: Record<string, string> = {
+  BUDGET: "$",
+  MODERATE: "$$",
+  EXPENSIVE: "$$$",
+  LUXURY: "$$$$",
+};
+
+export function eatsPriceRangeLabel(range: string | null): string | null {
+  if (!range) return null;
+  return EATS_PRICE_RANGE_LABELS[range] ?? range;
+}
+
 // Distancia entre dos puntos en la Tierra, en km — misma fórmula
 // exacta que ya usa el sitio web de Zertoo Eats (app/page.tsx de ese
 // proyecto), copiada tal cual para que "cerca de mí" dé el mismo

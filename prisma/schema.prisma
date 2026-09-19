@@ -125,6 +125,9 @@ model Tenant {
   // es algo que se activa solo.
   nowEnabled   Boolean      @default(false)
   nowCategory  NowCategory?
+  // Opcional a propósito — un negocio que todavía no lo cargó sigue
+  // apareciendo en el directorio, solo no entra en el filtro por precio.
+  nowPriceRange NowPriceRange?
   // Destacado en Zertoo Eats — lo cura el admin de Zertoo a mano, el
   // negocio no puede activarse esto solo (ver /admin, mismo patrón que
   // las solicitudes de módulo).
@@ -789,6 +792,16 @@ enum NowCategory {
   BAR_PUB
   BEACH_BAR
   FOOD_TRUCK
+}
+
+// Rango de precio del negocio para Zertoo Eats, mismo criterio de 4
+// niveles que Google/Yelp ($ a $$$$) — opcional, no bloquea aparecer
+// en el directorio si el negocio todavía no lo cargó.
+enum NowPriceRange {
+  BUDGET
+  MODERATE
+  EXPENSIVE
+  LUXURY
 }
 
 // Una foto que alguien (sin cuenta, cualquiera) subió desde el momento

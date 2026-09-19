@@ -162,6 +162,12 @@ export const dashboardTranslations = {
       BEACH_BAR: "Beach Bar",
       FOOD_TRUCK: "Food Truck",
     },
+    nowPriceRanges: {
+      BUDGET: "$",
+      MODERATE: "$$",
+      EXPENSIVE: "$$$",
+      LUXURY: "$$$$",
+    },
     settingsForm: {
       genericSaveError: "Couldn't save changes",
       genericError: "Couldn't connect to the server. Please try again.",
@@ -209,6 +215,8 @@ export const dashboardTranslations = {
       appearOnZertooEats: "Appear on Zertoo Eats",
       categoryLabel: "Category",
       chooseCategoryDefault: "Choose a category",
+      priceRangeLabel: "Price range (optional)",
+      choosePriceRangeDefault: "Not set",
       googleMapsLabel: "Google Maps link (optional)",
       googleMapsHint:
         'Find your business on Google Maps, tap "Share", and paste the link here. If you add it, the "Get directions" button on Zertoo Eats goes straight to your exact location, instead of calculating it from your address (which can get close to the area, but not always to the door).',
@@ -683,6 +691,12 @@ export const dashboardTranslations = {
       BEACH_BAR: "Beach Bar",
       FOOD_TRUCK: "Food Truck",
     },
+    nowPriceRanges: {
+      BUDGET: "$",
+      MODERATE: "$$",
+      EXPENSIVE: "$$$",
+      LUXURY: "$$$$",
+    },
     settingsForm: {
       genericSaveError: "No se pudieron guardar los cambios",
       genericError: "No se pudo conectar con el servidor. Intenta de nuevo.",
@@ -730,6 +744,8 @@ export const dashboardTranslations = {
       appearOnZertooEats: "Aparecer en Zertoo Eats",
       categoryLabel: "Categoría",
       chooseCategoryDefault: "Elegí una categoría",
+      priceRangeLabel: "Rango de precio (opcional)",
+      choosePriceRangeDefault: "Sin definir",
       googleMapsLabel: "Link de Google Maps (opcional)",
       googleMapsHint:
         'Buscá tu negocio en Google Maps, tocá "Compartir", y pegá el link acá. Si lo cargás, el botón "Cómo llegar" en Zertoo Eats lleva directo a tu ubicación exacta, en vez de calcularla desde tu dirección (que puede acercar a la zona, pero no siempre a la puerta).',

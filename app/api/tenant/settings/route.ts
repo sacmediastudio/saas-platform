@@ -40,6 +40,9 @@ const NOW_CATEGORIES = [
   "FOOD_TRUCK",
 ] as const;
 
+// Mismos 4 valores que el enum NowPriceRange de Prisma.
+const NOW_PRICE_RANGES = ["BUDGET", "MODERATE", "EXPENSIVE", "LUXURY"] as const;
+
 const updateSchema = z
   .object({
     name: z.string().min(1).optional(),
@@ -81,6 +84,7 @@ const updateSchema = z
       .optional(),
     nowEnabled: z.boolean().optional(),
     nowCategory: z.enum(NOW_CATEGORIES).nullable().optional(),
+    nowPriceRange: z.enum(NOW_PRICE_RANGES).nullable().optional(),
     googleMapsUrl: z.string().url().nullable().optional().or(z.literal("")),
   })
   .refine((data) => !data.nowEnabled || data.nowCategory, {

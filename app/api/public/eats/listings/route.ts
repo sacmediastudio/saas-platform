@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import type { NowCategory } from "@prisma/client";
-import { eatsCategoryLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
+import type { NowCategory, NowPriceRange } from "@prisma/client";
+import { eatsCategoryLabel, eatsPriceRangeLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
 
-// GET /api/public/eats/listings?category=SUSHI&q=texto&lat=12.5&lng=-70.0
+// Orden real de precio (no alfabético) — así el filtro y la lista de
+// opciones siempre van de más barato a más caro.
+const PRICE_RANGE_ORDER: NowPriceRange[] = ["BUDGET", "MODERATE", "EXPENSIVE", "LUXURY"];
+
+// GET /api/public/eats/listings?category=SUSHI&priceRange=BUDGET&q=texto&lat=12.5&lng=-70.0
 //
 // Endpoint público (sin autenticación) para el directorio de Zertoo
 // Eats — pensado para que la app móvil (y cualquier otro cliente,
@@ -17,6 +21,7 @@ import { eatsCategoryLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-
 //
 // Parámetros, todos opcionales:
 // - category: uno de los valores del enum NowCategory (ej. "SUSHI")
+// - priceRange: uno de los valores del enum NowPriceRange (ej. "BUDGET")
 // - q: texto libre, busca por nombre del negocio (case-insensitive)
 // - lat + lng: si se pasan los 2, activa el modo "cerca de mí" —
 //   devuelve además un array "nearby" ordenado por distancia real,
@@ -24,6 +29,7 @@ import { eatsCategoryLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
+  const priceRange = searchParams.get("priceRange");
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const latParam = searchParams.get("lat");
   const lngParam = searchParams.get("lng");
@@ -33,6 +39,7 @@ export async function GET(req: NextRequest) {
     where: {
       nowEnabled: true,
       ...(category ? { nowCategory: category as NowCategory } : {}),
+      ...(priceRange ? { nowPriceRange: priceRange as NowPriceRange } : {}),
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
     include: {
@@ -78,6 +85,8 @@ export async function GET(req: NextRequest) {
       nowCategory: t.nowCategory,
       categoryLabelEs: eatsCategoryLabel(t.nowCategory, "es"),
       categoryLabelEn: eatsCategoryLabel(t.nowCategory, "en"),
+      nowPriceRange: t.nowPriceRange,
+      priceRangeLabel: eatsPriceRangeLabel(t.nowPriceRange),
       avgRating,
       reviewCount: publishedReviews.length,
       distanceKm,
@@ -111,7 +120,7 @@ export async function GET(req: NextRequest) {
   // un filtro puesto — mismo comportamiento que el sitio web).
   const allActiveTenants = await db.tenant.findMany({
     where: { nowEnabled: true },
-    select: { nowCategory: true },
+    select: { nowCategory: true, nowPriceRange: true },
   });
   const availableCategories = Array.from(
     new Set(allActiveTenants.map((t) => t.nowCategory).filter((c): c is NowCategory => Boolean(c)))
@@ -119,11 +128,23 @@ export async function GET(req: NextRequest) {
     .sort((a, b) => (eatsCategoryLabel(a, "es") ?? a).localeCompare(eatsCategoryLabel(b, "es") ?? b))
     .map((value) => ({ value, labelEs: eatsCategoryLabel(value, "es"), labelEn: eatsCategoryLabel(value, "en") }));
 
+  // Mismo criterio que availableCategories (solo lo que de verdad tiene
+  // algún negocio activo ahora), pero ordenado de más barato a más caro
+  // en vez de alfabético.
+  const activePriceRanges = new Set(
+    allActiveTenants.map((t) => t.nowPriceRange).filter((p): p is NowPriceRange => Boolean(p))
+  );
+  const availablePriceRanges = PRICE_RANGE_ORDER.filter((p) => activePriceRanges.has(p)).map((value) => ({
+    value,
+    label: eatsPriceRangeLabel(value),
+  }));
+
   return NextResponse.json({
     featured,
     rest,
     nearby,
     nearMeActive,
     availableCategories,
+    availablePriceRanges,
   });
 }
