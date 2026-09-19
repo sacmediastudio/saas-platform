@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Pencil, Trash2, X, Megaphone } from "lucide-react";
+import { Plus, Pencil, Trash2, X, Megaphone, Image as ImageIcon } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import { uploadImage } from "@/lib/upload-image";
 
 interface Promotion {
   id: string;
@@ -70,6 +71,10 @@ export default function PromotionsView({ initialPromotions }: { initialPromotion
           {promotions.map((promo) => (
             <div key={promo.id} className="border border-[#002D09]/10 rounded-lg px-4 py-3">
               <div className="flex items-start gap-3">
+                {promo.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={promo.imageUrl} alt="" className="w-12 h-12 rounded-lg object-cover shrink-0" />
+                ) : null}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span
@@ -150,8 +155,23 @@ function PromotionModal({
   const [kind, setKind] = useState<"PROMO" | "SPECIAL">(promo?.kind ?? "PROMO");
   const [title, setTitle] = useState(promo?.title ?? "");
   const [description, setDescription] = useState(promo?.description ?? "");
+  const [imageUrl, setImageUrl] = useState<string | null>(promo?.imageUrl ?? null);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+
+  async function handleImageUpload(file: File) {
+    setUploading(true);
+    setError(null);
+    try {
+      const publicUrl = await uploadImage(file, 1200);
+      setImageUrl(publicUrl);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t.promotions.genericError);
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -164,7 +184,12 @@ function PromotionModal({
       const res = await fetch(path, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, title, description: description || undefined }),
+        body: JSON.stringify({
+          kind,
+          title,
+          description: description || undefined,
+          imageUrl: imageUrl ?? (mode === "edit" ? null : undefined),
+        }),
       });
 
       if (!res.ok) {
@@ -242,6 +267,50 @@ function PromotionModal({
             />
           </label>
 
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs text-[#343233]/70">{t.promotions.imageLabel}</span>
+            <div className="flex gap-3 items-start">
+              {imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={imageUrl} alt="" className="w-16 h-16 rounded-lg object-cover" />
+              ) : (
+                <div className="w-16 h-16 rounded-lg bg-[#F7F8F4] flex items-center justify-center text-[#343233]/40">
+                  <ImageIcon size={20} aria-hidden />
+                </div>
+              )}
+              <div className="flex flex-col gap-1.5">
+                <div className="flex gap-3">
+                  <label className="text-xs px-2.5 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] cursor-pointer w-fit">
+                    {uploading
+                      ? t.promotions.imageProcessing
+                      : imageUrl
+                        ? t.promotions.imageChange
+                        : t.promotions.imageUpload}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageUpload(file);
+                      }}
+                    />
+                  </label>
+                  {imageUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setImageUrl(null)}
+                      className="text-xs text-[#343233]/60 hover:text-red-600"
+                    >
+                      {t.promotions.imageRemove}
+                    </button>
+                  )}
+                </div>
+                <span className="text-[11px] text-[#343233]/50 max-w-[220px]">{t.promotions.imageHint}</span>
+              </div>
+            </div>
+          </div>
+
           <label className="flex flex-col gap-1">
             <span className="text-xs text-[#343233]/70">{t.promotions.description}</span>
             <textarea
@@ -266,7 +335,7 @@ function PromotionModal({
             </button>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || uploading}
               className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
             >
               {saving ? t.promotions.saving : mode === "create" ? t.promotions.add : t.promotions.save}
