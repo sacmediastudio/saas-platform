@@ -167,6 +167,10 @@ export async function POST(req: NextRequest) {
   // Aviso al NEGOCIO — al número de contacto configurado en Ajustes, no
   // al mismo número que usa para mandar mensajes (son cosas distintas).
   if (tenant.contactPhone) {
+    // WhatsApp rechaza las variables de plantilla que contengan saltos
+    // de línea (error 21656 de Twilio, "Content Variables parameter is
+    // invalid") — por eso se separan los ítems con " · " en vez de
+    // "\n", aunque quede menos prolijo que una lista real.
     let itemsSummary = orderItems
       .map((i) => {
         let line = `${i.quantity}x ${i.name}`;
@@ -174,8 +178,8 @@ export async function POST(req: NextRequest) {
         if (i.notes) line += ` — ${i.notes}`;
         return line;
       })
-      .join("\n");
-    if (data.notes) itemsSummary += `\n📝 ${data.notes}`;
+      .join(" · ");
+    if (data.notes) itemsSummary += ` · 📝 ${data.notes}`;
 
     const fulfillmentInfo =
       data.fulfillment === "DELIVERY" ? `🚗 Delivery: ${data.deliveryAddress}` : "🏪 Retiro en el local";
