@@ -132,6 +132,11 @@ model Tenant {
   // negocio no puede activarse esto solo (ver /admin, mismo patrón que
   // las solicitudes de módulo).
   nowFeatured  Boolean      @default(false)
+  // Nivel arriba de nowFeatured — el carrusel de portada al principio
+  // de la app/sitio, para la suscripción más cara. Igual que
+  // nowFeatured, lo activa solo el admin desde /admin/now, nunca el
+  // negocio por su cuenta.
+  nowSpotlight Boolean      @default(false)
   // Coordenadas reales del negocio, para "cerca de mí" — se completan
   // una sola vez (geocodificando la dirección), no en cada visita.
   // Suficientemente preciso para ORDENAR por cercanía, no para
@@ -544,6 +549,15 @@ model FaqItem {
   @@map("faq_items")
 }
 
+// PROMO (genérica, ej. "2x1 los martes") vs SPECIAL (plato/oferta del
+// día, más usado por restaurantes con carta que cambia seguido) — dos
+// terminologías distintas que ya usan negocios distintos, se
+// diferencian por color en la app (Promo naranja, Special rojo).
+enum PromotionKind {
+  PROMO
+  SPECIAL
+}
+
 // Una promoción de un negocio para Zertoo Eats (ej. "2x1 los martes",
 // "20% de descuento en tu primera visita"). `active` es lo que el
 // negocio prende/apaga desde su dashboard sin borrar el historial —
@@ -551,20 +565,47 @@ model FaqItem {
 // startsAt/endsAt son opcionales: una promo sin fechas se entiende
 // "activa hasta que la apaguen a mano".
 model Promotion {
-  id          String    @id @default(cuid())
+  id          String        @id @default(cuid())
   tenantId    String
+  kind        PromotionKind @default(PROMO)
   title       String
   description String?
   imageUrl    String?
-  active      Boolean   @default(true)
+  active      Boolean       @default(true)
   startsAt    DateTime?
   endsAt      DateTime?
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime      @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])
   @@map("promotions")
+}
+
+// Alguien que dejó sus datos desde la app de Zertoo Eats para recibir
+// avisos de promos/specials — no es un usuario con cuenta, es un
+// contacto de marketing + (opcional) un token de push. Todos los
+// campos de contacto son opcionales a propósito: alguien puede activar
+// solo las notificaciones sin dejar nombre/correo/teléfono, y viceversa
+// (dejar sus datos sin activar notificaciones todavía).
+model Subscriber {
+  id                  String   @id @default(cuid())
+  name                String?
+  // Único (cuando está presente) para poder actualizar el mismo
+  // registro si la persona vuelve a completar el form sin token de
+  // push todavía cargado, en vez de crear un duplicado.
+  email               String?  @unique
+  phone               String?
+  // Token de Expo Push (ExponentPushToken[...]) — único por
+  // instalación de la app, así un mismo dispositivo que reabre el form
+  // actualiza su registro en vez de duplicarlo.
+  pushToken           String?  @unique
+  notificationsEnabled Boolean @default(false)
+  lang                String   @default("es")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("subscribers")
 }
 
 // Una "tarjeta" de sellos por cliente (identificado por correo) por

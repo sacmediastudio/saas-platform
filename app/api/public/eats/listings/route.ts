@@ -1,11 +1,69 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import type { NowCategory, NowPriceRange } from "@prisma/client";
+import type { NowCategory, NowPriceRange, Prisma } from "@prisma/client";
 import { eatsCategoryLabel, eatsPriceRangeLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
 
 // Orden real de precio (no alfabético) — así el filtro y la lista de
 // opciones siempre van de más barato a más caro.
 const PRICE_RANGE_ORDER: NowPriceRange[] = ["BUDGET", "MODERATE", "EXPENSIVE", "LUXURY"];
+
+const activePromotionsWhere = (now: Date) => ({
+  active: true,
+  OR: [{ startsAt: null }, { startsAt: { lte: now } }],
+  AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
+});
+
+const tenantWithRatingsInclude = (now: Date) => ({
+  reviews: { where: { status: "PUBLISHED" as const } },
+  // Trae el "kind" (no solo si existe) para poder priorizar SPECIAL
+  // sobre PROMO en el indicador de la tarjeta cuando un negocio tiene
+  // los dos tipos activos a la vez.
+  promotions: {
+    where: activePromotionsWhere(now),
+    select: { id: true, kind: true },
+  },
+});
+
+type TenantWithRatings = Prisma.TenantGetPayload<{ include: ReturnType<typeof tenantWithRatingsInclude> }>;
+
+function mapTenant(
+  t: TenantWithRatings,
+  opts: { nearMeActive: boolean; userLat: number | null; userLng: number | null }
+) {
+  const publishedReviews = t.reviews;
+  const avgRating =
+    publishedReviews.length > 0
+      ? publishedReviews.reduce((sum, r) => sum + r.rating, 0) / publishedReviews.length
+      : null;
+  const distanceKm =
+    opts.nearMeActive && t.latitude !== null && t.longitude !== null
+      ? haversineKm(opts.userLat!, opts.userLng!, t.latitude, t.longitude)
+      : null;
+  const promoKind = t.promotions.some((p) => p.kind === "SPECIAL")
+    ? "SPECIAL"
+    : t.promotions.length > 0
+      ? "PROMO"
+      : null;
+  return {
+    id: t.id,
+    slug: t.slug,
+    name: t.name,
+    logoUrl: t.logoUrl,
+    heroImageUrl: t.heroImageUrl,
+    address: t.address,
+    nowCategory: t.nowCategory,
+    categoryLabelEs: eatsCategoryLabel(t.nowCategory, "es"),
+    categoryLabelEn: eatsCategoryLabel(t.nowCategory, "en"),
+    nowPriceRange: t.nowPriceRange,
+    priceRangeLabel: eatsPriceRangeLabel(t.nowPriceRange),
+    avgRating,
+    reviewCount: publishedReviews.length,
+    distanceKm,
+    nowFeatured: t.nowFeatured,
+    hasPromo: t.promotions.length > 0,
+    promoKind,
+  };
+}
 
 // GET /api/public/eats/listings?category=SUSHI&priceRange=BUDGET&q=texto&lat=12.5&lng=-70.0
 //
@@ -35,6 +93,11 @@ export async function GET(req: NextRequest) {
   const lngParam = searchParams.get("lng");
   const now = new Date();
 
+  const userLat = latParam ? Number(latParam) : null;
+  const userLng = lngParam ? Number(lngParam) : null;
+  const nearMeActive = userLat !== null && userLng !== null && !Number.isNaN(userLat) && !Number.isNaN(userLng);
+  const mapOpts = { nearMeActive, userLat, userLng };
+
   const allTenants = await db.tenant.findMany({
     where: {
       nowEnabled: true,
@@ -42,58 +105,11 @@ export async function GET(req: NextRequest) {
       ...(priceRange ? { nowPriceRange: priceRange as NowPriceRange } : {}),
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },
-    include: {
-      reviews: { where: { status: "PUBLISHED" } },
-      // Alcanza con saber si existe AL MENOS una promo vigente — el
-      // listado solo necesita el indicador "Promo" en la tarjeta, el
-      // detalle real de la promoción se pide aparte en
-      // /api/public/eats/promotions.
-      promotions: {
-        where: {
-          active: true,
-          OR: [{ startsAt: null }, { startsAt: { lte: now } }],
-          AND: [{ OR: [{ endsAt: null }, { endsAt: { gte: now } }] }],
-        },
-        select: { id: true },
-        take: 1,
-      },
-    },
+    include: tenantWithRatingsInclude(now),
     orderBy: { nowFeatured: "desc" },
   });
 
-  const userLat = latParam ? Number(latParam) : null;
-  const userLng = lngParam ? Number(lngParam) : null;
-  const nearMeActive = userLat !== null && userLng !== null && !Number.isNaN(userLat) && !Number.isNaN(userLng);
-
-  const withRatings = allTenants.map((t) => {
-    const publishedReviews = t.reviews;
-    const avgRating =
-      publishedReviews.length > 0
-        ? publishedReviews.reduce((sum, r) => sum + r.rating, 0) / publishedReviews.length
-        : null;
-    const distanceKm =
-      nearMeActive && t.latitude !== null && t.longitude !== null
-        ? haversineKm(userLat!, userLng!, t.latitude, t.longitude)
-        : null;
-    return {
-      id: t.id,
-      slug: t.slug,
-      name: t.name,
-      logoUrl: t.logoUrl,
-      heroImageUrl: t.heroImageUrl,
-      address: t.address,
-      nowCategory: t.nowCategory,
-      categoryLabelEs: eatsCategoryLabel(t.nowCategory, "es"),
-      categoryLabelEn: eatsCategoryLabel(t.nowCategory, "en"),
-      nowPriceRange: t.nowPriceRange,
-      priceRangeLabel: eatsPriceRangeLabel(t.nowPriceRange),
-      avgRating,
-      reviewCount: publishedReviews.length,
-      distanceKm,
-      nowFeatured: t.nowFeatured,
-      hasPromo: t.promotions.length > 0,
-    };
-  });
+  const withRatings = allTenants.map((t) => mapTenant(t, mapOpts));
 
   // Igual criterio que el sitio web: con "cerca de mí" activo, un solo
   // listado ordenado por distancia real (destacado vs. resto no tiene
@@ -113,6 +129,18 @@ export async function GET(req: NextRequest) {
 
   const featured = withRatings.filter((t) => t.nowFeatured);
   const rest = withRatings.filter((t) => !t.nowFeatured);
+
+  // El carrusel de portada (suscripción premium, cura el admin desde
+  // /admin/now) es SIEMPRE el mismo set de negocios, sin importar el
+  // filtro de categoría/precio/búsqueda que haya puesto el usuario —
+  // es una vidriera fija, no un resultado de búsqueda. Por eso es una
+  // consulta aparte, no un .filter() sobre allTenants.
+  const spotlightTenants = await db.tenant.findMany({
+    where: { nowEnabled: true, nowSpotlight: true },
+    include: tenantWithRatingsInclude(now),
+    orderBy: { name: "asc" },
+  });
+  const spotlight = spotlightTenants.map((t) => mapTenant(t, mapOpts));
 
   // Categorías disponibles: solo las que de verdad tienen algún
   // negocio activo ahora mismo (sin el filtro de category/q aplicado,
@@ -140,6 +168,7 @@ export async function GET(req: NextRequest) {
   }));
 
   return NextResponse.json({
+    spotlight,
     featured,
     rest,
     nearby,

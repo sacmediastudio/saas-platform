@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 
 const createSchema = z.object({
+  kind: z.enum(["PROMO", "SPECIAL"]).default("PROMO"),
   title: z.string().min(1).max(120),
   description: z.string().max(500).optional(),
   imageUrl: z.string().url().optional(),

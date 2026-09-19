@@ -7,8 +7,16 @@ export default async function AdminNowPage() {
 
   const tenants = await db.tenant.findMany({
     where: { nowEnabled: true },
-    orderBy: [{ nowFeatured: "desc" }, { name: "asc" }],
-    select: { id: true, name: true, slug: true, logoUrl: true, nowCategory: true, nowFeatured: true },
+    orderBy: [{ nowSpotlight: "desc" }, { nowFeatured: "desc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      logoUrl: true,
+      nowCategory: true,
+      nowFeatured: true,
+      nowSpotlight: true,
+    },
   });
 
   return <NowFeaturedView tenants={tenants} />;

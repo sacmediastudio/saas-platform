@@ -60,6 +60,7 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     menuUrl: `https://zertoo.app/menu/${tenant.slug}`,
     promotions: tenant.promotions.map((p) => ({
       id: p.id,
+      kind: p.kind,
       title: p.title,
       description: p.description,
       imageUrl: p.imageUrl,

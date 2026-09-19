@@ -7,6 +7,7 @@ import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
 interface Promotion {
   id: string;
+  kind: "PROMO" | "SPECIAL";
   title: string;
   description: string | null;
   imageUrl: string | null;
@@ -70,7 +71,14 @@ export default function PromotionsView({ initialPromotions }: { initialPromotion
             <div key={promo.id} className="border border-[#002D09]/10 rounded-lg px-4 py-3">
               <div className="flex items-start gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full text-white ${
+                        promo.kind === "SPECIAL" ? "bg-[#E5352B]" : "bg-[#FF7A1A]"
+                      }`}
+                    >
+                      {promo.kind === "SPECIAL" ? t.promotions.kindSpecial : t.promotions.kindPromo}
+                    </span>
                     <p className="text-sm font-semibold">{promo.title}</p>
                     <span
                       className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
@@ -139,6 +147,7 @@ function PromotionModal({
   onUpdated: (p: Promotion) => void;
 }) {
   const { t } = useDashboardLang();
+  const [kind, setKind] = useState<"PROMO" | "SPECIAL">(promo?.kind ?? "PROMO");
   const [title, setTitle] = useState(promo?.title ?? "");
   const [description, setDescription] = useState(promo?.description ?? "");
   const [error, setError] = useState<string | null>(null);
@@ -155,7 +164,7 @@ function PromotionModal({
       const res = await fetch(path, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description: description || undefined }),
+        body: JSON.stringify({ kind, title, description: description || undefined }),
       });
 
       if (!res.ok) {
@@ -193,6 +202,34 @@ function PromotionModal({
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-xs text-[#343233]/70">{t.promotions.kindLabel}</span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setKind("PROMO")}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold border-2 ${
+                  kind === "PROMO"
+                    ? "border-[#FF7A1A] bg-[#FF7A1A]/10 text-[#FF7A1A]"
+                    : "border-[#002D09]/15 text-[#343233]/60"
+                }`}
+              >
+                {t.promotions.kindPromo}
+              </button>
+              <button
+                type="button"
+                onClick={() => setKind("SPECIAL")}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold border-2 ${
+                  kind === "SPECIAL"
+                    ? "border-[#E5352B] bg-[#E5352B]/10 text-[#E5352B]"
+                    : "border-[#002D09]/15 text-[#343233]/60"
+                }`}
+              >
+                {t.promotions.kindSpecial}
+              </button>
+            </div>
+          </div>
+
           <label className="flex flex-col gap-1">
             <span className="text-xs text-[#343233]/70">{t.promotions.promoTitle}</span>
             <input

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Sparkles, Star } from "lucide-react";
+import { Sparkles, Star, Crown } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 
 interface Tenant {
@@ -11,6 +11,7 @@ interface Tenant {
   logoUrl: string | null;
   nowCategory: string | null;
   nowFeatured: boolean;
+  nowSpotlight: boolean;
 }
 
 // Misma lista que en /dashboard/settings y en el proyecto de Zertoo Eats.
@@ -49,6 +50,7 @@ export default function NowFeaturedView({ tenants: initialTenants }: { tenants: 
   const [error, setError] = useState<string | null>(null);
 
   const featuredCount = tenants.filter((t) => t.nowFeatured).length;
+  const spotlightCount = tenants.filter((t) => t.nowSpotlight).length;
 
   async function toggleFeatured(tenant: Tenant) {
     setBusyId(tenant.id);
@@ -65,7 +67,40 @@ export default function NowFeaturedView({ tenants: initialTenants }: { tenants: 
       setTenants((prev) =>
         prev
           .map((t) => (t.id === tenant.id ? { ...t, nowFeatured: nextValue } : t))
-          .sort((a, b) => Number(b.nowFeatured) - Number(a.nowFeatured) || a.name.localeCompare(b.name))
+          .sort(
+            (a, b) =>
+              Number(b.nowSpotlight) - Number(a.nowSpotlight) ||
+              Number(b.nowFeatured) - Number(a.nowFeatured) ||
+              a.name.localeCompare(b.name)
+          )
+      );
+    } else {
+      setError("No se pudo actualizar — intentá de nuevo.");
+    }
+    setBusyId(null);
+  }
+
+  async function toggleSpotlight(tenant: Tenant) {
+    setBusyId(tenant.id);
+    setError(null);
+    const nextValue = !tenant.nowSpotlight;
+
+    const res = await fetch(`/api/admin/tenants/${tenant.id}/now-spotlight`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nowSpotlight: nextValue }),
+    });
+
+    if (res.ok) {
+      setTenants((prev) =>
+        prev
+          .map((t) => (t.id === tenant.id ? { ...t, nowSpotlight: nextValue } : t))
+          .sort(
+            (a, b) =>
+              Number(b.nowSpotlight) - Number(a.nowSpotlight) ||
+              Number(b.nowFeatured) - Number(a.nowFeatured) ||
+              a.name.localeCompare(b.name)
+          )
       );
     } else {
       setError("No se pudo actualizar — intentá de nuevo.");
@@ -82,7 +117,8 @@ export default function NowFeaturedView({ tenants: initialTenants }: { tenants: 
         </h1>
         <p className="text-sm text-[#343233]/70 mb-6">
           Negocios que activaron su aparición en Zertoo Eats — marcá cuáles querés que salgan en
-          "Destacados" ({featuredCount} destacados de {tenants.length}).
+          "Destacados" ({featuredCount} destacados de {tenants.length}) o en el carrusel de portada
+          ({spotlightCount} en Spotlight, suscripción premium).
         </p>
 
         {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
@@ -121,6 +157,18 @@ export default function NowFeaturedView({ tenants: initialTenants }: { tenants: 
               >
                 <Star size={13} className={t.nowFeatured ? "fill-current" : ""} aria-hidden />
                 {t.nowFeatured ? "Destacado" : "Destacar"}
+              </button>
+              <button
+                onClick={() => toggleSpotlight(t)}
+                disabled={busyId === t.id}
+                className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md shrink-0 disabled:opacity-50 ${
+                  t.nowSpotlight
+                    ? "bg-[#002D09] text-white"
+                    : "border border-[#002D09]/15 hover:bg-[#F7F8F4]"
+                }`}
+              >
+                <Crown size={13} className={t.nowSpotlight ? "fill-current" : ""} aria-hidden />
+                {t.nowSpotlight ? "Spotlight" : "Poner en Spotlight"}
               </button>
             </div>
           ))}

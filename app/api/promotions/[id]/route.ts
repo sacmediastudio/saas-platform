@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
 
 const updateSchema = z.object({
+  kind: z.enum(["PROMO", "SPECIAL"]).optional(),
   title: z.string().min(1).max(120).optional(),
   description: z.string().max(500).nullable().optional(),
   imageUrl: z.string().url().nullable().optional(),
