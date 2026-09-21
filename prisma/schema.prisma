@@ -649,6 +649,28 @@ model LoyaltyCard {
   @@map("loyalty_cards")
 }
 
+// Verificación de que quien pregunta por las tarjetas de sellos de un
+// correo es realmente su dueño — a diferencia de la consulta de UN
+// solo negocio (GET /api/public/loyalty, sin verificar, bajo riesgo
+// porque solo revela un conteo en un negocio puntual), este desbloquea
+// la vista agregada de TODOS los negocios de una vez en la app, así
+// que sí hace falta probar que el correo es tuyo antes de mostrarla.
+// Mismo patrón de código de 6 dígitos que la verificación de User,
+// pero el token de acceso queda guardado en el dispositivo (como el
+// push token) para no pedir el código de nuevo en cada visita.
+model LoyaltyAccountVerification {
+  id                        String    @id @default(cuid())
+  email                     String    @unique
+  verificationCode          String?
+  verificationCodeExpiresAt DateTime?
+  verificationCodeSentAt    DateTime?
+  accessToken               String?   @unique
+  verifiedAt                DateTime?
+  createdAt                 DateTime  @default(now())
+
+  @@map("loyalty_account_verifications")
+}
+
 // Un dispositivo (iPhone) que agregó un pase a su Wallet, registrado
 // para recibir avisos push cuando ese pase cambie — así el sello
 // nuevo aparece solo, sin que el cliente tenga que volver a descargar

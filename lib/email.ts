@@ -86,6 +86,26 @@ export async function sendEmailChangeVerification(to: string, code: string, busi
   );
 }
 
+export async function sendLoyaltyAccountVerificationEmail(to: string, code: string) {
+  await sendEmail(
+    to,
+    `Tu código para ver tus sellos: ${code}`,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">Hola,</p>
+        <p style="font-size: 14px; color: #343233;">
+          Usa este código en Zertoo Eats para ver tus tarjetas de sellos de todos los negocios:
+        </p>
+        <p style="font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #002D09; margin: 24px 0;">
+          ${code}
+        </p>
+        <p style="font-size: 12px; color: #888;">Este código expira en 15 minutos.</p>
+      </div>
+    `,
+    `Código para ver tus sellos en Zertoo Eats: ${code}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string, userName: string) {
   await sendEmail(
     to,
