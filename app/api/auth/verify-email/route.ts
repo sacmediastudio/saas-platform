@@ -2,11 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({ code: z.string().length(6) });
 
 export async function POST(req: NextRequest) {
   const session = await requireTenant();
+
+  // Sin esto, el código de 6 dígitos (1 en 1,000,000) sería adivinable
+  // a fuerza bruta dentro de la ventana de 15 minutos en la que es
+  // válido — 10 intentos cada 15 minutos deja pasar los típicos errores
+  // de tipeo pero hace inviable adivinarlo.
+  const { allowed, retryAfterSeconds } = rateLimit(`verify-email:${session.userId}`, 10, 15 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera un momento e intenta de nuevo." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Código inválido" }, { status: 400 });

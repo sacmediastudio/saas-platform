@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import sharp from "sharp";
+import sharp, { type Sharp } from "sharp";
 import { PKPass } from "passkit-generator";
 import { textToPath, measureTextWidth } from "./text-to-path";
 
@@ -273,7 +273,7 @@ function buildFallbackSvg(width: number, height: number): Buffer {
 }
 
 async function buildStrip(content: StripContent, width: number, height: number, logo: Buffer | null): Promise<Buffer> {
-  let base: sharp.Sharp;
+  let base: Sharp;
   try {
     base = sharp(buildBaseSvg(content, width, height));
     // sharp no valida el SVG hasta que se ejecuta de verdad — se

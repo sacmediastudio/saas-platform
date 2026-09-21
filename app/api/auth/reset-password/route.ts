@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
 import { signSession, sessionCookieName } from "@/lib/auth";
+import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   token: z.string().min(1),
@@ -13,6 +14,17 @@ const schema = z.object({
 // y actualiza la contraseña. Lo deja con sesión iniciada de una vez,
 // para no hacerle pasar por el login después de esto.
 export async function POST(req: NextRequest) {
+  // El token es de 256 bits (no es adivinable a fuerza bruta), pero
+  // igual limitamos por IP como higiene general contra abuso/scraping,
+  // mismo criterio que el resto de los endpoints de auth.
+  const { allowed, retryAfterSeconds } = rateLimit(`reset-password:${getClientIp(req)}`, 10, 15 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera un momento e intenta de nuevo." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.errors[0]?.message ?? "Datos inválidos" }, { status: 400 });

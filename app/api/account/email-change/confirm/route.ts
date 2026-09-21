@@ -3,6 +3,7 @@ import { z } from "zod";
 import { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
 import { requireTenant } from "@/lib/auth";
+import { rateLimit } from "@/lib/rate-limit";
 
 const schema = z.object({ code: z.string().length(6) });
 
@@ -10,6 +11,19 @@ const schema = z.object({ code: z.string().length(6) });
 // y recién ahí reemplaza `email`. Hasta este punto el correo viejo sigue funcionando.
 export async function POST(req: NextRequest) {
   const session = await requireTenant();
+
+  // Mismo criterio que verify-email: sin límite de intentos, el código de
+  // 6 dígitos sería adivinable a fuerza bruta dentro de sus 15 minutos
+  // de validez (por ejemplo, con una sesión robada por XSS, sin haber
+  // recibido el correo real).
+  const { allowed, retryAfterSeconds } = rateLimit(`email-change-confirm:${session.userId}`, 10, 15 * 60_000);
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera un momento e intenta de nuevo." },
+      { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } }
+    );
+  }
+
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Código inválido" }, { status: 400 });
