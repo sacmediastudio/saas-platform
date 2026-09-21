@@ -489,7 +489,7 @@ export default function PublicMenu({
                 </div>
                 <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-xl font-bold leading-tight">{resolveItemName(item, lang)}</p>
+                    <p className="text-xl font-bold leading-tight min-w-0">{resolveItemName(item, lang)}</p>
                     <span className="text-xl font-bold text-red-600 shrink-0">
                       {priceLabel(item)}
                     </span>
@@ -580,7 +580,7 @@ export default function PublicMenu({
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-baseline justify-between gap-3">
-                            <p className="text-base font-semibold">{resolveItemName(item, lang)}</p>
+                            <p className="text-base font-semibold min-w-0">{resolveItemName(item, lang)}</p>
                             {item.status === "SOLD_OUT" ? (
                               <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
                                 {lang === "en" ? "Sold out" : "Agotado"}
@@ -755,7 +755,7 @@ export default function PublicMenu({
             </div>
             <div className="px-5 py-4">
               <div className="flex items-baseline justify-between gap-3">
-                <p className="text-lg font-bold">{zoomedItem.name}</p>
+                <p className="text-lg font-bold min-w-0">{zoomedItem.name}</p>
                 {zoomedItem.status === "SOLD_OUT" ? (
                   <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">{lang === "en" ? "Sold out" : "Agotado"}</span>
                 ) : (
@@ -1292,16 +1292,16 @@ function ItemCustomizeModal({
             <p className="text-xs font-semibold uppercase opacity-60">{lang === "en" ? "Add-ons" : "Extras"}</p>
             {item.addOns.map((addOn) => (
               <label key={addOn.id} className="flex items-center justify-between gap-2 text-sm cursor-pointer">
-                <span className="flex items-center gap-2">
+                <span className="flex items-center gap-2 min-w-0">
                   <input
                     type="checkbox"
                     checked={selectedAddOnIds.includes(addOn.id)}
                     onChange={() => toggleAddOn(addOn.id)}
-                    className="w-4 h-4"
+                    className="w-4 h-4 shrink-0"
                   />
-                  {addOn.name}
+                  <span className="min-w-0 truncate">{addOn.name}</span>
                 </span>
-                <span className="opacity-60">
+                <span className="opacity-60 shrink-0">
                   {addOn.price > 0 ? `+${formatCurrency(addOn.price, currency)}` : lang === "en" ? "Free" : "Gratis"}
                 </span>
               </label>
