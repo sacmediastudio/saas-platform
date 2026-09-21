@@ -9,6 +9,7 @@ import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import DashboardCard from "@/components/dashboard-card";
 import BusinessHoursEditor from "@/components/business-hours-editor";
+import AccountEmailSection from "@/components/account-email-section";
 
 interface TenantData {
   name: string;
@@ -42,9 +43,13 @@ interface TenantData {
 export default function SettingsForm({
   tenant,
   enabledModules,
+  accountEmail,
+  pendingAccountEmail,
 }: {
   tenant: TenantData;
   enabledModules: ("RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK")[];
+  accountEmail: string;
+  pendingAccountEmail: string | null;
 }) {
   const { t } = useDashboardLang();
   const router = useRouter();
@@ -114,6 +119,8 @@ export default function SettingsForm({
       <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">{t.settings.title}</h1>
       <p className="text-sm text-[#343233]/70 mb-6">{t.settings.subtitle}</p>
+
+      <AccountEmailSection initialEmail={accountEmail} initialPendingEmail={pendingAccountEmail} />
 
       <Section title={t.settingsForm.profileSection}>
         <Field label={t.settingsForm.businessName}>

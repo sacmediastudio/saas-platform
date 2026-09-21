@@ -261,6 +261,15 @@ model User {
   passwordResetTokenExpiresAt DateTime?
   passwordResetSentAt         DateTime?
 
+  // Cambio de correo de acceso (post-signup) — el nuevo correo solo
+  // reemplaza a `email` cuando se confirma el código; hasta entonces
+  // el correo viejo sigue siendo válido para hacer login. Mismo
+  // criterio de cooldown/código-de-6-dígitos que la verificación inicial.
+  pendingEmail                String?
+  emailChangeCode             String?
+  emailChangeCodeExpiresAt    DateTime?
+  emailChangeCodeSentAt       DateTime?
+
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId])

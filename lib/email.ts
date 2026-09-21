@@ -62,6 +62,30 @@ export function generateVerificationCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }
 
+export async function sendEmailChangeVerification(to: string, code: string, businessName: string) {
+  await sendEmail(
+    to,
+    `Tu código para confirmar el nuevo correo: ${code}`,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">Hola,</p>
+        <p style="font-size: 14px; color: #343233;">
+          Pediste cambiar el correo de acceso de tu cuenta de <strong>${businessName}</strong> en Zertoo a esta dirección.
+          Usa este código para confirmarlo:
+        </p>
+        <p style="font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #002D09; margin: 24px 0;">
+          ${code}
+        </p>
+        <p style="font-size: 12px; color: #888;">
+          Este código expira en 15 minutos. Si no pediste este cambio, ignora este correo — tu cuenta sigue
+          usando el correo anterior hasta que confirmes acá.
+        </p>
+      </div>
+    `,
+    `Código para confirmar cambio de correo a ${to}: ${code}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string, userName: string) {
   await sendEmail(
     to,

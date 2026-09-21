@@ -6,11 +6,16 @@ import SettingsForm from "./settings-form";
 
 export default async function SettingsPage() {
   const session = await requireTenant();
-  const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
-  if (!tenant) redirect("/login");
+  const [tenant, user] = await Promise.all([
+    db.tenant.findUnique({ where: { id: session.tenantId } }),
+    db.user.findUnique({ where: { id: session.userId } }),
+  ]);
+  if (!tenant || !user) redirect("/login");
 
   return (
     <SettingsForm
+      accountEmail={user.email}
+      pendingAccountEmail={user.pendingEmail}
       tenant={{
         name: tenant.name,
         slug: tenant.slug,
