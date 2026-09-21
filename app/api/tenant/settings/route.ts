@@ -43,6 +43,20 @@ const NOW_CATEGORIES = [
 // Mismos 4 valores que el enum NowPriceRange de Prisma.
 const NOW_PRICE_RANGES = ["BUDGET", "MODERATE", "EXPENSIVE", "LUXURY"] as const;
 
+// Mismos 10 valores que el enum NowSecondaryCategory de Prisma.
+const NOW_SECONDARY_CATEGORIES = [
+  "SUNSET",
+  "OCEANFRONT",
+  "ON_THE_BEACH",
+  "ROOFTOP",
+  "FEET_IN_THE_WATER",
+  "CHEFS_TABLE",
+  "PRIVATE_DINING",
+  "LIVE_MUSIC",
+  "LOCAL_EXPERIENCE",
+  "UNDER_THE_STARS",
+] as const;
+
 const updateSchema = z
   .object({
     name: z.string().min(1).optional(),
@@ -84,6 +98,7 @@ const updateSchema = z
       .optional(),
     nowEnabled: z.boolean().optional(),
     nowCategory: z.enum(NOW_CATEGORIES).nullable().optional(),
+    nowSecondaryCategory: z.enum(NOW_SECONDARY_CATEGORIES).nullable().optional(),
     nowPriceRange: z.enum(NOW_PRICE_RANGES).nullable().optional(),
     googleMapsUrl: z.string().url().nullable().optional().or(z.literal("")),
     nowReservationUrl: z.string().url().nullable().optional().or(z.literal("")),

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import type { NowCategory, NowPriceRange, Prisma } from "@prisma/client";
-import { eatsCategoryLabel, eatsPriceRangeLabel, eatsHoursStatusLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
+import type { NowCategory, NowPriceRange, NowSecondaryCategory, Prisma } from "@prisma/client";
+import { eatsCategoryLabel, eatsSecondaryCategoryLabel, eatsPriceRangeLabel, eatsHoursStatusLabel, haversineKm, EATS_MAX_NEAR_ME_KM } from "@/lib/eats-categories";
 import { getBusinessHoursForTenants, computeHoursStatus, type HoursStatus } from "@/lib/availability";
 
 // Orden real de precio (no alfabético) — así el filtro y la lista de
@@ -56,6 +56,9 @@ function mapTenant(
     nowCategory: t.nowCategory,
     categoryLabelEs: eatsCategoryLabel(t.nowCategory, "es"),
     categoryLabelEn: eatsCategoryLabel(t.nowCategory, "en"),
+    nowSecondaryCategory: t.nowSecondaryCategory,
+    secondaryCategoryLabelEs: eatsSecondaryCategoryLabel(t.nowSecondaryCategory, "es"),
+    secondaryCategoryLabelEn: eatsSecondaryCategoryLabel(t.nowSecondaryCategory, "en"),
     nowPriceRange: t.nowPriceRange,
     priceRangeLabel: eatsPriceRangeLabel(t.nowPriceRange),
     avgRating,
@@ -92,6 +95,7 @@ function mapTenant(
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const category = searchParams.get("category");
+  const secondaryCategory = searchParams.get("secondaryCategory");
   const priceRange = searchParams.get("priceRange");
   const q = searchParams.get("q")?.trim().toLowerCase() || "";
   const latParam = searchParams.get("lat");
@@ -107,6 +111,7 @@ export async function GET(req: NextRequest) {
     where: {
       nowEnabled: true,
       ...(category ? { nowCategory: category as NowCategory } : {}),
+      ...(secondaryCategory ? { nowSecondaryCategory: secondaryCategory as NowSecondaryCategory } : {}),
       ...(priceRange ? { nowPriceRange: priceRange as NowPriceRange } : {}),
       ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
     },

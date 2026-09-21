@@ -35,6 +35,7 @@ interface TenantData {
   menuShowPhotos: boolean;
   nowEnabled: boolean;
   nowCategory: string | null;
+  nowSecondaryCategory: string | null;
   nowPriceRange: string | null;
   googleMapsUrl: string | null;
   nowReservationUrl: string | null;
@@ -405,6 +406,23 @@ export default function SettingsForm({
                     </option>
                   ))}
                 </select>
+              </label>
+
+              <label className="flex flex-col gap-1.5 max-w-xs">
+                <span className="text-xs text-[#343233]/70">{t.settingsForm.secondaryCategoryLabel}</span>
+                <select
+                  value={form.nowSecondaryCategory ?? ""}
+                  onChange={(e) => setForm({ ...form, nowSecondaryCategory: e.target.value || null })}
+                  className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none"
+                >
+                  <option value="">{t.settingsForm.chooseSecondaryCategoryDefault}</option>
+                  {Object.entries(t.nowSecondaryCategories).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-xs text-[#343233]/50">{t.settingsForm.secondaryCategoryHint}</span>
               </label>
 
               <label className="flex flex-col gap-1.5 max-w-xs">

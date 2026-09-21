@@ -70,6 +70,41 @@ export function eatsCategoryLabel(category: string | null, lang: "es" | "en"): s
   return EATS_CATEGORY_LABELS[lang][category] ?? category;
 }
 
+// Segunda etiqueta opcional (ambiente/experiencia, no tipo de comida)
+// — mismo criterio que EATS_CATEGORY_LABELS: 10 valores fijos, el
+// negocio elige como máximo uno desde el dashboard.
+export const EATS_SECONDARY_CATEGORY_LABELS: Record<"es" | "en", Record<string, string>> = {
+  es: {
+    SUNSET: "Atardecer",
+    OCEANFRONT: "Frente al mar",
+    ON_THE_BEACH: "En la playa",
+    ROOFTOP: "Rooftop",
+    FEET_IN_THE_WATER: "Pies en el agua",
+    CHEFS_TABLE: "Mesa del chef",
+    PRIVATE_DINING: "Cena privada",
+    LIVE_MUSIC: "Música en vivo",
+    LOCAL_EXPERIENCE: "Experiencia local",
+    UNDER_THE_STARS: "Bajo las estrellas",
+  },
+  en: {
+    SUNSET: "Sunset",
+    OCEANFRONT: "Oceanfront",
+    ON_THE_BEACH: "On the Beach",
+    ROOFTOP: "Rooftop",
+    FEET_IN_THE_WATER: "Feet in the Water",
+    CHEFS_TABLE: "Chef's Table",
+    PRIVATE_DINING: "Private Dining",
+    LIVE_MUSIC: "Live Music",
+    LOCAL_EXPERIENCE: "Local Experience",
+    UNDER_THE_STARS: "Under the Stars",
+  },
+};
+
+export function eatsSecondaryCategoryLabel(category: string | null, lang: "es" | "en"): string | null {
+  if (!category) return null;
+  return EATS_SECONDARY_CATEGORY_LABELS[lang][category] ?? category;
+}
+
 // Símbolos de precio ($ a $$$$) — mismo signo en cualquier idioma, no
 // hace falta traducción por lang como con las categorías.
 export const EATS_PRICE_RANGE_LABELS: Record<string, string> = {

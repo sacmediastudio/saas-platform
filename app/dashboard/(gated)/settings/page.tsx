@@ -40,6 +40,7 @@ export default async function SettingsPage() {
         menuPageTextColor: tenant.menuPageTextColor,
         nowEnabled: tenant.nowEnabled,
         nowCategory: tenant.nowCategory,
+        nowSecondaryCategory: tenant.nowSecondaryCategory,
         nowPriceRange: tenant.nowPriceRange,
         googleMapsUrl: tenant.googleMapsUrl,
         nowReservationUrl: tenant.nowReservationUrl,

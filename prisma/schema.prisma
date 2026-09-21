@@ -125,6 +125,9 @@ model Tenant {
   // es algo que se activa solo.
   nowEnabled   Boolean      @default(false)
   nowCategory  NowCategory?
+  // Segunda etiqueta opcional de "ambiente" — el negocio elige como
+  // máximo una (ver enum NowSecondaryCategory arriba).
+  nowSecondaryCategory NowSecondaryCategory?
   // Opcional a propósito — un negocio que todavía no lo cargó sigue
   // apareciendo en el directorio, solo no entra en el filtro por precio.
   nowPriceRange NowPriceRange?
@@ -848,6 +851,24 @@ enum NowCategory {
   BAR_PUB
   BEACH_BAR
   FOOD_TRUCK
+}
+
+// Segunda etiqueta opcional para Zertoo Eats — describe el "ambiente"
+// o experiencia del lugar, no el tipo de comida (eso es NowCategory).
+// Se muestra como una segunda chip al lado de la categoría en las
+// cards, y en la app se elige desde una grilla de íconos fija (no un
+// dropdown) — ver SecondaryCategoryGrid.tsx en zertoo-mobile-app.
+enum NowSecondaryCategory {
+  SUNSET
+  OCEANFRONT
+  ON_THE_BEACH
+  ROOFTOP
+  FEET_IN_THE_WATER
+  CHEFS_TABLE
+  PRIVATE_DINING
+  LIVE_MUSIC
+  LOCAL_EXPERIENCE
+  UNDER_THE_STARS
 }
 
 // Rango de precio del negocio para Zertoo Eats, mismo criterio de 4

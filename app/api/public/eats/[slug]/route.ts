@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { eatsCategoryLabel, eatsPriceRangeLabel, eatsHoursStatusLabel } from "@/lib/eats-categories";
+import { eatsCategoryLabel, eatsSecondaryCategoryLabel, eatsPriceRangeLabel, eatsHoursStatusLabel } from "@/lib/eats-categories";
 import { getBusinessHours, computeHoursStatus } from "@/lib/availability";
 
 // GET /api/public/eats/[slug]
@@ -49,6 +49,9 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
     nowCategory: tenant.nowCategory,
     categoryLabelEs: eatsCategoryLabel(tenant.nowCategory, "es"),
     categoryLabelEn: eatsCategoryLabel(tenant.nowCategory, "en"),
+    nowSecondaryCategory: tenant.nowSecondaryCategory,
+    secondaryCategoryLabelEs: eatsSecondaryCategoryLabel(tenant.nowSecondaryCategory, "es"),
+    secondaryCategoryLabelEn: eatsSecondaryCategoryLabel(tenant.nowSecondaryCategory, "en"),
     nowPriceRange: tenant.nowPriceRange,
     priceRangeLabel: eatsPriceRangeLabel(tenant.nowPriceRange),
     address: tenant.address,
