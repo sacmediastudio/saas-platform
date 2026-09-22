@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import TrendStatCard from "@/components/trend-stat-card";
 import DashboardCard from "@/components/dashboard-card";
+import LinkQrButton from "@/components/link-qr-button";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import {
   Plus,
@@ -152,6 +153,7 @@ export default function SmartLinkEditor({
         <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
           {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
         </button>
+        <LinkQrButton url={publicUrl} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 divide-x divide-black/[0.06]">

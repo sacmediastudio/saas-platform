@@ -8,6 +8,7 @@ import OrderStatsPanel from "./order-stats-panel";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import DashboardCard from "@/components/dashboard-card";
+import LinkQrButton from "@/components/link-qr-button";
 
 interface AddOn {
   id?: string;
@@ -204,6 +205,7 @@ export default function MenuEditor({
           <button onClick={copyLink} className="text-[#343233]/70 hover:text-[#002D09] shrink-0">
             {copied ? <Check size={15} aria-hidden /> : <Copy size={15} aria-hidden />}
           </button>
+          <LinkQrButton url={publicUrl} />
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 divide-x divide-black/[0.06]">

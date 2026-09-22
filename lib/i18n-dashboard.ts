@@ -450,6 +450,12 @@ export const dashboardTranslations = {
       statusCompleted: "Completed",
       statusCancelled: "Cancelled",
     },
+    qrCode: {
+      buttonLabel: "Show QR code",
+      title: "Scan to open",
+      hint: "Print it or share it — scanning opens this link on any phone, no NFC needed.",
+      download: "Download QR",
+    },
     common: {
       cancel: "Cancel",
       save: "Save changes",
@@ -1019,6 +1025,12 @@ export const dashboardTranslations = {
       statusReady: "Listo",
       statusCompleted: "Completado",
       statusCancelled: "Cancelado",
+    },
+    qrCode: {
+      buttonLabel: "Ver código QR",
+      title: "Escaneá para abrir",
+      hint: "Imprimilo o compartilo — al escanearlo se abre este link en cualquier teléfono, sin necesidad de NFC.",
+      download: "Descargar QR",
     },
     common: {
       cancel: "Cancelar",
