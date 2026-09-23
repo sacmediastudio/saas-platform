@@ -6,7 +6,15 @@ import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { formatCurrency } from "@/lib/currency";
 import TrendStatCard from "@/components/trend-stat-card";
 
-type Period = "day" | "week" | "month" | "year";
+type Period = "day" | "week" | "month" | "year" | "custom";
+
+// Fecha local en formato YYYY-MM-DD para <input type="date"> — evita el
+// corrimiento de un día que da toISOString() cerca de medianoche, porque
+// esta pasa primero por UTC.
+function toDateInputValue(d: Date): string {
+  const local = new Date(d.getTime() - d.getTimezoneOffset() * 60_000);
+  return local.toISOString().slice(0, 10);
+}
 
 interface Bucket {
   label: string;
@@ -27,13 +35,27 @@ interface OrderStats {
 export default function OrderStatsPanel({ currency }: { currency: string }) {
   const { t } = useDashboardLang();
   const [period, setPeriod] = useState<Period>("week");
+  const [customStart, setCustomStart] = useState(() => toDateInputValue(new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)));
+  const [customEnd, setCustomEnd] = useState(() => toDateInputValue(new Date()));
   const [stats, setStats] = useState<OrderStats | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const customRangeValid = customStart !== "" && customEnd !== "" && customStart <= customEnd;
+
   useEffect(() => {
+    if (period === "custom" && !customRangeValid) {
+      setLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setLoading(true);
-    fetch(`/api/tenant/order-stats?period=${period}`)
+    const params = new URLSearchParams({ period });
+    if (period === "custom") {
+      params.set("start", customStart);
+      params.set("end", customEnd);
+    }
+    fetch(`/api/tenant/order-stats?${params.toString()}`)
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setStats(data);
@@ -44,13 +66,14 @@ export default function OrderStatsPanel({ currency }: { currency: string }) {
     return () => {
       cancelled = true;
     };
-  }, [period]);
+  }, [period, customStart, customEnd, customRangeValid]);
 
   const periods: { value: Period; label: string }[] = [
     { value: "day", label: t.menu.orderStats.periodDay },
     { value: "week", label: t.menu.orderStats.periodWeek },
     { value: "month", label: t.menu.orderStats.periodMonth },
     { value: "year", label: t.menu.orderStats.periodYear },
+    { value: "custom", label: t.menu.orderStats.periodCustom },
   ];
 
   return (
@@ -71,6 +94,35 @@ export default function OrderStatsPanel({ currency }: { currency: string }) {
           ))}
         </div>
       </div>
+
+      {period === "custom" && (
+        <div className="flex flex-wrap items-end gap-3">
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#343233]/70">{t.menu.orderStats.customFrom}</span>
+            <input
+              type="date"
+              value={customStart}
+              max={customEnd}
+              onChange={(e) => setCustomStart(e.target.value)}
+              className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-2.5 py-1.5 text-sm outline-none"
+            />
+          </label>
+          <label className="flex flex-col gap-1">
+            <span className="text-xs font-medium text-[#343233]/70">{t.menu.orderStats.customTo}</span>
+            <input
+              type="date"
+              value={customEnd}
+              min={customStart}
+              max={toDateInputValue(new Date())}
+              onChange={(e) => setCustomEnd(e.target.value)}
+              className="bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-2.5 py-1.5 text-sm outline-none"
+            />
+          </label>
+          {!customRangeValid && (
+            <span className="text-xs text-red-600 pb-1.5">{t.menu.orderStats.customRangeInvalid}</span>
+          )}
+        </div>
+      )}
 
       {loading || !stats ? (
         <div className="h-40 flex items-center justify-center text-sm text-[#343233]/50">

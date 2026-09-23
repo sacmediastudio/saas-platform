@@ -32,6 +32,12 @@ const TEMPLATE_ORDER_CONFIRMATION_EN = process.env.TWILIO_TEMPLATE_ORDER_CONFIRM
 const TEMPLATE_NEW_ORDER_ALERT_ES = process.env.TWILIO_TEMPLATE_NEW_ORDER_ALERT_ES || "";
 const TEMPLATE_NEW_ORDER_ALERT_EN = process.env.TWILIO_TEMPLATE_NEW_ORDER_ALERT_EN || "";
 
+const TEMPLATE_ORDER_CONFIRMED_ETA_ES = process.env.TWILIO_TEMPLATE_ORDER_CONFIRMED_ETA_ES || "";
+const TEMPLATE_ORDER_CONFIRMED_ETA_EN = process.env.TWILIO_TEMPLATE_ORDER_CONFIRMED_ETA_EN || "";
+
+const TEMPLATE_ORDER_READY_ES = process.env.TWILIO_TEMPLATE_ORDER_READY_ES || "";
+const TEMPLATE_ORDER_READY_EN = process.env.TWILIO_TEMPLATE_ORDER_READY_EN || "";
+
 export function isWhatsAppConfigured(): boolean {
   return Boolean(ACCOUNT_SID && AUTH_TOKEN && WHATSAPP_NUMBER);
 }
@@ -184,5 +190,48 @@ export async function sendNewOrderAlertWhatsApp(params: {
     toPhone: params.toPhone,
     contentSid: params.language === "en" ? TEMPLATE_NEW_ORDER_ALERT_EN : TEMPLATE_NEW_ORDER_ALERT_ES,
     bodyParams: [params.customerName, params.itemsSummary, params.fulfillmentInfo, params.total, params.customerPhone],
+  });
+}
+
+/**
+ * El negocio confirma el pedido y le avisa al CLIENTE con un tiempo
+ * estimado — es la respuesta puntual que pidió el cliente (ej. "tu
+ * pedido fue confirmado, estará listo en 25 minutos"). Como el
+ * cliente nunca le escribe primero al número de WhatsApp del negocio,
+ * nunca se abre una ventana de sesión de 24h — por eso esto también
+ * tiene que ir por plantilla aprobada, no texto libre. Plantilla:
+ * "Hola {{1}}, tu pedido en {{2}} fue confirmado ✅. Estará listo en
+ * aprox. {{3}} minutos." — 3 variables: nombre, negocio, minutos.
+ */
+export async function sendOrderConfirmedWithEtaWhatsApp(params: {
+  toPhone: string;
+  customerName: string;
+  businessName: string;
+  etaMinutes: number;
+  language: string;
+}): Promise<void> {
+  await sendTemplateMessage({
+    toPhone: params.toPhone,
+    contentSid: params.language === "en" ? TEMPLATE_ORDER_CONFIRMED_ETA_EN : TEMPLATE_ORDER_CONFIRMED_ETA_ES,
+    bodyParams: [params.customerName, params.businessName, String(params.etaMinutes)],
+  });
+}
+
+/**
+ * El pedido ya está listo (para retirar o en camino) — se avisa al
+ * CLIENTE. Plantilla: "Hola {{1}}, tu pedido en {{2}} ya está listo
+ * 🎉 {{3}}." — 3 variables: nombre, negocio, nota de retiro/entrega.
+ */
+export async function sendOrderReadyWhatsApp(params: {
+  toPhone: string;
+  customerName: string;
+  businessName: string;
+  fulfillmentNote: string;
+  language: string;
+}): Promise<void> {
+  await sendTemplateMessage({
+    toPhone: params.toPhone,
+    contentSid: params.language === "en" ? TEMPLATE_ORDER_READY_EN : TEMPLATE_ORDER_READY_ES,
+    bodyParams: [params.customerName, params.businessName, params.fulfillmentNote],
   });
 }

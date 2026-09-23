@@ -51,6 +51,9 @@ export default function OrdersView({
   const [orders, setOrders] = useState(initialOrders);
   const [tab, setTab] = useState<"active" | "history">("active");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [etaModalOrder, setEtaModalOrder] = useState<Order | null>(null);
+  const [etaMinutes, setEtaMinutes] = useState("20");
+  const [etaError, setEtaError] = useState(false);
 
   const STATUS_META: Record<Order["status"], { label: string; className: string }> = {
     PENDING: { label: t.orders.statusPending, className: "bg-amber-50 text-amber-700" },
@@ -85,18 +88,43 @@ export default function OrdersView({
     setSaving(false);
   }
 
-  async function updateStatus(order: Order, status: Order["status"]) {
+  async function updateStatus(order: Order, status: Order["status"], extra?: { etaMinutes: number }) {
     setBusyId(order.id);
     const res = await fetch(`/api/menu-orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
+      body: JSON.stringify({ status, ...extra }),
     });
     if (res.ok) {
       const { order: updated } = await res.json();
       setOrders((prev) => prev.map((o) => (o.id === order.id ? { ...o, status: updated.status } : o)));
     }
     setBusyId(null);
+  }
+
+  // Confirmar pide primero cuántos minutos va a tardar — es lo que
+  // deja avisarle al cliente "listo en 25 minutos" por WhatsApp. Las
+  // demás transiciones (marcar listo, completar, cancelar) no
+  // necesitan ese dato y se disparan directo.
+  function handleAction(order: Order, action: { label: string; next: Order["status"] }) {
+    if (action.next === "CONFIRMED") {
+      setEtaMinutes("20");
+      setEtaError(false);
+      setEtaModalOrder(order);
+      return;
+    }
+    updateStatus(order, action.next);
+  }
+
+  async function confirmWithEta() {
+    if (!etaModalOrder) return;
+    const minutes = Math.round(Number(etaMinutes));
+    if (!Number.isFinite(minutes) || minutes <= 0) {
+      setEtaError(true);
+      return;
+    }
+    await updateStatus(etaModalOrder, "CONFIRMED", { etaMinutes: minutes });
+    setEtaModalOrder(null);
   }
 
   return (
@@ -253,7 +281,7 @@ export default function OrdersView({
                   {action && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => updateStatus(order, action.next)}
+                        onClick={() => handleAction(order, action)}
                         disabled={busyId === order.id}
                         className="text-xs font-semibold px-3 py-1.5 rounded-md bg-[#E7FF00] text-[#002D09] hover:brightness-105 disabled:opacity-50"
                       >
@@ -273,6 +301,48 @@ export default function OrdersView({
             })}
           </div>
         </DashboardCard>
+      )}
+
+      {etaModalOrder && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setEtaModalOrder(null)}
+        >
+          <div className="w-full max-w-sm rounded-xl bg-white p-5" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-sm font-semibold mb-1">{t.orders.etaModalTitle}</h3>
+            <p className="text-xs text-[#343233]/60 mb-4">{t.orders.etaModalSubtitle}</p>
+            <label className="block text-xs font-medium mb-1">{t.orders.etaMinutesLabel}</label>
+            <input
+              type="number"
+              min="1"
+              max="180"
+              value={etaMinutes}
+              onChange={(e) => {
+                setEtaMinutes(e.target.value);
+                setEtaError(false);
+              }}
+              placeholder={t.orders.etaPlaceholder}
+              autoFocus
+              className="w-full bg-[#F7F8F4] border border-[#002D09]/15 rounded-lg px-3 py-2 text-sm outline-none mb-1"
+            />
+            {etaError && <p className="text-xs text-red-600 mb-2">{t.orders.etaInvalid}</p>}
+            <div className="flex gap-2 mt-3">
+              <button
+                onClick={confirmWithEta}
+                disabled={busyId === etaModalOrder.id}
+                className="flex-1 text-sm font-semibold px-4 h-9 rounded-lg bg-[#E7FF00] text-[#002D09] hover:brightness-105 disabled:opacity-50"
+              >
+                {t.orders.etaSend}
+              </button>
+              <button
+                onClick={() => setEtaModalOrder(null)}
+                className="text-sm font-medium px-4 h-9 rounded-lg border border-[#002D09]/15 hover:bg-[#F7F8F4]"
+              >
+                {t.orders.etaCancel}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
