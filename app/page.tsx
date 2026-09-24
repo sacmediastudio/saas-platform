@@ -13,14 +13,14 @@ import {
   Smartphone,
   ShieldCheck,
   Zap,
-  Menu,
-  X,
 } from "lucide-react";
 import Reveal from "@/components/reveal";
+import Btn from "@/components/landing-btn";
+import Header from "@/components/landing-header";
+import Footer from "@/components/landing-footer";
 import { translations, type Lang } from "@/lib/i18n-landing";
 import { getStoredLang, setStoredLang } from "@/lib/i18n-auth";
 
-const LOGO = "/logo.svg";
 const DASHBOARD = "https://images.hostinger.com/7d431ae5-239d-4f18-8ad3-1a498cd57431.png";
 const HERO_CUSTOMER = "/hero-customer.webp";
 const CTA_GUY = "/cta-guy.webp";
@@ -29,121 +29,6 @@ const NFC_CARD = "/nfc-card.webp";
 
 const PRODUCT_ICONS = [UtensilsCrossed, CalendarCheck, Link2];
 const PLAN_TYPES = ["SMARTLINK", "SMALL_BUSINESS", "RESTAURANT"];
-
-function Btn({ children, variant = "primary", className = "", as: As = "a", ...rest }: any) {
-  const base =
-    "inline-flex items-center justify-center gap-2 rounded-2xl px-7 min-h-[52px] text-[15px] font-semibold transition-all duration-200 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-forest/30";
-  const styles: Record<string, string> = {
-    primary: "bg-lime text-forest hover:-translate-y-0.5 hover:brightness-105",
-    dark: "bg-forest text-white hover:-translate-y-0.5 hover:bg-forest/90",
-    ghost: "border border-forest/15 text-forest hover:-translate-y-0.5 hover:border-forest/40 hover:bg-forest/[0.03]",
-  };
-  return (
-    <As className={`${base} ${styles[variant]} ${className}`} {...rest}>
-      {children}
-    </As>
-  );
-}
-
-function LangSwitch({ lang, setLang }: { lang: Lang; setLang: (l: Lang) => void }) {
-  return (
-    <div className="flex items-center rounded-full border border-forest/15 p-0.5 text-xs font-bold">
-      {(["EN", "ES"] as const).map((l) => {
-        const value = l.toLowerCase() as Lang;
-        const active = lang === value;
-        return (
-          <button
-            key={l}
-            type="button"
-            onClick={() => setLang(value)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${active ? "bg-forest text-white" : "text-forest/60"}`}
-          >
-            {l}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function Header({ lang, setLang, t }: { lang: Lang; setLang: (l: Lang) => void; t: (typeof translations)["en"] }) {
-  const [open, setOpen] = useState(false);
-  const nav = [
-    { label: t.nav.products, href: "#productos" },
-    { label: t.nav.hardware, href: "#hardware" },
-    { label: t.nav.pricing, href: "#precios" },
-    { label: t.nav.faq, href: "#faq" },
-  ];
-  return (
-    <header className="sticky top-0 z-50 border-b border-forest/[0.07] bg-white/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-[76px] w-full max-w-[90rem] items-center justify-between px-6 lg:px-10">
-        <a href="#top" className="flex items-center" aria-label="Zertoo">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="Zertoo" className="h-10 w-auto" />
-        </a>
-        <nav className="hidden items-center gap-9 md:flex">
-          {nav.map((n) => (
-            <a key={n.href} href={n.href} className="relative text-sm font-medium text-graphite transition-colors hover:text-forest">
-              {n.label}
-            </a>
-          ))}
-        </nav>
-        <div className="hidden items-center gap-4 md:flex">
-          <LangSwitch lang={lang} setLang={setLang} />
-          <a
-            href="https://zertooeats.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm font-semibold text-graphite hover:opacity-70"
-          >
-            Zertoo <span className="text-[#8a9c00]">Eats!</span>
-          </a>
-          <a href="#precios" className="text-sm font-semibold text-forest hover:opacity-70">{t.nav.viewPlans}</a>
-          <a href="/login" className="text-sm font-semibold text-forest hover:opacity-70">{t.nav.login}</a>
-          <Btn href="/signup" className="px-5 min-h-[44px]">{t.nav.start}</Btn>
-        </div>
-        <div className="flex items-center gap-2 md:hidden">
-          <LangSwitch lang={lang} setLang={setLang} />
-          <button type="button" onClick={() => setOpen((v) => !v)} className="-mr-2 p-2 text-forest" aria-label="Menu">
-            {open ? <X className="h-6 w-6" strokeWidth={1.6} /> : <Menu className="h-6 w-6" strokeWidth={1.6} />}
-          </button>
-        </div>
-      </div>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: "easeOut" }}
-            className="overflow-hidden border-t border-forest/[0.07] bg-white md:hidden"
-          >
-            <div className="flex flex-col gap-1 px-6 py-5">
-              {nav.map((n) => (
-                <a key={n.href} href={n.href} onClick={() => setOpen(false)} className="py-3 text-base font-medium text-forest">
-                  {n.label}
-                </a>
-              ))}
-              <a
-                href="https://zertooeats.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => setOpen(false)}
-                className="py-3 text-base font-medium text-forest"
-              >
-                Zertoo <span className="text-[#8a9c00]">Eats!</span>
-              </a>
-              <a href="/login" onClick={() => setOpen(false)} className="py-3 text-base font-medium text-forest">
-                {t.nav.login}
-              </a>
-              <Btn href="/signup" onClick={() => setOpen(false)} className="mt-3 w-full">{t.nav.start}</Btn>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
-  );
-}
 
 function Hero({ t }: { t: (typeof translations)["en"] }) {
   return (
@@ -260,7 +145,9 @@ function ProductCard({ p, index, moreInfoLabel }: { p: any; index: number; moreI
             </li>
           ))}
         </ul>
-        <Btn href="#precios" variant="ghost" className="mt-8 w-full">{moreInfoLabel}</Btn>
+        <Btn href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : "#precios"} variant="ghost" className="mt-8 w-full">
+          {moreInfoLabel}
+        </Btn>
       </div>
     </Reveal>
   );
@@ -474,32 +361,6 @@ function CtaBand({ t }: { t: (typeof translations)["en"] }) {
         </div>
       </Reveal>
     </section>
-  );
-}
-
-function Footer({ t }: { t: (typeof translations)["en"] }) {
-  return (
-    <footer className="border-t border-forest/[0.07] bg-white">
-      <div className="mx-auto flex w-full max-w-[90rem] flex-col gap-10 px-6 py-14 lg:flex-row lg:items-center lg:justify-between lg:px-10">
-        <div>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO} alt="Zertoo" className="h-6 w-auto" />
-          <p className="mt-4 max-w-[34ch] text-sm text-graphite/70">{t.footer.tagline}</p>
-        </div>
-        <nav className="flex flex-wrap gap-x-8 gap-y-3 text-sm font-medium text-graphite">
-          <a href="mailto:hello@zertoo.app" className="transition-colors hover:text-forest">{t.footer.contact}</a>
-          <a href="#productos" className="transition-colors hover:text-forest">{t.footer.products}</a>
-          <a href="#precios" className="transition-colors hover:text-forest">{t.footer.pricing}</a>
-          <a href="#faq" className="transition-colors hover:text-forest">{t.footer.faq}</a>
-          <a href="/privacidad" className="transition-colors hover:text-forest">{t.footer.privacy}</a>
-          <a href="https://instagram.com" target="_blank" rel="noreferrer" className="transition-colors hover:text-forest">Instagram</a>
-          <a href="https://wa.me/" target="_blank" rel="noreferrer" className="transition-colors hover:text-forest">WhatsApp</a>
-        </nav>
-      </div>
-      <div className="mx-auto w-full max-w-[90rem] border-t border-forest/[0.07] px-6 py-6 lg:px-10">
-        <p className="text-xs text-graphite/60">© {new Date().getFullYear()} Zertoo. {t.footer.copyright}</p>
-      </div>
-    </footer>
   );
 }
 
