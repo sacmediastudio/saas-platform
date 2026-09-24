@@ -504,14 +504,63 @@ export default function PublicMenu({
                   </button>
                 </div>
                 <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
-                  <div className="flex items-start justify-between gap-3">
-                    <p className="text-xl font-bold leading-tight min-w-0">{resolveItemName(item, lang)}</p>
-                    <span className="text-xl font-bold text-red-600 shrink-0">
-                      {priceLabel(item)}
+                  {/* Nombre y precio en líneas separadas, no en la misma
+                      fila — un plato destacado con nombre largo y precio
+                      con conversión de moneda no entran juntos en una sola
+                      línea (mismo problema que la lista de platos). */}
+                  <p className="text-xl font-bold leading-tight">{resolveItemName(item, lang)}</p>
+                  {item.status === "SOLD_OUT" ? (
+                    <span className="inline-block text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 mt-1.5">
+                      {lang === "en" ? "Sold out" : "Agotado"}
                     </span>
-                  </div>
+                  ) : (
+                    <p className="text-xl font-bold text-red-600 mt-0.5">{priceLabel(item)}</p>
+                  )}
                   {itemDescription(item) && (
                     <p className="text-sm opacity-60 mt-2">{itemDescription(item)}</p>
+                  )}
+                  {/* Mismo botón de agregar/quitar que la lista de platos —
+                      antes un destacado no se podía pedir directo desde
+                      acá, había que encontrarlo de nuevo más abajo. */}
+                  {tenant.orderingEnabled && item.status !== "SOLD_OUT" && !item.variablePrice && (
+                    <div className="flex items-center justify-end gap-2 mt-3">
+                      {item.addOns.length > 0 ? (
+                        <button
+                          onClick={() => setCustomizeItem(item)}
+                          aria-label={lang === "en" ? "Customize and add to order" : "Personalizar y agregar al pedido"}
+                          className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
+                          style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+                        >
+                          +
+                        </button>
+                      ) : (
+                        <>
+                          {quickQuantityFor(item.id) > 0 && (
+                            <>
+                              <button
+                                onClick={() => quickRemove(item.id)}
+                                aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
+                                className="w-8 h-8 rounded-full border flex items-center justify-center text-base"
+                                style={{ borderColor: "currentColor" }}
+                              >
+                                −
+                              </button>
+                              <span className="text-base font-semibold w-5 text-center">
+                                {quickQuantityFor(item.id)}
+                              </span>
+                            </>
+                          )}
+                          <button
+                            onClick={() => quickAdd(item.id)}
+                            aria-label={lang === "en" ? "Add to order" : "Agregar al pedido"}
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
+                            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+                          >
+                            +
+                          </button>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -779,18 +828,65 @@ export default function PublicMenu({
               </button>
             </div>
             <div className="px-5 py-4">
-              <div className="flex items-baseline justify-between gap-3">
-                <p className="text-lg font-bold min-w-0">{zoomedItem.name}</p>
-                {zoomedItem.status === "SOLD_OUT" ? (
-                  <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">{lang === "en" ? "Sold out" : "Agotado"}</span>
-                ) : (
-                  <span className="text-lg font-bold shrink-0">
-                    {priceLabel(zoomedItem)}
-                  </span>
-                )}
-              </div>
+              {/* Nombre y precio en líneas separadas — mismo motivo que en
+                  la lista y en Destacados: no siempre entran juntos. */}
+              <p className="text-lg font-bold">{zoomedItem.name}</p>
+              {zoomedItem.status === "SOLD_OUT" ? (
+                <span className="inline-block text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 mt-1">
+                  {lang === "en" ? "Sold out" : "Agotado"}
+                </span>
+              ) : (
+                <p className="text-lg font-bold mt-0.5">{priceLabel(zoomedItem)}</p>
+              )}
               {itemDescription(zoomedItem) && (
                 <p className="text-sm opacity-70 mt-1.5">{itemDescription(zoomedItem)}</p>
+              )}
+              {/* Agregar directo desde acá — antes había que cerrar la
+                  foto y volver a encontrar el mismo plato en la lista,
+                  sin ninguna marca visual de cuál era. */}
+              {tenant.orderingEnabled && zoomedItem.status !== "SOLD_OUT" && !zoomedItem.variablePrice && (
+                <div className="flex items-center justify-end gap-2 mt-3">
+                  {zoomedItem.addOns.length > 0 ? (
+                    <button
+                      onClick={() => {
+                        const item = zoomedItem;
+                        setZoomedItem(null);
+                        setCustomizeItem(item);
+                      }}
+                      aria-label={lang === "en" ? "Customize and add to order" : "Personalizar y agregar al pedido"}
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
+                      style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+                    >
+                      +
+                    </button>
+                  ) : (
+                    <>
+                      {quickQuantityFor(zoomedItem.id) > 0 && (
+                        <>
+                          <button
+                            onClick={() => quickRemove(zoomedItem.id)}
+                            aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
+                            className="w-8 h-8 rounded-full border flex items-center justify-center text-base"
+                            style={{ borderColor: "currentColor" }}
+                          >
+                            −
+                          </button>
+                          <span className="text-base font-semibold w-5 text-center">
+                            {quickQuantityFor(zoomedItem.id)}
+                          </span>
+                        </>
+                      )}
+                      <button
+                        onClick={() => quickAdd(zoomedItem.id)}
+                        aria-label={lang === "en" ? "Add to order" : "Agregar al pedido"}
+                        className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
+                        style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+                      >
+                        +
+                      </button>
+                    </>
+                  )}
+                </div>
               )}
             </div>
           </div>
