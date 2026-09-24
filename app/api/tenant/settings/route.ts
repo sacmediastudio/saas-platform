@@ -100,8 +100,18 @@ const updateSchema = z
     nowCategory: z.enum(NOW_CATEGORIES).nullable().optional(),
     nowSecondaryCategory: z.enum(NOW_SECONDARY_CATEGORIES).nullable().optional(),
     nowPriceRange: z.enum(NOW_PRICE_RANGES).nullable().optional(),
-    googleMapsUrl: z.string().url().nullable().optional().or(z.literal("")),
-    nowReservationUrl: z.string().url().nullable().optional().or(z.literal("")),
+    googleMapsUrl: z
+      .string()
+      .url("El link de Google Maps no es válido — pegá el link completo (tiene que empezar con https://), no la dirección en texto.")
+      .nullable()
+      .optional()
+      .or(z.literal("")),
+    nowReservationUrl: z
+      .string()
+      .url("El link de reservas no es válido — pegá el link completo (tiene que empezar con https://).")
+      .nullable()
+      .optional()
+      .or(z.literal("")),
   })
   .refine((data) => !data.nowEnabled || data.nowCategory, {
     message: "Elegí una categoría para aparecer en Zertoo Eats.",
@@ -119,7 +129,12 @@ export async function PATCH(req: NextRequest) {
   const session = await requireTenant();
   const parsed = updateSchema.safeParse(await req.json());
   if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    // El frontend solo sabe mostrar un mensaje si "error" es un string
+    // (ver handleSave en settings-form.tsx) — mandar el objeto crudo de
+    // zod acá hacía que CUALQUIER campo inválido cayera silenciosamente
+    // en el mensaje genérico, sin decir cuál era el problema real.
+    const firstIssue = parsed.error.issues[0];
+    return NextResponse.json({ error: firstIssue?.message || "Datos inválidos" }, { status: 400 });
   }
 
   const existing = await db.tenant.findUnique({ where: { id: session.tenantId } });
