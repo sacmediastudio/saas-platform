@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, Check, Bike, Store } from "lucide-react";
+import { ShoppingBag, Check, Bike, Store, MapPin } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { formatCurrency } from "@/lib/currency";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
@@ -32,6 +32,7 @@ interface Order {
   deliveryFee: number;
   total: number;
   createdAt: string;
+  locationName: string | null;
   items: OrderItem[];
 }
 
@@ -256,6 +257,13 @@ export default function OrdersView({
                     </div>
                     <span className={`text-xs px-2 py-1 rounded-md font-medium ${meta.className}`}>{meta.label}</span>
                   </div>
+
+                  {order.locationName && (
+                    <div className="flex items-center gap-1.5 text-xs font-medium text-[#343233]/70 mb-2">
+                      <MapPin size={13} aria-hidden />
+                      {order.locationName}
+                    </div>
+                  )}
 
                   <div className="flex items-center gap-1.5 text-xs text-[#343233]/70 mb-2">
                     {order.fulfillment === "PICKUP" ? <Store size={13} aria-hidden /> : <Bike size={13} aria-hidden />}

@@ -9,6 +9,9 @@ import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
   slug: z.string(),
+  // Solo aplica a negocios con más de una ubicación cargada — ver
+  // Location en el schema. Un negocio de un solo local nunca la manda.
+  locationId: z.string().optional(),
   customerName: z.string().min(1).max(100),
   customerEmail: z.string().email(),
   customerPhone: z.string().min(6).max(30),
@@ -54,11 +57,30 @@ export async function POST(req: NextRequest) {
   if (!tenant || !tenant.orderingEnabled) {
     return NextResponse.json({ error: "Los pedidos no están disponibles en este negocio." }, { status: 404 });
   }
-  if (data.fulfillment === "PICKUP" && !tenant.pickupEnabled) {
+
+  // Si el negocio tiene ubicaciones cargadas, el pedido tiene que traer
+  // una válida y activa — la config de pickup/delivery/fee de ESA
+  // location manda en vez de la del Tenant. Un negocio sin ubicaciones
+  // sigue funcionando exactamente como antes.
+  const locations = await db.location.findMany({ where: { tenantId: tenant.id, isActive: true } });
+  let location: (typeof locations)[number] | null = null;
+  if (locations.length > 0) {
+    location = locations.find((l) => l.id === data.locationId) ?? null;
+    if (!location) {
+      return NextResponse.json({ error: "Elegí una ubicación válida." }, { status: 400 });
+    }
+  }
+
+  const effectivePickupEnabled = location ? location.pickupEnabled : tenant.pickupEnabled;
+  const effectiveDeliveryEnabled = location ? location.deliveryEnabled : tenant.deliveryEnabled;
+  const effectiveDeliveryFee = location ? location.deliveryFee : tenant.deliveryFee;
+  const effectiveMinDeliveryAmount = location ? location.minDeliveryAmount : tenant.minDeliveryAmount;
+
+  if (data.fulfillment === "PICKUP" && !effectivePickupEnabled) {
     return NextResponse.json({ error: "Este negocio no ofrece pickup." }, { status: 400 });
   }
   if (data.fulfillment === "DELIVERY") {
-    if (!tenant.deliveryEnabled) {
+    if (!effectiveDeliveryEnabled) {
       return NextResponse.json({ error: "Este negocio no ofrece delivery." }, { status: 400 });
     }
     if (!data.deliveryAddress) {
@@ -106,12 +128,12 @@ export async function POST(req: NextRequest) {
     };
   });
   const subtotal = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const deliveryFee = data.fulfillment === "DELIVERY" ? (tenant.deliveryFee ?? 0) : 0;
+  const deliveryFee = data.fulfillment === "DELIVERY" ? (effectiveDeliveryFee ?? 0) : 0;
   const total = subtotal + deliveryFee;
 
-  if (data.fulfillment === "DELIVERY" && tenant.minDeliveryAmount && subtotal < tenant.minDeliveryAmount) {
+  if (data.fulfillment === "DELIVERY" && effectiveMinDeliveryAmount && subtotal < effectiveMinDeliveryAmount) {
     return NextResponse.json(
-      { error: `El pedido mínimo para delivery es ${tenant.minDeliveryAmount}.` },
+      { error: `El pedido mínimo para delivery es ${effectiveMinDeliveryAmount}.` },
       { status: 400 }
     );
   }
@@ -119,6 +141,7 @@ export async function POST(req: NextRequest) {
   const order = await db.menuOrder.create({
     data: {
       tenantId: tenant.id,
+      locationId: location?.id,
       customerName: data.customerName,
       customerEmail: data.customerEmail.toLowerCase().trim(),
       customerPhone: data.customerPhone,
@@ -143,11 +166,14 @@ export async function POST(req: NextRequest) {
   });
 
   const totalLabel = formatCurrency(total, tenant.currency);
+  // Con varias ubicaciones, "tu pedido en {negocio}" a secas sería
+  // ambiguo — se usa el nombre de la location elegida cuando existe.
+  const businessName = location ? `${tenant.name} - ${location.name}` : tenant.name;
 
   await sendOrderConfirmationEmail({
     to: data.customerEmail,
     customerName: data.customerName,
-    businessName: tenant.name,
+    businessName,
     fulfillment: data.fulfillment,
     items: orderItems,
     total,
@@ -159,14 +185,16 @@ export async function POST(req: NextRequest) {
   await sendOrderConfirmationWhatsApp({
     toPhone: data.customerPhone,
     customerName: data.customerName,
-    businessName: tenant.name,
+    businessName,
     total: totalLabel,
     language: data.language,
   }).catch((err) => console.error("No se pudo enviar la confirmación de pedido por WhatsApp:", err));
 
-  // Aviso al NEGOCIO — al número de contacto configurado en Ajustes, no
-  // al mismo número que usa para mandar mensajes (son cosas distintas).
-  if (tenant.contactPhone) {
+  // Aviso al NEGOCIO — al WhatsApp de la ubicación elegida si tiene uno
+  // propio cargado, si no al contacto general del Tenant (son cosas
+  // distintas del número que USA para mandar mensajes).
+  const alertPhone = location?.contactPhone || tenant.contactPhone;
+  if (alertPhone) {
     // WhatsApp rechaza las variables de plantilla que contengan saltos
     // de línea (error 21656 de Twilio, "Content Variables parameter is
     // invalid") — por eso se separan los ítems con " · " en vez de
@@ -185,7 +213,7 @@ export async function POST(req: NextRequest) {
       data.fulfillment === "DELIVERY" ? `🚗 Delivery: ${data.deliveryAddress}` : "🏪 Retiro en el local";
 
     await sendNewOrderAlertWhatsApp({
-      toPhone: tenant.contactPhone,
+      toPhone: alertPhone,
       customerName: data.customerName,
       customerPhone: data.customerPhone,
       itemsSummary,

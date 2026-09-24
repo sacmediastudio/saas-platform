@@ -39,7 +39,7 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
 
   await recordPageView(tenant.id, "MENU");
 
-  const [categories, items, reviews] = await Promise.all([
+  const [categories, items, reviews, locations] = await Promise.all([
     db.menuCategory.findMany({ where: { tenantId: tenant.id }, orderBy: { sortOrder: "asc" } }),
     db.menuItem.findMany({
       where: { tenantId: tenant.id },
@@ -47,6 +47,7 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
       orderBy: { sortOrder: "asc" },
     }),
     db.review.findMany({ where: { tenantId: tenant.id, status: "PUBLISHED" } }),
+    db.location.findMany({ where: { tenantId: tenant.id, isActive: true }, orderBy: { sortOrder: "asc" } }),
   ]);
 
   const avgRating =
@@ -112,6 +113,15 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
         }))}
         avgRating={avgRating}
         reviewCount={reviews.length}
+        locations={locations.map((l) => ({
+          id: l.id,
+          name: l.name,
+          address: l.address,
+          pickupEnabled: l.pickupEnabled,
+          deliveryEnabled: l.deliveryEnabled,
+          deliveryFee: l.deliveryFee,
+          minDeliveryAmount: l.minDeliveryAmount,
+        }))}
       />
     </>
   );

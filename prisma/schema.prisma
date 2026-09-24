@@ -215,6 +215,13 @@ model Tenant {
   deliveryFee         Float?
   minDeliveryAmount   Float?
   menuOrders          MenuOrder[]
+  // Ubicaciones adicionales para negocios con más de un local (ej.
+  // franquicias) — opcional. Si el tenant no tiene ninguna, el pedido
+  // sigue usando pickup/delivery/deliveryFee/minDeliveryAmount de
+  // arriba tal cual funciona hoy; en cuanto agrega la primera, el
+  // checkout público pasa a pedir "elegí tu local" y esos campos se
+  // leen de la Location elegida en su lugar.
+  locations           Location[]
 
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
@@ -777,6 +784,9 @@ enum OrderStatus {
 model MenuOrder {
   id              String           @id @default(cuid())
   tenantId        String
+  // Solo se completa si el Tenant tiene Location cargadas — un negocio
+  // de un solo local nunca la usa (ver comentario en Location).
+  locationId      String?
   customerName    String
   customerEmail   String
   customerPhone   String
@@ -794,12 +804,46 @@ model MenuOrder {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  tenant Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items  MenuOrderItem[]
+  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  items    MenuOrderItem[]
 
   @@index([tenantId])
   @@index([tenantId, status])
+  @@index([locationId])
   @@map("menu_orders")
+}
+
+// Local físico adicional de un mismo negocio (franquicias con 2+
+// sucursales) — opcional: un tenant sin ninguna Location sigue
+// funcionando exactamente como antes (pickup/delivery a nivel
+// Tenant, ver esos campos arriba). En cuanto tiene al menos una, el
+// checkout público exige elegir local y usa la configuración de ESA
+// location en vez de la del Tenant. El menú (platos y precios) sigue
+// siendo el mismo para todas las locations de un tenant — no hay
+// override por local todavía.
+model Location {
+  id                String   @id @default(cuid())
+  tenantId          String
+  name              String
+  address           String?
+  // WhatsApp de este local para el aviso de "pedido nuevo" — si no
+  // se carga, se usa el contactPhone del Tenant como respaldo.
+  contactPhone      String?
+  pickupEnabled     Boolean  @default(true)
+  deliveryEnabled   Boolean  @default(false)
+  deliveryFee       Float?
+  minDeliveryAmount Float?
+  isActive          Boolean  @default(true)
+  sortOrder         Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  orders MenuOrder[]
+
+  @@index([tenantId])
+  @@map("locations")
 }
 
 // Snapshot del plato al momento del pedido (nombre y precio propios,

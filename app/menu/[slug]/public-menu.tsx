@@ -66,6 +66,20 @@ interface TenantData {
   minDeliveryAmount: number | null;
 }
 
+// Negocios de un solo local no tienen ninguna — el checkout sigue
+// usando pickup/delivery/deliveryFee/minDeliveryAmount de TenantData
+// tal cual. En cuanto hay al menos una, el checkout pide elegir local
+// y usa la configuración de ESA location en su lugar.
+interface LocationData {
+  id: string;
+  name: string;
+  address: string | null;
+  pickupEnabled: boolean;
+  deliveryEnabled: boolean;
+  deliveryFee: number | null;
+  minDeliveryAmount: number | null;
+}
+
 // Función de módulo (no un método interno de PublicMenu) porque
 // CheckoutModal e ItemCustomizeModal, definidos más abajo en este
 // mismo archivo, también necesitan resolver el nombre del plato
@@ -81,12 +95,14 @@ export default function PublicMenu({
   items,
   avgRating,
   reviewCount,
+  locations,
 }: {
   tenant: TenantData;
   categories: CategoryData[];
   items: MenuItemData[];
   avgRating: number | null;
   reviewCount: number;
+  locations: LocationData[];
 }) {
   // El nombre de cada plato NUNCA se traduce (puede ser cualquier cosa —
   // una marca, un plato regional, etc.). Solo las categorías y las
@@ -822,6 +838,7 @@ export default function PublicMenu({
           deliveryEnabled={tenant.deliveryEnabled}
           deliveryFee={tenant.deliveryFee}
           minDeliveryAmount={tenant.minDeliveryAmount}
+          locations={locations}
           buttonColor={tenant.buttonColor}
           buttonTextColor={tenant.buttonTextColor}
           cartLines={cartLines}
@@ -995,6 +1012,7 @@ function CheckoutModal({
   deliveryEnabled,
   deliveryFee,
   minDeliveryAmount,
+  locations,
   buttonColor,
   buttonTextColor,
   cartLines,
@@ -1012,6 +1030,7 @@ function CheckoutModal({
   deliveryEnabled: boolean;
   deliveryFee: number | null;
   minDeliveryAmount: number | null;
+  locations: LocationData[];
   buttonColor: string;
   buttonTextColor: string;
   cartLines: CartLine[];
@@ -1023,7 +1042,18 @@ function CheckoutModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
-  const defaultFulfillment: "PICKUP" | "DELIVERY" = pickupEnabled ? "PICKUP" : "DELIVERY";
+  const hasLocations = locations.length > 0;
+  const [locationId, setLocationId] = useState(hasLocations ? locations[0].id : "");
+  const selectedLocation = hasLocations ? locations.find((l) => l.id === locationId) ?? locations[0] : null;
+
+  // Sin locations, el checkout se comporta exactamente igual que antes
+  // (usa los valores del Tenant que ya venían como props).
+  const effectivePickupEnabled = selectedLocation ? selectedLocation.pickupEnabled : pickupEnabled;
+  const effectiveDeliveryEnabled = selectedLocation ? selectedLocation.deliveryEnabled : deliveryEnabled;
+  const effectiveDeliveryFee = selectedLocation ? selectedLocation.deliveryFee : deliveryFee;
+  const effectiveMinDeliveryAmount = selectedLocation ? selectedLocation.minDeliveryAmount : minDeliveryAmount;
+
+  const defaultFulfillment: "PICKUP" | "DELIVERY" = effectivePickupEnabled ? "PICKUP" : "DELIVERY";
   const [fulfillment, setFulfillment] = useState<"PICKUP" | "DELIVERY">(defaultFulfillment);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -1033,10 +1063,24 @@ function CheckoutModal({
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
 
-  const fee = fulfillment === "DELIVERY" ? (deliveryFee ?? 0) : 0;
+  // Si cambia de local y el que eligió antes ya no ofrece esa opción
+  // (ej. tenía Delivery elegido y el nuevo local solo hace Pickup), se
+  // reacomoda solo a lo que SÍ ofrece — nunca deja seleccionada una
+  // opción inválida para el local actual.
+  useEffect(() => {
+    if (!selectedLocation) return;
+    if (fulfillment === "PICKUP" && !selectedLocation.pickupEnabled && selectedLocation.deliveryEnabled) {
+      setFulfillment("DELIVERY");
+    } else if (fulfillment === "DELIVERY" && !selectedLocation.deliveryEnabled && selectedLocation.pickupEnabled) {
+      setFulfillment("PICKUP");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedLocation?.id]);
+
+  const fee = fulfillment === "DELIVERY" ? (effectiveDeliveryFee ?? 0) : 0;
   const total = subtotal + fee;
   const belowMinimum =
-    fulfillment === "DELIVERY" && minDeliveryAmount !== null && subtotal < minDeliveryAmount;
+    fulfillment === "DELIVERY" && effectiveMinDeliveryAmount !== null && subtotal < effectiveMinDeliveryAmount;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1049,6 +1093,7 @@ function CheckoutModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           slug,
+          locationId: hasLocations ? locationId : undefined,
           customerName: name,
           customerEmail: email,
           customerPhone: phone,
@@ -1137,7 +1182,25 @@ function CheckoutModal({
               })}
             </div>
 
-            {(pickupEnabled || deliveryEnabled) && pickupEnabled && deliveryEnabled && (
+            {hasLocations && (
+              <div className="flex flex-col gap-1 mb-1">
+                <label className="text-xs font-medium opacity-70">{language === "en" ? "Location" : "Ubicación"}</label>
+                <select
+                  value={locationId}
+                  onChange={(e) => setLocationId(e.target.value)}
+                  className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base bg-white"
+                >
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                      {loc.address ? ` — ${loc.address}` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {(effectivePickupEnabled || effectiveDeliveryEnabled) && effectivePickupEnabled && effectiveDeliveryEnabled && (
               <div className="flex gap-2 mb-1">
                 <button
                   type="button"
@@ -1211,8 +1274,8 @@ function CheckoutModal({
             {belowMinimum && (
               <p className="text-xs text-red-600">
                 {language === "en"
-                  ? `The minimum order for delivery is ${formatCurrency(minDeliveryAmount!, currency)}.`
-                  : `El pedido mínimo para delivery es ${formatCurrency(minDeliveryAmount!, currency)}.`}
+                  ? `The minimum order for delivery is ${formatCurrency(effectiveMinDeliveryAmount!, currency)}.`
+                  : `El pedido mínimo para delivery es ${formatCurrency(effectiveMinDeliveryAmount!, currency)}.`}
               </p>
             )}
             {status === "error" && <p className="text-sm text-red-600">{error}</p>}

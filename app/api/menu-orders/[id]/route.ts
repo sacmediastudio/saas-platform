@@ -24,7 +24,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const existing = await db.menuOrder.findFirst({
     where: { id: params.id, tenantId: session.tenantId },
-    include: { tenant: true },
+    include: { tenant: true, location: true },
   });
   if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
 
@@ -34,6 +34,10 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     include: { items: true },
   });
 
+  // Con varias ubicaciones, "tu pedido en {negocio}" a secas sería
+  // ambiguo — se usa el nombre de la location del pedido cuando existe.
+  const businessName = existing.location ? `${existing.tenant.name} - ${existing.location.name}` : existing.tenant.name;
+
   // Avisos al CLIENTE por WhatsApp — no deben tumbar el cambio de
   // estado si Twilio falla, solo queda logueado (mismo criterio que
   // /api/public/menu-orders).
@@ -41,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await sendOrderConfirmedWithEtaWhatsApp({
       toPhone: order.customerPhone,
       customerName: order.customerName,
-      businessName: existing.tenant.name,
+      businessName,
       etaMinutes: parsed.data.etaMinutes,
       language: order.language,
     }).catch((err) => console.error("No se pudo avisar la confirmación por WhatsApp:", err));
@@ -50,7 +54,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     await sendOrderReadyWhatsApp({
       toPhone: order.customerPhone,
       customerName: order.customerName,
-      businessName: existing.tenant.name,
+      businessName,
       fulfillmentNote: notes[order.fulfillment],
       language: order.language,
     }).catch((err) => console.error("No se pudo avisar que el pedido está listo por WhatsApp:", err));
