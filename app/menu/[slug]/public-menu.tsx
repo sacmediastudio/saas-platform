@@ -546,74 +546,83 @@ export default function PublicMenu({
                   return (
                     <div
                       key={item.id}
-                      className={`py-4 first:pt-0 flex items-center gap-3 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
+                      className={`py-4 first:pt-0 flex flex-col gap-2 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
                     >
-                      {!hasPhoto && (
-                        <button
-                          onClick={() => toggleWishlist(item.id)}
-                          aria-label={favLabel(liked)}
-                          className="shrink-0 p-1 -ml-1"
-                        >
-                          <Heart
-                            size={18}
-                            className={liked ? "fill-red-500 text-red-500" : ""}
-                            style={liked ? undefined : { opacity: 0.35 }}
-                            aria-hidden
-                          />
-                        </button>
-                      )}
-                      <div
-                        onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
-                        className={`flex-1 min-w-0 flex gap-3 ${
-                          hasPhoto ? "cursor-pointer active:opacity-70 transition-opacity" : ""
-                        }`}
-                      >
-                        {hasPhoto && (
-                          <div className="relative shrink-0">
-                            <SmartImage
-                              src={item.imageUrl}
-                              alt={resolveItemName(item, lang)}
-                              width={56}
-                              height={56}
-                              className="w-14 h-14 rounded-lg object-cover"
+                      <div className="flex items-center gap-3">
+                        {!hasPhoto && (
+                          <button
+                            onClick={() => toggleWishlist(item.id)}
+                            aria-label={favLabel(liked)}
+                            className="shrink-0 p-1 -ml-1"
+                          >
+                            <Heart
+                              size={18}
+                              className={liked ? "fill-red-500 text-red-500" : ""}
+                              style={liked ? undefined : { opacity: 0.35 }}
+                              aria-hidden
                             />
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleWishlist(item.id);
-                              }}
-                              aria-label={favLabel(liked)}
-                              className="absolute top-0.5 right-0.5 p-1 rounded-full"
-                              style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
-                            >
-                              <Heart
-                                size={13}
-                                className={liked ? "fill-red-500 text-red-500" : "text-white"}
-                                aria-hidden
-                              />
-                            </button>
-                          </div>
+                          </button>
                         )}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline justify-between gap-3">
-                            <p className="text-base font-semibold min-w-0">{resolveItemName(item, lang)}</p>
+                        <div
+                          onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
+                          className={`flex-1 min-w-0 flex gap-3 ${
+                            hasPhoto ? "cursor-pointer active:opacity-70 transition-opacity" : ""
+                          }`}
+                        >
+                          {hasPhoto && (
+                            <div className="relative shrink-0">
+                              <SmartImage
+                                src={item.imageUrl}
+                                alt={resolveItemName(item, lang)}
+                                width={56}
+                                height={56}
+                                className="w-14 h-14 rounded-lg object-cover"
+                              />
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleWishlist(item.id);
+                                }}
+                                aria-label={favLabel(liked)}
+                                className="absolute top-0.5 right-0.5 p-1 rounded-full"
+                                style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
+                              >
+                                <Heart
+                                  size={13}
+                                  className={liked ? "fill-red-500 text-red-500" : "text-white"}
+                                  aria-hidden
+                                />
+                              </button>
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            {/* Nombre y precio en líneas separadas, no en la
+                                misma fila — al lado de la foto queda muy poco
+                                ancho, y un nombre largo junto a un precio con
+                                conversión de moneda ("Afl. 30,00 / $17.14")
+                                no entran juntos: el nombre se achicaba a una
+                                columna angosta y el precio quedaba superpuesto
+                                encima del texto. */}
+                            <p className="text-base font-semibold">{resolveItemName(item, lang)}</p>
                             {item.status === "SOLD_OUT" ? (
-                              <span className="text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 shrink-0">
+                              <span className="inline-block text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 mt-1">
                                 {lang === "en" ? "Sold out" : "Agotado"}
                               </span>
                             ) : (
-                              <span className="text-base font-semibold shrink-0">
-                                {priceLabel(item)}
-                              </span>
+                              <p className="text-base font-semibold mt-0.5">{priceLabel(item)}</p>
+                            )}
+                            {itemDescription(item) && (
+                              <p className="text-sm opacity-60 mt-1">{itemDescription(item)}</p>
                             )}
                           </div>
-                          {itemDescription(item) && (
-                            <p className="text-sm opacity-60 mt-1">{itemDescription(item)}</p>
-                          )}
                         </div>
                       </div>
+                      {/* Fila propia debajo del precio — si compartiera fila con
+                          el nombre, el stepper completo (−, cantidad, +) le
+                          quitaba tanto ancho al nombre en pantallas angostas
+                          que el texto se superponía con el precio. */}
                       {tenant.orderingEnabled && item.status !== "SOLD_OUT" && !item.variablePrice && (
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center justify-end gap-2">
                           {item.addOns.length > 0 ? (
                             <button
                               onClick={() => setCustomizeItem(item)}
