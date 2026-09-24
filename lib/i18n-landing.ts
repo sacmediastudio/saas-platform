@@ -75,8 +75,8 @@ export const translations = {
       start: "Start free",
       plans: [
         { name: "Smartlink", price: "12.90", for: "Profiles and creators", points: ["Unlimited links", "WhatsApp and Instagram", "Map location", "Custom page"], highlight: false },
-        { name: "Appointment businesses", price: "29.90", for: "Service businesses with a schedule", points: ["Online bookings", "Time-slot blocking", "Automatic confirmations", "Customer reviews"], highlight: true },
-        { name: "Restaurants", price: "39.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Reviews and local currency"], highlight: false },
+        { name: "Restaurants", price: "39.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Reviews and local currency"], highlight: true },
+        { name: "Appointment businesses", price: "29.90", for: "Service businesses with a schedule", points: ["Online bookings", "Time-slot blocking", "Automatic confirmations", "Customer reviews"], highlight: false },
       ],
       trust: ["No contracts or penalties", "Instant publishing", "Optimized for mobile"],
     },
@@ -173,6 +173,17 @@ export const translations = {
             "Wishlist: they save their favorite dishes to order faster next time",
             "Real reviews + your Google and TripAdvisor links",
             "FAQ chat, so you don't answer the same question twice",
+          ],
+        },
+        {
+          id: "loyalty",
+          isNew: false,
+          title: "A stamp card your customers keep in their pocket",
+          subtitle: "Every purchase adds a stamp — no app to install, no paper card to lose.",
+          bullets: [
+            "Digital stamps for every purchase or visit",
+            "Saves to Apple Wallet or Google Wallet in one tap",
+            "Redeem rewards straight from your dashboard",
           ],
         },
         {
@@ -277,8 +288,8 @@ export const translations = {
       start: "Empieza gratis",
       plans: [
         { name: "Smartlink", price: "12.90", for: "Perfiles y creadores", points: ["Links ilimitados", "WhatsApp e Instagram", "Ubicación en mapa", "Página personalizada"], highlight: false },
-        { name: "Negocios de citas", price: "29.90", for: "Servicios con agenda", points: ["Reservas online", "Bloqueo de horarios", "Confirmaciones automáticas", "Reseñas de clientes"], highlight: true },
-        { name: "Restaurantes", price: "39.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Reseñas y moneda local"], highlight: false },
+        { name: "Restaurantes", price: "39.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Reseñas y moneda local"], highlight: true },
+        { name: "Negocios de citas", price: "29.90", for: "Servicios con agenda", points: ["Reservas online", "Bloqueo de horarios", "Confirmaciones automáticas", "Reseñas de clientes"], highlight: false },
       ],
       trust: ["Sin contratos ni penalizaciones", "Publicación inmediata", "Optimizado para móvil"],
     },
@@ -315,17 +326,17 @@ export const translations = {
       heroTitleHighlight: "vender más.",
       heroSubtitle:
         "Menú digital, avisos de pedidos por WhatsApp, varias ubicaciones y las métricas para decidir mejor — todo en un solo panel, sin comisión por pedido.",
-      heroCtaPrimary: "Empezá gratis",
+      heroCtaPrimary: "Empieza gratis",
       heroCtaSecondary: "Ver precios",
       sections: [
         {
           id: "menu",
           isNew: false,
           title: "Un menú que vende solo",
-          subtitle: "Fotos, categorías y destacados — lo actualizás una vez y se ve perfecto en cualquier celular.",
+          subtitle: "Fotos, categorías y destacados — lo actualizas una vez y se ve perfecto en cualquier celular.",
           bullets: [
-            "Fotos de cada plato, tocá para ampliar",
-            'Categorías ilimitadas y marcá "agotado" al instante',
+            "Fotos de cada plato, toca para ampliar",
+            'Categorías ilimitadas y marca "agotado" al instante',
             "Sección de Destacados para tus mejores platos",
             "Menú bilingüe (ES/EN) con un clic",
             "Tu marca, tus colores y tu moneda local",
@@ -335,7 +346,7 @@ export const translations = {
           id: "pedidos",
           isNew: false,
           title: "Pedidos que se arman solos",
-          subtitle: "El cliente arma su pedido desde el menú y elige cómo lo quiere recibir — vos solo cociná.",
+          subtitle: "El cliente arma su pedido desde el menú y elige cómo lo quiere recibir — tú solo prepara o cocina.",
           bullets: [
             "Pickup y Delivery, cada uno con su propia configuración",
             "Tarifa de envío y pedido mínimo a tu medida",
@@ -345,7 +356,7 @@ export const translations = {
         {
           id: "ubicaciones",
           isNew: true,
-          title: "¿Tenés más de un local? Un panel para todos",
+          title: "¿Tienes más de un local? Un panel para todos",
           subtitle: "Franquicias y cadenas administran todas sus sucursales desde la misma cuenta, sin duplicar trabajo.",
           bullets: [
             "El cliente elige la ubicación más cercana al hacer su pedido",
@@ -356,19 +367,19 @@ export const translations = {
         {
           id: "whatsapp",
           isNew: false,
-          title: "WhatsApp que hace el seguimiento por vos",
+          title: "WhatsApp que hace el seguimiento por ti",
           subtitle: "Tu cliente sabe en todo momento qué pasa con su pedido, sin que escribas un solo mensaje a mano.",
           bullets: [
             "Confirmación automática del pedido al cliente por WhatsApp",
-            "Aviso instantáneo a vos cuando entra un pedido nuevo",
-            'Confirmá con un botón y avisale "listo en X minutos"',
+            "Aviso instantáneo para ti cuando entra un pedido nuevo",
+            'Confirma con un botón y avísale "listo en X minutos"',
             "Notificación automática cuando el pedido está listo",
           ],
         },
         {
           id: "clientes",
           isNew: false,
-          title: "Convertí visitas en clientes que vuelven",
+          title: "Convierte visitas en clientes que vuelven",
           subtitle: "Herramientas simples para que no sea la última vez que piden en tu restaurante.",
           bullets: [
             'Premio de bienvenida (ej. "postre gratis") a cambio del WhatsApp del cliente',
@@ -378,13 +389,24 @@ export const translations = {
           ],
         },
         {
+          id: "loyalty",
+          isNew: false,
+          title: "Un programa de sellos que tus clientes llevan en el bolsillo",
+          subtitle: "Cada compra suma un sello — sin apps que instalar, sin tarjetitas de papel que se pierden.",
+          bullets: [
+            "Sellos digitales por cada compra o visita",
+            "Se guarda en Apple Wallet o Google Wallet con un toque",
+            "El premio se canjea directo desde el panel del negocio",
+          ],
+        },
+        {
           id: "metricas",
           isNew: true,
           title: "Números claros para decidir mejor",
           subtitle: "Pedidos y ventas en el tiempo, con el detalle que necesites.",
           bullets: [
             "Gráficos de pedidos y ventas por día, semana, mes o año",
-            "Rango de fechas personalizado — elegí un día puntual o cualquier período",
+            "Rango de fechas personalizado — elige un día puntual o cualquier período",
             "Comparación automática contra el período anterior",
           ],
         },
@@ -402,7 +424,7 @@ export const translations = {
       ],
       ctaTitle: "¿Listo para digitalizar tu restaurante?",
       ctaSubtitle: "14 días gratis. Sin tarjeta de crédito.",
-      ctaPrimary: "Empezá gratis",
+      ctaPrimary: "Empieza gratis",
       ctaSecondary: "Ver precios",
     },
   },

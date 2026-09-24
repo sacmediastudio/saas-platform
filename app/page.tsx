@@ -28,7 +28,7 @@ const STAND = "/nfc-stand.webp";
 const NFC_CARD = "/nfc-card.webp";
 
 const PRODUCT_ICONS = [UtensilsCrossed, CalendarCheck, Link2];
-const PLAN_TYPES = ["SMARTLINK", "SMALL_BUSINESS", "RESTAURANT"];
+const PLAN_TYPES = ["SMARTLINK", "RESTAURANT", "SMALL_BUSINESS"];
 
 function Hero({ t }: { t: (typeof translations)["en"] }) {
   return (

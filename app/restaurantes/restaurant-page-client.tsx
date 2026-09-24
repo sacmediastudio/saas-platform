@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowRight, Check, MapPin, Gift, Star, Heart } from "lucide-react";
+import { ArrowRight, Check, MapPin, Gift, Star, Heart, Stamp } from "lucide-react";
 import Reveal from "@/components/reveal";
 import Btn from "@/components/landing-btn";
 import Header from "@/components/landing-header";
@@ -81,7 +81,7 @@ function OrderMock() {
 function LocationsMock() {
   const locations = ["Centro", "Playa", "Norte"];
   return (
-    <MockWindow label="Elegí tu ubicación">
+    <MockWindow label="Elige tu ubicación">
       <div className="space-y-2.5">
         {locations.map((n, i) => (
           <div
@@ -139,6 +139,29 @@ function CustomersMock() {
   );
 }
 
+function LoyaltyMock() {
+  return (
+    <MockWindow label="Tu tarjeta de sellos">
+      <div className="rounded-2xl bg-forest p-5 text-white">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-bold">Tu Restaurante</p>
+          <Stamp className="h-5 w-5 text-lime" strokeWidth={1.7} />
+        </div>
+        <div className="mt-5 flex gap-2">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <span key={i} className={`h-7 w-7 rounded-full border-2 ${i <= 4 ? "border-lime bg-lime" : "border-white/25"}`} />
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-white/70">4 de 6 sellos — ¡2 más para tu premio!</p>
+      </div>
+      <div className="mt-4 flex gap-2">
+        <div className="flex-1 rounded-lg border border-forest/15 py-2.5 text-center text-xs font-bold text-forest">Apple Wallet</div>
+        <div className="flex-1 rounded-lg border border-forest/15 py-2.5 text-center text-xs font-bold text-forest">Google Wallet</div>
+      </div>
+    </MockWindow>
+  );
+}
+
 function StatsMock() {
   const bars = [40, 65, 50, 80, 55, 95, 70];
   return (
@@ -182,6 +205,7 @@ const MOCKS: Record<string, React.ComponentType> = {
   ubicaciones: LocationsMock,
   whatsapp: WhatsAppMock,
   clientes: CustomersMock,
+  loyalty: LoyaltyMock,
   metricas: StatsMock,
   eats: EatsMock,
 };
