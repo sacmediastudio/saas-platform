@@ -51,4 +51,23 @@ export async function requireTenant(): Promise<SessionPayload> {
   return session;
 }
 
+/**
+ * Igual que requireTenant(), pero además exige que la sesión sea del
+ * dueño (OWNER) — para las acciones que un STAFF no debería poder
+ * hacer aunque tenga sesión válida (facturación, activar/desactivar
+ * módulos, ajustes del negocio, administrar al resto del staff). El
+ * chequeo de rol vive acá, en el server, a propósito — nunca alcanza
+ * con solo esconder el botón en el frontend.
+ */
+export async function requireOwner(): Promise<SessionPayload> {
+  const session = await requireTenant();
+  if (session.role !== "OWNER") {
+    throw new Response(JSON.stringify({ error: "Esta acción solo puede hacerla el dueño del negocio." }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return session;
+}
+
 export const sessionCookieName = COOKIE_NAME;

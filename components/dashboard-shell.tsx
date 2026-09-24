@@ -15,11 +15,13 @@ export default function DashboardShell({
   tenant,
   enabledModules,
   billingStatus,
+  role,
   children,
 }: {
   tenant: { name: string; logoUrl: string | null };
   enabledModules: ModuleType[];
   billingStatus?: "trialing" | "trial_expired" | "active" | "past_due" | "canceled";
+  role: "OWNER" | "STAFF";
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -66,6 +68,9 @@ export default function DashboardShell({
     { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks },
     { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard },
     { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
+    // Solo el dueño ve y administra el equipo — un STAFF que entre a la
+    // URL a mano igual rebota en el servidor (ver team/page.tsx).
+    ...(role === "OWNER" ? [{ href: "/dashboard/team", label: t.nav.team, icon: Users }] : []),
   ];
 
   const TenantBadge = ({ size = "w-8 h-8" }: { size?: string }) =>

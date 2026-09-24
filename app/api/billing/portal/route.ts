@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requireOwner } from "@/lib/auth";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 
 // POST /api/billing/portal — redirige al portal de facturación alojado
 // por Stripe, donde el negocio puede cambiar su tarjeta, ver facturas
 // pasadas, o cancelar su suscripción por su cuenta.
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requireOwner();
 
   if (!isStripeConfigured()) {
     return NextResponse.json(

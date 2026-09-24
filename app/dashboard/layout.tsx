@@ -37,6 +37,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       tenant={{ name: tenant.name, logoUrl: tenant.logoUrl }}
       enabledModules={getEnabledModules(tenant)}
       billingStatus={billingStatus}
+      role={session.role}
     >
       {children}
     </DashboardShell>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requireOwner } from "@/lib/auth";
 import { getEnabledModules, type ModuleType } from "@/lib/modules";
 import { getStripe, isStripeConfigured, PRICE_ID_BY_MODULE } from "@/lib/stripe";
 
@@ -17,7 +17,7 @@ const schema = z.object({
 // para el porqué de este cambio (evitar altas impulsivas que después
 // complican una baja parcial y arriesgan perder al cliente entero).
 export async function PATCH(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requireOwner();
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

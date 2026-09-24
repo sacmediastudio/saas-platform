@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requireOwner, requireTenant } from "@/lib/auth";
 import { TIMEZONES } from "@/lib/timezone";
 import { geocodeAddress, isGeocodingConfigured } from "@/lib/geocoding";
 import { getEnabledModules } from "@/lib/modules";
@@ -126,7 +126,7 @@ export async function GET() {
 }
 
 export async function PATCH(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requireOwner();
   const parsed = updateSchema.safeParse(await req.json());
   if (!parsed.success) {
     // El frontend solo sabe mostrar un mensaje si "error" es un string

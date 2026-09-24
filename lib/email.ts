@@ -129,6 +129,35 @@ export async function sendPasswordResetEmail(to: string, resetUrl: string, userN
   );
 }
 
+export async function sendStaffInviteEmail(params: {
+  to: string;
+  staffName: string;
+  businessName: string;
+  setPasswordUrl: string;
+}) {
+  const { to, staffName, businessName, setPasswordUrl } = params;
+  await sendEmail(
+    to,
+    `Te invitaron a ${businessName} en Zertoo`,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">Hola ${staffName},</p>
+        <p style="font-size: 14px; color: #343233;">
+          El dueño de <strong>${businessName}</strong> te agregó como parte del equipo en Zertoo.
+          Haz clic en el botón de abajo para elegir tu contraseña y empezar — este link expira en 1 hora.
+        </p>
+        <a href="${setPasswordUrl}" style="display: inline-block; background: #E7FF00; color: #002D09; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 999px; text-decoration: none; margin: 20px 0;">
+          Elegir mi contraseña
+        </a>
+        <p style="font-size: 12px; color: #888;">
+          Si no esperabas este correo, puedes ignorarlo con confianza.
+        </p>
+      </div>
+    `,
+    `Te invitaron a ${businessName} en Zertoo. Elegí tu contraseña acá: ${setPasswordUrl}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
+
 export async function sendBookingConfirmationEmail(params: {
   to: string;
   customerName: string;
