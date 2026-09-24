@@ -945,7 +945,7 @@ function LeadClaimModal({
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               required
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             <input
               type="email"
@@ -953,7 +953,7 @@ function LeadClaimModal({
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             <input
               type="tel"
@@ -961,7 +961,7 @@ function LeadClaimModal({
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
               required
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             {status === "error" && <p className="text-red-600 text-sm">{errorMsg}</p>}
             <div className="flex gap-2 mt-1">
@@ -1162,7 +1162,7 @@ function CheckoutModal({
                 onChange={(e) => setAddress(e.target.value)}
                 required
                 placeholder={language === "en" ? "Delivery address" : "Dirección de entrega"}
-                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+                className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
               />
             )}
 
@@ -1171,7 +1171,7 @@ function CheckoutModal({
               onChange={(e) => setName(e.target.value)}
               required
               placeholder={language === "en" ? "Your name" : "Tu nombre"}
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             <input
               type="email"
@@ -1179,7 +1179,7 @@ function CheckoutModal({
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder={language === "en" ? "Your email" : "Tu correo"}
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             <input
               type="tel"
@@ -1187,14 +1187,14 @@ function CheckoutModal({
               onChange={(e) => setPhone(e.target.value)}
               required
               placeholder={language === "en" ? "Your WhatsApp (with country code)" : "Tu WhatsApp (con código de país)"}
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             <textarea
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
               rows={2}
               placeholder={language === "en" ? "General order notes (optional)" : "Notas del pedido en general (opcional)"}
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base resize-none"
             />
 
             {fee > 0 && (
@@ -1316,7 +1316,7 @@ function ItemCustomizeModal({
           placeholder={
             lang === "en" ? "Anything specific for this dish (optional), e.g. no onion" : "Algo específico para este plato (opcional), ej. sin cebolla"
           }
-          className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-sm resize-none mb-4"
+          className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base resize-none mb-4"
         />
 
         <div className="flex items-center justify-between mb-5">
