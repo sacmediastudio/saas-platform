@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireOwner, requireTenant } from "@/lib/auth";
+import { requirePermission, requireTenant } from "@/lib/auth";
 import { getEnabledModules, type ModuleType } from "@/lib/modules";
 
 const schema = z.object({ module: z.enum(["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"]) });
@@ -21,7 +21,7 @@ export async function GET() {
 // admin de Zertoo la revise y active a mano (ver /api/tenant/modules
 // para el porqué de este cambio).
 export async function POST(req: NextRequest) {
-  const session = await requireOwner();
+  const session = await requirePermission("MODULES");
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

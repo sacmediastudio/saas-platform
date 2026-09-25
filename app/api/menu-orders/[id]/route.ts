@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { sendOrderConfirmedWithEtaWhatsApp, sendOrderReadyWhatsApp } from "@/lib/whatsapp";
 
 const schema = z.object({
@@ -18,7 +18,7 @@ const READY_FULFILLMENT_NOTE: Record<string, Record<"PICKUP" | "DELIVERY", strin
 
 // PATCH /api/menu-orders/[id] — el negocio avanza el pedido por sus estados.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
 

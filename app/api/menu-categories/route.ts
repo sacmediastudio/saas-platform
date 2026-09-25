@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const createSchema = z.object({
   name: z.string().min(1),
@@ -9,7 +9,7 @@ const createSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU");
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

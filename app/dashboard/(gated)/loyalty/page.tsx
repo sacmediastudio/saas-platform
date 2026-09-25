@@ -1,9 +1,9 @@
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import LoyaltyView from "./loyalty-view";
 
 export default async function LoyaltyPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("LOYALTY");
   const tenant = await db.tenant.findUnique({
     where: { id: session.tenantId },
     select: {

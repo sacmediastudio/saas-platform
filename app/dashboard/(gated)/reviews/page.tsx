@@ -1,9 +1,9 @@
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import ReviewsView from "./reviews-view";
 
 export default async function ReviewsPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("REVIEWS");
 
   const reviews = await db.review.findMany({
     where: { tenantId: session.tenantId },

@@ -1,10 +1,10 @@
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import OrdersView from "./orders-view";
 import LocationsManager from "./locations-manager";
 
 export default async function OrdersPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("ORDERS");
   const [tenant, orders, locations] = await Promise.all([
     db.tenant.findUnique({
       where: { id: session.tenantId },

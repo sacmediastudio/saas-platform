@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const schema = z.object({ status: z.enum(["PUBLISHED", "HIDDEN", "REPORTED"]) });
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("REVIEWS");
 
   const existing = await db.review.findFirst({ where: { id: params.id, tenantId: session.tenantId } });
   if (!existing) {

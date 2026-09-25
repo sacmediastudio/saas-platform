@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 // GET /api/menu-items/template — plantilla de Excel con las columnas
 // correctas y un par de filas de ejemplo, lista para llenar. No trae
 // fotos (esas se agregan plato por plato después, desde el dashboard —
 // no hay forma práctica de meter una imagen en una celda de Excel).
 export async function GET() {
-  await requireTenant();
+  await requirePermission("MENU");
 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Menú");

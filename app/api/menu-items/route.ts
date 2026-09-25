@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const addOnSchema = z.object({ name: z.string().min(1).max(60), price: z.number().min(0).max(10000) });
 
@@ -28,7 +28,7 @@ const createSchema = z
 // GET /api/menu-items — lista los platos del tenant autenticado, agrupados
 // implícitamente por categoría (el frontend agrupa por categoryId).
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU");
 
   const items = await db.menuItem.findMany({
     where: { tenantId: session.tenantId },
@@ -41,7 +41,7 @@ export async function GET() {
 
 // POST /api/menu-items — crea un plato nuevo dentro del tenant actual.
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU");
   const body = await req.json();
   const parsed = createSchema.safeParse(body);
 

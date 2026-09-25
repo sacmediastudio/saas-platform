@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const TYPES = [
   "WEBSITE",
@@ -30,7 +30,7 @@ const createSchema = z
   });
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("SMARTLINK");
   const items = await db.smartLinkItem.findMany({
     where: { tenantId: session.tenantId },
     orderBy: { sortOrder: "asc" },
@@ -39,7 +39,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("SMARTLINK");
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

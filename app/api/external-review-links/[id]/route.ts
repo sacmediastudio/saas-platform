@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const PLATFORMS = ["GOOGLE", "TRIPADVISOR", "YELP", "FACEBOOK", "CUSTOM"] as const;
 
@@ -17,7 +17,7 @@ async function findOwnedLink(tenantId: string, id: string) {
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("REVIEWS");
   const existing = await findOwnedLink(session.tenantId, params.id);
   if (!existing) {
     return NextResponse.json({ error: "Link no encontrado" }, { status: 404 });
@@ -33,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("REVIEWS");
   const existing = await findOwnedLink(session.tenantId, params.id);
   if (!existing) {
     return NextResponse.json({ error: "Link no encontrado" }, { status: 404 });

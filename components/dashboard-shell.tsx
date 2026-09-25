@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone } from "lucide-react";
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
+import type { PermissionKey } from "@/lib/permissions";
 
 const LOGO = "/logo.svg";
 
@@ -16,12 +17,15 @@ export default function DashboardShell({
   enabledModules,
   billingStatus,
   role,
+  permissions,
   children,
 }: {
   tenant: { name: string; logoUrl: string | null };
   enabledModules: ModuleType[];
   billingStatus?: "trialing" | "trial_expired" | "active" | "past_due" | "canceled";
   role: "OWNER" | "STAFF";
+  // Solo importa para STAFF — un OWNER ve todo prendido sin mirar esto.
+  permissions: PermissionKey[];
   children: React.ReactNode;
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -43,34 +47,39 @@ export default function DashboardShell({
   }
   const t = dashboardTranslations[lang];
 
-  const MODULE_NAV: Record<ModuleType, { href: string; label: string; icon: any }> = {
-    RESTAURANT: { href: "/dashboard/menu", label: t.nav.menu, icon: UtensilsCrossed },
-    SMALL_BUSINESS: { href: "/dashboard/bookings", label: t.nav.bookings, icon: Calendar },
-    SMARTLINK: { href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2 },
+  const MODULE_NAV: Record<ModuleType, { href: string; label: string; icon: any; permissionKey: PermissionKey }> = {
+    RESTAURANT: { href: "/dashboard/menu", label: t.nav.menu, icon: UtensilsCrossed, permissionKey: "MENU" },
+    SMALL_BUSINESS: { href: "/dashboard/bookings", label: t.nav.bookings, icon: Calendar, permissionKey: "BOOKINGS" },
+    SMARTLINK: { href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2, permissionKey: "SMARTLINK" },
   };
   const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"];
 
   // El nav muestra un link por cada módulo activo del negocio (puede
-  // ser más de uno), en un orden fijo, más las secciones comunes.
-  const navItems = [
+  // ser más de uno), en un orden fijo, más las secciones comunes. Cada
+  // item lleva su permissionKey — si el negocio tiene ese módulo
+  // activo pero el STAFF no tiene el permiso puntual, el item de
+  // todas formas aparece (para que sepa que existe) pero deshabilitado.
+  const navItems: { href: string; label: string; icon: any; permissionKey: PermissionKey | null }[] = [
     ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
     ...(enabledModules.includes("RESTAURANT")
       ? [
-          { href: "/dashboard/orders", label: t.nav.orders, icon: ShoppingBag },
-          { href: "/dashboard/menu-leads", label: t.nav.menuLeads, icon: Gift },
+          { href: "/dashboard/orders", label: t.nav.orders, icon: ShoppingBag, permissionKey: "ORDERS" as const },
+          { href: "/dashboard/menu-leads", label: t.nav.menuLeads, icon: Gift, permissionKey: "MENU_LEADS" as const },
         ]
       : []),
-    { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star },
-    { href: "/dashboard/customers", label: t.nav.customers, icon: Users },
-    { href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion },
-    { href: "/dashboard/promotions", label: t.nav.promotions, icon: Megaphone },
-    { href: "/dashboard/loyalty", label: t.nav.loyalty, icon: Stamp },
-    { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks },
-    { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard },
-    { href: "/dashboard/settings", label: t.nav.settings, icon: Settings },
-    // Solo el dueño ve y administra el equipo — un STAFF que entre a la
-    // URL a mano igual rebota en el servidor (ver team/page.tsx).
-    ...(role === "OWNER" ? [{ href: "/dashboard/team", label: t.nav.team, icon: Users }] : []),
+    { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star, permissionKey: "REVIEWS" as const },
+    { href: "/dashboard/customers", label: t.nav.customers, icon: Users, permissionKey: "CUSTOMERS" as const },
+    { href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion, permissionKey: "FAQS" as const },
+    { href: "/dashboard/promotions", label: t.nav.promotions, icon: Megaphone, permissionKey: "PROMOTIONS" as const },
+    { href: "/dashboard/loyalty", label: t.nav.loyalty, icon: Stamp, permissionKey: "LOYALTY" as const },
+    { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks, permissionKey: "MODULES" as const },
+    { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard, permissionKey: "BILLING" as const },
+    { href: "/dashboard/settings", label: t.nav.settings, icon: Settings, permissionKey: "SETTINGS" as const },
+    // Solo el dueño ve y administra el equipo — nunca es un permiso que
+    // se pueda tildar, ni siquiera aparece deshabilitado para STAFF (ver
+    // requireOwner() en lib/auth.ts: administrar staff queda afuera del
+    // sistema de permisos a propósito, para que nadie se autoescale).
+    ...(role === "OWNER" ? [{ href: "/dashboard/team", label: t.nav.team, icon: Users, permissionKey: null }] : []),
   ];
 
   const TenantBadge = ({ size = "w-8 h-8" }: { size?: string }) =>
@@ -104,8 +113,28 @@ export default function DashboardShell({
 
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex flex-col gap-0.5">
-      {navItems.map(({ href, label, icon: Icon }) => {
+      {navItems.map(({ href, label, icon: Icon, permissionKey }) => {
         const active = pathname === href;
+        // El dueño siempre tiene todo prendido — el toggle solo aplica
+        // a STAFF. El link sigue visible aunque esté apagado (así sabe
+        // que la sección existe), pero en gris y sin poder entrar; el
+        // bloqueo real pasa en el servidor (requirePagePermission), no acá.
+        const enabled = role === "OWNER" || !permissionKey || permissions.includes(permissionKey);
+
+        if (!enabled) {
+          return (
+            <span
+              key={href}
+              aria-disabled="true"
+              title={t.nav.disabledHint}
+              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#343233]/30 cursor-not-allowed select-none"
+            >
+              <Icon size={16} aria-hidden />
+              {label}
+            </span>
+          );
+        }
+
         return (
           <Link
             key={href}

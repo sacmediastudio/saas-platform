@@ -1,30 +1,42 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, X, Users, Copy, Check } from "lucide-react";
+import { Plus, Trash2, X, Users, Copy, Check, Settings2 } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
+import { PERMISSION_KEYS, PERMISSION_MODULE_DEPENDENCY, type PermissionKey } from "@/lib/permissions";
+
+type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
 
 interface StaffMember {
   id: string;
   name: string;
   email: string;
   role: "OWNER" | "STAFF";
+  permissions: string[];
   createdAt: string | Date;
 }
 
 export default function TeamView({
   initialStaff,
   currentUserId,
+  enabledModules,
 }: {
   initialStaff: StaffMember[];
   currentUserId: string;
+  enabledModules: ModuleType[];
 }) {
   const { t } = useDashboardLang();
   const [staff, setStaff] = useState(initialStaff);
   const [modalOpen, setModalOpen] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
+  const [editingPerms, setEditingPerms] = useState<StaffMember | null>(null);
+
+  const visibleKeys = PERMISSION_KEYS.filter((key) => {
+    const dep = PERMISSION_MODULE_DEPENDENCY[key];
+    return !dep || enabledModules.includes(dep);
+  });
 
   async function removeStaff(member: StaffMember) {
     if (!confirm(t.team.confirmRemove(member.name))) return;
@@ -73,14 +85,23 @@ export default function TeamView({
                   {member.role === "OWNER" ? t.team.roleOwner : t.team.roleStaff}
                 </span>
                 {member.role === "STAFF" && (
-                  <button
-                    onClick={() => removeStaff(member)}
-                    disabled={busy === member.id}
-                    aria-label={t.team.removeLabel}
-                    className="text-[#343233]/60 hover:text-red-600 shrink-0 ml-1"
-                  >
-                    <Trash2 size={14} aria-hidden />
-                  </button>
+                  <>
+                    <button
+                      onClick={() => setEditingPerms(member)}
+                      aria-label={t.team.permissionsLabel}
+                      className="text-[#343233]/60 hover:text-[#002D09] shrink-0 ml-1"
+                    >
+                      <Settings2 size={14} aria-hidden />
+                    </button>
+                    <button
+                      onClick={() => removeStaff(member)}
+                      disabled={busy === member.id}
+                      aria-label={t.team.removeLabel}
+                      className="text-[#343233]/60 hover:text-red-600 shrink-0"
+                    >
+                      <Trash2 size={14} aria-hidden />
+                    </button>
+                  </>
                 )}
               </div>
             </div>
@@ -100,6 +121,18 @@ export default function TeamView({
       )}
 
       {inviteLink && <InviteLinkModal email={inviteLink.email} url={inviteLink.url} onClose={() => setInviteLink(null)} />}
+
+      {editingPerms && (
+        <PermissionsModal
+          member={editingPerms}
+          visibleKeys={visibleKeys}
+          onClose={() => setEditingPerms(null)}
+          onSaved={(updated) => {
+            setStaff((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+            setEditingPerms(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -246,6 +279,116 @@ function InviteLinkModal({ email, url, onClose }: { email: string; url: string; 
         >
           {t.common.close}
         </button>
+      </div>
+    </div>
+  );
+}
+
+function PermissionsModal({
+  member,
+  visibleKeys,
+  onClose,
+  onSaved,
+}: {
+  member: StaffMember;
+  visibleKeys: readonly PermissionKey[];
+  onClose: () => void;
+  onSaved: (updated: StaffMember) => void;
+}) {
+  const { t } = useDashboardLang();
+  const [selected, setSelected] = useState<Set<string>>(new Set(member.permissions));
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function toggle(key: PermissionKey) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  async function handleSave() {
+    setError(null);
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/tenant/staff/${member.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ permissions: Array.from(selected) }),
+      });
+      if (!res.ok) {
+        let message = t.team.saveFailed;
+        try {
+          const body = await res.json();
+          if (typeof body.error === "string") message = body.error;
+        } catch {}
+        setError(message);
+        setSaving(false);
+        return;
+      }
+      const body = await res.json();
+      onSaved(body.staff);
+    } catch {
+      setError(t.team.genericError);
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5 max-h-[85vh] flex flex-col">
+        <div className="flex items-center justify-between mb-1 shrink-0">
+          <h2 className="text-base font-semibold">{t.team.permissionsTitle}</h2>
+          <button onClick={onClose} aria-label={t.common.cancel} className="text-[#343233]/60 hover:text-[#002D09]">
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <p className="text-sm text-[#343233]/70 mb-4 shrink-0">{t.team.permissionsSubtitle(member.name)}</p>
+
+        <div className="flex flex-col gap-1 overflow-y-auto -mx-1 px-1">
+          {visibleKeys.map((key) => {
+            const active = selected.has(key);
+            return (
+              <div key={key} className="flex items-center justify-between gap-3 py-2 border-b border-[#002D09]/[0.06] last:border-0">
+                <span className={`text-sm ${active ? "text-[#343233]" : "text-[#343233]/40"}`}>
+                  {t.team.permissionLabels[key]}
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={active}
+                    onChange={() => toggle(key)}
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-6 bg-[#F7F8F4] border border-[#002D09]/15 rounded-full peer-checked:bg-[#E7FF00] transition-colors" />
+                  <div className="absolute left-1 top-1 w-4 h-4 bg-white border border-[#002D09]/15 rounded-full transition-transform peer-checked:translate-x-4" />
+                </label>
+              </div>
+            );
+          })}
+        </div>
+
+        {error && <p className="text-red-600 text-sm mt-2 shrink-0">{error}</p>}
+
+        <div className="flex gap-2 mt-4 shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
+          >
+            {t.common.cancel}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving}
+            className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
+          >
+            {saving ? t.common.saving : t.common.save}
+          </button>
+        </div>
       </div>
     </div>
   );

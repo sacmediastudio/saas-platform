@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU_LEADS");
 
   const [tenant, leads] = await Promise.all([
     db.tenant.findUnique({
@@ -36,7 +36,7 @@ const schema = z.object({
 });
 
 export async function PUT(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU_LEADS");
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

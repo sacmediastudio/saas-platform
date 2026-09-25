@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { isWhatsAppConfigured } from "@/lib/whatsapp";
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const tenant = await db.tenant.findUnique({
     where: { id: session.tenantId },
     select: { remindersEnabled: true, reminderHoursBefore: true },
@@ -23,7 +23,7 @@ const schema = z.object({
 });
 
 export async function PUT(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

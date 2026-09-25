@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/email";
 import { syncBookingToGoogleCalendar, deleteGoogleCalendarEvent } from "@/lib/google-calendar";
 import { addLoyaltyStamp } from "@/lib/loyalty";
@@ -11,7 +11,7 @@ const schema = z.object({
 });
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
 
   const existing = await db.booking.findFirst({
     where: { id: params.id, tenantId: session.tenantId },

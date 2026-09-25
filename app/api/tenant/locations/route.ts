@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const createSchema = z.object({
   name: z.string().min(1).max(100),
@@ -15,7 +15,7 @@ const createSchema = z.object({
 
 // GET /api/tenant/locations
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const locations = await db.location.findMany({
     where: { tenantId: session.tenantId },
     orderBy: { sortOrder: "asc" },
@@ -25,7 +25,7 @@ export async function GET() {
 
 // POST /api/tenant/locations — el negocio agrega una sucursal más.
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

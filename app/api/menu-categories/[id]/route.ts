@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const updateSchema = z.object({
   name: z.string().min(1),
@@ -13,7 +13,7 @@ async function findOwnedCategory(tenantId: string, id: string) {
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU");
   const existing = await findOwnedCategory(session.tenantId, params.id);
   if (!existing) {
     return NextResponse.json({ error: "Categoría no encontrada" }, { status: 404 });
@@ -32,7 +32,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU");
   const existing = await findOwnedCategory(session.tenantId, params.id);
   if (!existing) {
     return NextResponse.json({ error: "Categoría no encontrada" }, { status: 404 });

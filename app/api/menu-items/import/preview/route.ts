@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import ExcelJS from "exceljs";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 interface ParsedRow {
   rowNumber: number; // número de fila real en el Excel, para que el negocio la ubique fácil
@@ -64,7 +64,7 @@ const DESTACADO_ALIASES = ["Destacado (Sí/No)", "Destacado (Si/No)", "Featured 
 // — que es exactamente lo que hacemos acá con un archivo subido por
 // el usuario. exceljs es una librería activa y sin ese problema.
 export async function POST(req: NextRequest) {
-  await requireTenant();
+  await requirePermission("MENU");
 
   const formData = await req.formData();
   const file = formData.get("file");

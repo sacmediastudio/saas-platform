@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getBusinessHours } from "@/lib/availability";
 import { getDayBoundsInTz, getDayOfWeekInTz } from "@/lib/timezone";
 
@@ -8,7 +8,7 @@ import { getDayBoundsInTz, getDayOfWeekInTz } from "@/lib/timezone";
 // la vista de calendario de un día: horario de atención ese día de la
 // semana, citas, y bloqueos.
 export async function GET(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const { searchParams } = new URL(req.url);
   const dateParam = searchParams.get("date");
   if (!dateParam || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {

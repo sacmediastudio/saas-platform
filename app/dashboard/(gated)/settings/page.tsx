@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getEnabledModules } from "@/lib/modules";
 import SettingsForm from "./settings-form";
 
 export default async function SettingsPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("SETTINGS");
   const [tenant, user] = await Promise.all([
     db.tenant.findUnique({ where: { id: session.tenantId } }),
     db.user.findUnique({ where: { id: session.userId } }),

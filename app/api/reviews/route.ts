@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { upsertCustomer } from "@/lib/customers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -17,7 +17,7 @@ const createSchema = z.object({
 // GET /api/reviews — reseñas del tenant autenticado, para el panel de
 // moderación del dashboard.
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("REVIEWS");
   const reviews = await db.review.findMany({
     where: { tenantId: session.tenantId },
     orderBy: { createdAt: "desc" },

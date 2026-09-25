@@ -17,7 +17,7 @@ export async function GET() {
   const session = await requireOwner();
   const staff = await db.user.findMany({
     where: { tenantId: session.tenantId },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, permissions: true, createdAt: true },
     orderBy: { createdAt: "asc" },
   });
   return NextResponse.json({ staff });
@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       passwordResetTokenExpiresAt,
       passwordResetSentAt: new Date(),
     },
-    select: { id: true, name: true, email: true, role: true, createdAt: true },
+    select: { id: true, name: true, email: true, role: true, permissions: true, createdAt: true },
   });
 
   const origin = req.headers.get("origin") || `https://${req.headers.get("host")}`;

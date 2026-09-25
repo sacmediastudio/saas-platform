@@ -1,9 +1,9 @@
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import MenuLeadsView from "./menu-leads-view";
 
 export default async function MenuLeadsPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("MENU_LEADS");
   const tenant = await db.tenant.findUnique({
     where: { id: session.tenantId },
     select: { menuLeadEnabled: true, menuLeadButtonLabel: true, menuLeadRewardText: true, menuLeadDailyLimit: true },

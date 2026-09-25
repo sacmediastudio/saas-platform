@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireOwner } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getStripe, getOrCreateStripeCustomer, isStripeConfigured, PRICE_ID_BY_MODULE } from "@/lib/stripe";
 import { getEnabledModules } from "@/lib/modules";
 
@@ -9,7 +9,7 @@ import { getEnabledModules } from "@/lib/modules";
 // Smartlink, o cualquier combinación) y redirige a la página de pago
 // alojada por Stripe.
 export async function POST(req: NextRequest) {
-  const session = await requireOwner();
+  const session = await requirePermission("BILLING");
 
   if (!isStripeConfigured()) {
     return NextResponse.json(

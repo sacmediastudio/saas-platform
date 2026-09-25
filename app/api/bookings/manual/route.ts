@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/email";
 import { isSlotFree } from "@/lib/availability";
 import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
@@ -23,7 +23,7 @@ const schema = z.object({
 // registrando él mismo (una llamada telefónica, alguien que llegó sin
 // reservar, etc.), no necesita pasar por el estado PENDING.
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

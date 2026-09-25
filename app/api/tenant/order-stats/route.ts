@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getOrderStats, type OrderPeriod, type CustomRange } from "@/lib/order-analytics";
 
 const VALID_PERIODS: OrderPeriod[] = ["day", "week", "month", "year", "custom"];
@@ -22,7 +22,7 @@ function parseLocalDate(value: string): Date | null {
 // GET /api/tenant/order-stats?period=week
 // GET /api/tenant/order-stats?period=custom&start=2026-09-01&end=2026-09-15
 export async function GET(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
 
   const periodParam = req.nextUrl.searchParams.get("period");
   const period: OrderPeriod = VALID_PERIODS.includes(periodParam as OrderPeriod)

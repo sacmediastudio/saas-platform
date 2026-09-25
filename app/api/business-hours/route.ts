@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getBusinessHours } from "@/lib/availability";
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const [hours, tenant] = await Promise.all([
     getBusinessHours(session.tenantId),
     db.tenant.findUnique({ where: { id: session.tenantId }, select: { bufferMinutes: true } }),
@@ -28,7 +28,7 @@ const putSchema = z.object({
 // PUT /api/business-hours — reemplaza el horario completo (las 7 filas)
 // y el buffer, en una sola operación.
 export async function PUT(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const parsed = putSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

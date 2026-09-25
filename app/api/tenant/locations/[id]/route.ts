@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const updateSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -19,7 +19,7 @@ async function findOwnedLocation(tenantId: string, id: string) {
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const existing = await findOwnedLocation(session.tenantId, params.id);
   if (!existing) return NextResponse.json({ error: "Ubicación no encontrada" }, { status: 404 });
 
@@ -41,7 +41,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 // "mueva" pedidos viejos a otra ubicación. onDelete: SetNull en el
 // schema deja esos pedidos con locationId null, sin perder el pedido.
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("ORDERS");
   const existing = await findOwnedLocation(session.tenantId, params.id);
   if (!existing) return NextResponse.json({ error: "Ubicación no encontrada" }, { status: 404 });
 

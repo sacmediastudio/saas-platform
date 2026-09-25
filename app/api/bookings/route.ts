@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { isSlotFree } from "@/lib/availability";
 import { upsertCustomer } from "@/lib/customers";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
@@ -18,7 +18,7 @@ const createSchema = z.object({
 
 // GET /api/bookings?from=&to= — agenda del negocio en un rango de fechas.
 export async function GET(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const { searchParams } = new URL(req.url);
   const from = searchParams.get("from");
   const to = searchParams.get("to");

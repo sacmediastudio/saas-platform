@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 // POST /api/tenant/loyalty/[id]/redeem — el negocio marca que el
 // cliente ya reclamó su premio en persona: resetea los sellos a 0 (le
 // deja el sobrante si tenía más de los necesarios, en vez de perderlos)
 // y suma uno a su historial de premios canjeados.
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("LOYALTY");
 
   const card = await db.loyaltyCard.findFirst({ where: { id: params.id, tenantId: session.tenantId } });
   if (!card) return NextResponse.json({ error: "No encontrada" }, { status: 404 });

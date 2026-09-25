@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getEnabledModules } from "@/lib/modules";
 import { ensureTrialEndsAt, getBillingStatus } from "@/lib/billing-status";
 import DashboardShell from "@/components/dashboard-shell";
+import type { PermissionKey } from "@/lib/permissions";
 
 export async function generateMetadata(): Promise<Metadata> {
   const session = await getSession();
@@ -19,7 +20,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const [tenant, user, subscription] = await Promise.all([
     db.tenant.findUnique({ where: { id: session.tenantId } }),
-    db.user.findUnique({ where: { id: session.userId }, select: { emailVerified: true } }),
+    db.user.findUnique({ where: { id: session.userId }, select: { emailVerified: true, permissions: true } }),
     db.subscription.findUnique({ where: { tenantId: session.tenantId } }),
   ]);
   if (!tenant) redirect("/login");
@@ -38,6 +39,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       enabledModules={getEnabledModules(tenant)}
       billingStatus={billingStatus}
       role={session.role}
+      permissions={(user?.permissions ?? []) as PermissionKey[]}
     >
       {children}
     </DashboardShell>

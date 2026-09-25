@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 // POST /api/tenant/menu-leads/[id]/redeem — el negocio confirma que
 // el cliente presentó su código y le entregó el premio.
 export async function POST(_req: Request, { params }: { params: { id: string } }) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU_LEADS");
 
   const lead = await db.menuLead.findFirst({ where: { id: params.id, tenantId: session.tenantId } });
   if (!lead) return NextResponse.json({ error: "No encontrado" }, { status: 404 });

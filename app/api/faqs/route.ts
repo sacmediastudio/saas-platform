@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const createSchema = z.object({
   question: z.string().min(1).max(200),
@@ -9,7 +9,7 @@ const createSchema = z.object({
 });
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("FAQS");
   const faqs = await db.faqItem.findMany({
     where: { tenantId: session.tenantId },
     orderBy: { sortOrder: "asc" },
@@ -18,7 +18,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("FAQS");
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });

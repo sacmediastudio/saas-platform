@@ -1,9 +1,9 @@
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import CustomersView from "./customers-view";
 
 export default async function CustomersPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("CUSTOMERS");
   const [customers, loyaltyCards] = await Promise.all([
     db.customer.findMany({
       where: { tenantId: session.tenantId },

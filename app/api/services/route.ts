@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
 
   const [services, staff] = await Promise.all([
     db.service.findMany({ where: { tenantId: session.tenantId } }),
@@ -27,7 +27,7 @@ const createSchema = z.object({
 
 // POST /api/services — crea un servicio nuevo para el negocio.
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const parsed = createSchema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });

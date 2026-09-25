@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireTenant } from "@/lib/auth";
+import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getViewsTrend, getTotalViews } from "@/lib/analytics";
 import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
@@ -37,7 +37,7 @@ async function ensureItemSortOrder(
 }
 
 export default async function MenuPage() {
-  const session = await requireTenant();
+  const session = await requirePagePermission("MENU");
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 const rowSchema = z
   .object({
@@ -24,7 +24,7 @@ const schema = z.object({ rows: z.array(rowSchema).min(1).max(500) });
 // por el preview (no vuelve a leer el archivo) y crea todo de verdad:
 // las categorías que no existan todavía, y los platos dentro de ellas.
 export async function POST(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("MENU");
   const parsed = schema.safeParse(await req.json());
   if (!parsed.success) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
