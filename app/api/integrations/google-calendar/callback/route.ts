@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { exchangeCodeForTokens, getAppBaseUrl } from "@/lib/google-calendar";
 
 export async function GET(req: NextRequest) {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const { searchParams } = new URL(req.url);
   const code = searchParams.get("code");
   const state = searchParams.get("state");

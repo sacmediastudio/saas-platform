@@ -14,10 +14,13 @@ export const PRICE_ID_BY_MODULE: Record<ModuleType, string | undefined> = {
   SMARTLINK: process.env.STRIPE_PRICE_SMARTLINK,
 };
 
+// Solo exige el Price de Restaurantes — es el único módulo que se
+// vende hoy (ver el pivot de producto). Los otros dos price ids siguen
+// definidos arriba por compatibilidad con datos/suscripciones viejas,
+// pero la plataforma no debería depender de que existan para poder
+// cobrar lo único que realmente se vende ahora.
 export function isStripeConfigured(): boolean {
-  return Boolean(
-    SECRET_KEY && PRICE_ID_BY_MODULE.RESTAURANT && PRICE_ID_BY_MODULE.SMALL_BUSINESS && PRICE_ID_BY_MODULE.SMARTLINK
-  );
+  return Boolean(SECRET_KEY && PRICE_ID_BY_MODULE.RESTAURANT);
 }
 
 let cachedClient: Stripe | null = null;

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { isGoogleCalendarConfigured } from "@/lib/google-calendar";
 
 export async function GET() {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   const conn = await db.googleCalendarConnection.findUnique({
     where: { tenantId: session.tenantId },
     select: { connectedEmail: true },

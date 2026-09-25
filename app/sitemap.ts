@@ -36,9 +36,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     if (modules.includes("SMALL_BUSINESS")) {
       entries.push({ url: `${SITE_URL}/book/${t.slug}`, lastModified: t.updatedAt, changeFrequency: "weekly", priority: 0.8 });
     }
-    if (modules.includes("SMARTLINK")) {
-      entries.push({ url: `${SITE_URL}/link/${t.slug}`, lastModified: t.updatedAt, changeFrequency: "weekly", priority: 0.7 });
-    }
+    // Smartlink ya no es un módulo pago — es gratis e incluido para
+    // cualquier tenant, así que su página pública siempre existe, sin
+    // importar qué haya en enabledModules (ver el pivot de producto).
+    entries.push({ url: `${SITE_URL}/link/${t.slug}`, lastModified: t.updatedAt, changeFrequency: "weekly", priority: 0.7 });
     return entries;
   });
 

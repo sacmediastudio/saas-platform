@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 import { getGoogleAuthUrl, isGoogleCalendarConfigured, getAppBaseUrl } from "@/lib/google-calendar";
 
 export async function GET(req: NextRequest) {
-  const session = await requireTenant();
+  await requirePermission("BOOKINGS");
 
   if (!isGoogleCalendarConfigured()) {
     return NextResponse.redirect(new URL("/dashboard/bookings?google=not_configured", getAppBaseUrl()));

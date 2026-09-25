@@ -46,10 +46,14 @@ export const DEFAULT_STAFF_PERMISSIONS: PermissionKey[] = [
 // Algunos permisos solo tienen sentido si el negocio tiene el módulo
 // correspondiente activo — si no, el nav ya esconde esa sección sin
 // importar el permiso, así que ni vale la pena mostrar el toggle.
-export const PERMISSION_MODULE_DEPENDENCY: Partial<Record<PermissionKey, "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK">> = {
+//
+// SMARTLINK ya no depende de ningún módulo: es gratis e incluido para
+// cualquier tenant (ver el pivot de producto), así que el toggle de
+// staff para esa sección tiene que estar siempre visible en
+// /dashboard/team — de ahí que no aparezca acá.
+export const PERMISSION_MODULE_DEPENDENCY: Partial<Record<PermissionKey, "RESTAURANT" | "SMALL_BUSINESS">> = {
   MENU: "RESTAURANT",
   MENU_LEADS: "RESTAURANT",
   ORDERS: "RESTAURANT",
   BOOKINGS: "SMALL_BUSINESS",
-  SMARTLINK: "SMARTLINK",
 };

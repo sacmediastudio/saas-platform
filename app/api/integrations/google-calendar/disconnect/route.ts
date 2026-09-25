@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { requireTenant } from "@/lib/auth";
+import { requirePermission } from "@/lib/auth";
 
 export async function POST() {
-  const session = await requireTenant();
+  const session = await requirePermission("BOOKINGS");
   await db.googleCalendarConnection.deleteMany({ where: { tenantId: session.tenantId } });
   return NextResponse.json({ ok: true });
 }
