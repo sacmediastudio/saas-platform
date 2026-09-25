@@ -1249,7 +1249,12 @@ function CheckoutModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <p className="text-lg font-semibold mb-1">{language === "en" ? "Your order" : "Tu pedido"}</p>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-neutral-800 text-white shrink-0">
+                {fulfillment === "DELIVERY" ? "Delivery" : "Pickup"}
+              </span>
+              <p className="text-lg font-semibold">{language === "en" ? "Your order" : "Tu pedido"}</p>
+            </div>
 
             <div className="flex flex-col gap-2 mb-2">
               {cartLines.map((line) => {
