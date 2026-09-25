@@ -110,7 +110,7 @@ export default function SettingsForm({
     form.businessType === "SMARTLINK" ? t.settingsForm.heroLabelSmartlink : t.settingsForm.heroLabelRestaurant;
 
   return (
-    <div className="max-w-lg">
+    <div>
       <DashboardCard>
       <h1 className="text-xl font-semibold mb-1">{t.settings.title}</h1>
       <p className="text-sm text-[#343233]/70 mb-6">{t.settings.subtitle}</p>
