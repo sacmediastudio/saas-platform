@@ -20,6 +20,7 @@ export const dashboardTranslations = {
       settings: "Settings",
       team: "Team",
       disabledHint: "You don't have access to this section",
+      logout: "Log out",
     },
     footer: { rights: "A Certucce Digital LLC product. All rights reserved." },
     menu: {
@@ -138,7 +139,6 @@ export const dashboardTranslations = {
       subtitle: "Profile, branding, and preferences for your business.",
       save: "Save changes",
       saved: "Saved",
-      logout: "Log out",
     },
     nowCategories: {
       ITALIAN: "Italian",
@@ -666,6 +666,7 @@ export const dashboardTranslations = {
       settings: "Ajustes",
       team: "Equipo",
       disabledHint: "No tienes acceso a esta sección",
+      logout: "Cerrar sesión",
     },
     footer: { rights: "Un producto de Certucce Digital LLC. Todos los derechos reservados." },
     menu: {
@@ -784,7 +785,6 @@ export const dashboardTranslations = {
       subtitle: "Perfil, marca y preferencias de tu negocio.",
       save: "Guardar cambios",
       saved: "Guardado",
-      logout: "Cerrar sesión",
     },
     nowCategories: {
       ITALIAN: "Italiana",

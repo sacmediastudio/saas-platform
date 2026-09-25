@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Image as ImageIcon, LogOut, Check } from "lucide-react";
+import { Image as ImageIcon, Check } from "lucide-react";
 import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { TIMEZONES } from "@/lib/timezone";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
@@ -104,12 +104,6 @@ export default function SettingsForm({
     } finally {
       setSaving(false);
     }
-  }
-
-  async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
-    router.refresh();
   }
 
   const heroLabel =
@@ -492,16 +486,6 @@ export default function SettingsForm({
             <Check size={14} aria-hidden /> {t.settings.saved}
           </span>
         )}
-      </div>
-
-      <div className="mt-10 pt-6 border-t border-[#002D09]/[0.08]">
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1.5 text-sm text-[#343233]/70 hover:text-red-600"
-        >
-          <LogOut size={15} aria-hidden />
-          {t.settings.logout}
-        </button>
       </div>
       </DashboardCard>
     </div>

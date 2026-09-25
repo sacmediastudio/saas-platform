@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone, LogOut } from "lucide-react";
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 import type { PermissionKey } from "@/lib/permissions";
@@ -30,6 +30,17 @@ export default function DashboardShell({
 }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  // Vive acá, no en /dashboard/settings — un STAFF al que le apagaron
+  // el permiso de Ajustes se queda sin forma de cerrar sesión si el
+  // botón depende de esa página. El nav siempre está disponible sin
+  // importar qué permisos tenga.
+  async function handleLogout() {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
+  }
 
   // Igual que en el resto del sitio: el idioma se guarda en localStorage
   // bajo la misma clave que la landing/login/signup, así que si alguien
@@ -152,6 +163,16 @@ export default function DashboardShell({
     </nav>
   );
 
+  const LogoutButton = () => (
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#343233]/70 hover:bg-[#F7F8F4] hover:text-red-600"
+    >
+      <LogOut size={16} aria-hidden />
+      {t.nav.logout}
+    </button>
+  );
+
   return (
     <DashboardLangContext.Provider value={{ lang, setLang, t }}>
       <div className="min-h-screen bg-[#F5F5F5] text-[#002D09] flex flex-col">
@@ -177,6 +198,9 @@ export default function DashboardShell({
         {mobileOpen && (
           <div className="md:hidden border-b border-[#002D09]/[0.08] px-4 py-3 sticky top-16 bg-white z-30">
             <NavLinks onNavigate={() => setMobileOpen(false)} />
+            <div className="mt-2 pt-2 border-t border-[#002D09]/[0.08]">
+              <LogoutButton />
+            </div>
           </div>
         )}
 
@@ -195,6 +219,10 @@ export default function DashboardShell({
             </div>
 
             <NavLinks />
+
+            <div className="mt-auto pt-3 border-t border-[#002D09]/[0.08]">
+              <LogoutButton />
+            </div>
           </aside>
 
           <main className="p-4 sm:p-6 md:p-9 min-w-0">
