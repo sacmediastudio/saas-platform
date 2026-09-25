@@ -126,49 +126,51 @@ export default function SettingsForm({
           />
         </Field>
 
-        <div className="flex gap-4">
+        <ImageField
+          label="Logo"
+          value={form.logoUrl}
+          uploading={uploading === "logo"}
+          onChange={(file) => handleImageUpload("logoUrl", file)}
+          onRemove={() => setForm((f) => ({ ...f, logoUrl: null }))}
+          shape="square"
+        />
+
+        <div className="md:col-span-2">
           <ImageField
-            label="Logo"
-            value={form.logoUrl}
-            uploading={uploading === "logo"}
-            onChange={(file) => handleImageUpload("logoUrl", file)}
-            onRemove={() => setForm((f) => ({ ...f, logoUrl: null }))}
-            shape="square"
+            label={heroLabel}
+            value={form.heroImageUrl}
+            uploading={uploading === "hero"}
+            onChange={(file) => handleImageUpload("heroImageUrl", file)}
+            onRemove={() => setForm((f) => ({ ...f, heroImageUrl: null }))}
+            shape="wide"
           />
         </div>
 
-        <ImageField
-          label={heroLabel}
-          value={form.heroImageUrl}
-          uploading={uploading === "hero"}
-          onChange={(file) => handleImageUpload("heroImageUrl", file)}
-          onRemove={() => setForm((f) => ({ ...f, heroImageUrl: null }))}
-          shape="wide"
-        />
-
-        <Field
-          label={
-            form.businessType === "SMARTLINK"
-              ? t.settingsForm.taglineLabelSmartlink
-              : t.settingsForm.taglineLabelRestaurant
-          }
-        >
-          <textarea
-            value={form.heroTagline ?? ""}
-            onChange={(e) => setForm({ ...form, heroTagline: e.target.value })}
-            rows={2}
-            maxLength={200}
-            placeholder={
+        <div className="md:col-span-2">
+          <Field
+            label={
               form.businessType === "SMARTLINK"
-                ? t.settingsForm.taglinePlaceholderSmartlink
-                : t.settingsForm.taglinePlaceholderRestaurant
+                ? t.settingsForm.taglineLabelSmartlink
+                : t.settingsForm.taglineLabelRestaurant
             }
-            className={`${inputClass} resize-none`}
-          />
-        </Field>
+          >
+            <textarea
+              value={form.heroTagline ?? ""}
+              onChange={(e) => setForm({ ...form, heroTagline: e.target.value })}
+              rows={2}
+              maxLength={200}
+              placeholder={
+                form.businessType === "SMARTLINK"
+                  ? t.settingsForm.taglinePlaceholderSmartlink
+                  : t.settingsForm.taglinePlaceholderRestaurant
+              }
+              className={`${inputClass} resize-none`}
+            />
+          </Field>
+        </div>
 
         {form.businessType === "RESTAURANT" && (
-          <label className="flex items-center gap-2.5 text-sm cursor-pointer">
+          <label className="md:col-span-2 flex items-center gap-2.5 text-sm cursor-pointer">
             <input
               type="checkbox"
               checked={form.menuShowPhotos}
@@ -237,7 +239,7 @@ export default function SettingsForm({
           </select>
         </Field>
 
-        <label className="flex items-center gap-3 mt-4">
+        <label className="md:col-span-2 flex items-center gap-3">
           <input
             type="checkbox"
             checked={Boolean(form.secondaryCurrencyCode)}
@@ -254,7 +256,7 @@ export default function SettingsForm({
         </label>
 
         {form.secondaryCurrencyCode && (
-          <div className="flex flex-wrap gap-4 mt-3">
+          <div className="md:col-span-2 flex flex-wrap gap-4">
             <label className="flex flex-col gap-1.5">
               <span className="text-xs text-[#343233]/70">{t.settingsForm.secondCurrencyLabel}</span>
               <select
@@ -285,7 +287,7 @@ export default function SettingsForm({
             </label>
           </div>
         )}
-        <p className="text-xs text-[#343233]/50 mt-3 max-w-md">{t.settingsForm.secondCurrencyHint}</p>
+        <p className="md:col-span-2 text-xs text-[#343233]/50 max-w-md">{t.settingsForm.secondCurrencyHint}</p>
       </Section>
 
       <Section title={t.settingsForm.timezoneSection}>
@@ -305,7 +307,7 @@ export default function SettingsForm({
       </Section>
 
       <Section title={t.settingsForm.appearanceSection}>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="md:col-span-2 grid grid-cols-2 gap-4">
           <ColorField
             label={t.settingsForm.background}
             value={form.themeBgColor}
@@ -338,40 +340,42 @@ export default function SettingsForm({
           />
         </div>
 
-        <div
-          className="rounded-xl border border-[#002D09]/10 px-4 py-4 flex items-center justify-between gap-3"
-          style={{ backgroundColor: form.themeBgColor, color: form.themeTextColor }}
-        >
-          <span className="text-sm">{t.settingsForm.previewPageLabel}</span>
-          <span
-            className="text-xs font-semibold px-3.5 py-2 rounded-full"
-            style={{ backgroundColor: form.buttonColor, color: form.buttonTextColor }}
+        <div className="md:col-span-2">
+          <div
+            className="rounded-xl border border-[#002D09]/10 px-4 py-4 flex items-center justify-between gap-3"
+            style={{ backgroundColor: form.themeBgColor, color: form.themeTextColor }}
           >
-            {t.settingsForm.previewButtonLabel}
-          </span>
-        </div>
+            <span className="text-sm">{t.settingsForm.previewPageLabel}</span>
+            <span
+              className="text-xs font-semibold px-3.5 py-2 rounded-full"
+              style={{ backgroundColor: form.buttonColor, color: form.buttonTextColor }}
+            >
+              {t.settingsForm.previewButtonLabel}
+            </span>
+          </div>
 
-        <div
-          className="rounded-xl px-4 py-3 mt-3"
-          style={{ backgroundColor: form.themeBgColor, color: form.menuPageTextColor }}
-        >
-          <span className="text-xs font-semibold tracking-[0.15em] uppercase opacity-70">
-            {t.settingsForm.previewFeaturedLabel}
-          </span>
-        </div>
+          <div
+            className="rounded-xl px-4 py-3 mt-3"
+            style={{ backgroundColor: form.themeBgColor, color: form.menuPageTextColor }}
+          >
+            <span className="text-xs font-semibold tracking-[0.15em] uppercase opacity-70">
+              {t.settingsForm.previewFeaturedLabel}
+            </span>
+          </div>
 
-        <div
-          className="rounded-2xl px-4 py-4 mt-3 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
-          style={{ backgroundColor: form.menuCardColor, color: form.themeTextColor }}
-        >
-          <span className="text-sm">{t.settingsForm.previewCardLabel}</span>
+          <div
+            className="rounded-2xl px-4 py-4 mt-3 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
+            style={{ backgroundColor: form.menuCardColor, color: form.themeTextColor }}
+          >
+            <span className="text-sm">{t.settingsForm.previewCardLabel}</span>
+          </div>
         </div>
       </Section>
 
       {enabledModules.includes("RESTAURANT") && (
         <Section title="Zertoo Eats">
-          <p className="text-sm text-[#343233]/60 -mt-2 mb-4">{t.settingsForm.zertooEatsDescription}</p>
-          <label className="flex items-center gap-3 mb-4">
+          <p className="md:col-span-2 text-sm text-[#343233]/60 -mt-2">{t.settingsForm.zertooEatsDescription}</p>
+          <label className="md:col-span-2 flex items-center gap-3">
             <input
               type="checkbox"
               checked={form.nowEnabled}
@@ -382,7 +386,7 @@ export default function SettingsForm({
           </label>
 
           {form.nowEnabled && (
-            <div className="flex flex-col gap-4">
+            <div className="md:col-span-2 flex flex-col gap-4">
               <label className="flex flex-col gap-1.5 max-w-xs">
                 <span className="text-xs text-[#343233]/70">{t.settingsForm.categoryLabel}</span>
                 <select
@@ -496,7 +500,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="mb-7">
       <h2 className="text-sm font-semibold text-[#002D09] mb-3">{title}</h2>
-      <div className="flex flex-col gap-3">{children}</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 items-start">{children}</div>
     </div>
   );
 }
