@@ -12,9 +12,9 @@ interface ChatMessage {
 const COPY: Record<Lang, { greeting: string; placeholder: string; title: string; genericError: string }> = {
   es: {
     greeting: "¡Hola! Soy el asistente de Zertoo. ¿En qué te puedo ayudar? Puedo contarte sobre precios, productos y cómo empezar.",
-    placeholder: "Escribí tu pregunta...",
+    placeholder: "Escribe tu pregunta...",
     title: "Zertoo",
-    genericError: "No se pudo conectar con el asistente. Escribinos a hello@zertoo.app.",
+    genericError: "No se pudo conectar con el asistente. Escríbenos a hello@zertoo.app.",
   },
   en: {
     greeting: "Hi! I'm Zertoo's assistant. How can I help? Ask me about pricing, products, or how to get started.",
