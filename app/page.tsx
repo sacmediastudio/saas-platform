@@ -18,6 +18,7 @@ import Reveal from "@/components/reveal";
 import Btn from "@/components/landing-btn";
 import Header from "@/components/landing-header";
 import Footer from "@/components/landing-footer";
+import LandingChatWidget from "@/components/landing-chat-widget";
 import { translations, type Lang } from "@/lib/i18n-landing";
 import { getStoredLang, setStoredLang } from "@/lib/i18n-auth";
 
@@ -393,6 +394,7 @@ export default function HomePage() {
         <CtaBand t={t} />
       </main>
       <Footer t={t} />
+      <LandingChatWidget lang={lang} />
     </div>
   );
 }
