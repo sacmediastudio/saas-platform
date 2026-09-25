@@ -4,7 +4,10 @@ import { db } from "@/lib/db";
 import { requirePermission, requireTenant } from "@/lib/auth";
 import { getEnabledModules, type ModuleType } from "@/lib/modules";
 
-const schema = z.object({ module: z.enum(["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"]) });
+// Citas y Smartlink ya no son módulos solicitables: Citas se dejó de
+// vender, y Smartlink pasó a ser gratis e incluido para todos — no
+// hace falta pedirlo. Restaurant queda como el único módulo pago real.
+const schema = z.object({ module: z.enum(["RESTAURANT"]) });
 
 // GET /api/tenant/modules/request — solicitudes del negocio, para
 // saber en el dashboard cuáles ya están pendientes (y no dejar pedir

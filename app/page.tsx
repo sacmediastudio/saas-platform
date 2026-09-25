@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   UtensilsCrossed,
-  CalendarCheck,
-  Link2,
+  MapPin,
+  ShoppingBag,
   ArrowRight,
   Check,
   Plus,
@@ -28,8 +28,7 @@ const CTA_GUY = "/cta-guy.webp";
 const STAND = "/nfc-stand.webp";
 const NFC_CARD = "/nfc-card.webp";
 
-const PRODUCT_ICONS = [UtensilsCrossed, CalendarCheck, Link2];
-const PLAN_TYPES = ["SMARTLINK", "RESTAURANT", "SMALL_BUSINESS"];
+const PRODUCT_ICONS = [UtensilsCrossed, MapPin, ShoppingBag];
 
 function Hero({ t }: { t: (typeof translations)["en"] }) {
   return (
@@ -121,7 +120,19 @@ function Hero({ t }: { t: (typeof translations)["en"] }) {
   );
 }
 
-function ProductCard({ p, index, moreInfoLabel }: { p: any; index: number; moreInfoLabel: string }) {
+function ProductCard({
+  p,
+  index,
+  moreInfoLabel,
+  includedLabel,
+  soonLabel,
+}: {
+  p: any;
+  index: number;
+  moreInfoLabel: string;
+  includedLabel: string;
+  soonLabel: string;
+}) {
   const Icon = PRODUCT_ICONS[index];
   return (
     <Reveal delay={index * 0.08} y={24} className="min-w-[86vw] snap-center sm:min-w-0">
@@ -130,14 +141,24 @@ function ProductCard({ p, index, moreInfoLabel }: { p: any; index: number; moreI
           <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-forest/[0.05] text-forest transition-colors duration-200 group-hover:bg-lime">
             <Icon className="h-5 w-5" strokeWidth={1.6} />
           </span>
-          <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-graphite/45">{p.id}</span>
+          {p.soon ? (
+            <span className="rounded-full bg-coral/10 px-3 py-1 text-[12px] font-bold uppercase tracking-[0.1em] text-coral">{soonLabel}</span>
+          ) : (
+            <span className="text-[13px] font-semibold uppercase tracking-[0.14em] text-graphite/45">{p.id}</span>
+          )}
         </div>
         <h3 className="mt-7 text-2xl font-extrabold tracking-tight text-forest">{p.name}</h3>
         <p className="mt-2 text-[15px] leading-relaxed text-graphite">{p.desc}</p>
-        <p className="mt-6 flex items-baseline gap-1.5">
-          <span className="text-4xl font-extrabold tracking-tight text-forest">${p.price}</span>
-          <span className="text-sm font-medium text-graphite/70">/mo</span>
-        </p>
+        {p.included ? (
+          <p className="mt-6 text-2xl font-extrabold tracking-tight text-forest">{includedLabel}</p>
+        ) : p.soon ? (
+          <p className="mt-6 text-2xl font-extrabold tracking-tight text-graphite/40">{soonLabel}</p>
+        ) : (
+          <p className="mt-6 flex items-baseline gap-1.5">
+            <span className="text-4xl font-extrabold tracking-tight text-forest">${p.price}</span>
+            <span className="text-sm font-medium text-graphite/70">/mo</span>
+          </p>
+        )}
         <ul className="mt-7 space-y-3 border-t border-forest/[0.07] pt-7">
           {p.benefits.map((b: string) => (
             <li key={b} className="flex items-start gap-3 text-[15px] text-graphite">
@@ -146,9 +167,15 @@ function ProductCard({ p, index, moreInfoLabel }: { p: any; index: number; moreI
             </li>
           ))}
         </ul>
-        <Btn href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : "#precios"} variant="ghost" className="mt-8 w-full">
-          {moreInfoLabel}
-        </Btn>
+        {p.soon ? (
+          <span className="mt-8 flex w-full items-center justify-center rounded-2xl border border-forest/15 px-7 py-3.5 text-[15px] font-semibold text-graphite/40">
+            {soonLabel}
+          </span>
+        ) : (
+          <Btn href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : "#precios"} variant="ghost" className="mt-8 w-full">
+            {moreInfoLabel}
+          </Btn>
+        )}
       </div>
     </Reveal>
   );
@@ -165,7 +192,14 @@ function Products({ t }: { t: (typeof translations)["en"] }) {
       </Reveal>
       <div className="no-scrollbar mt-14 flex snap-x snap-mandatory gap-6 overflow-x-auto pb-2 sm:grid sm:grid-cols-3 sm:overflow-visible">
         {t.products.items.map((p, i) => (
-          <ProductCard key={p.id} p={p} index={i} moreInfoLabel={t.products.moreInfo} />
+          <ProductCard
+            key={p.id}
+            p={p}
+            index={i}
+            moreInfoLabel={t.products.moreInfo}
+            includedLabel={t.products.included}
+            soonLabel={t.products.soon}
+          />
         ))}
       </div>
     </section>
@@ -251,10 +285,20 @@ function Pricing({ t }: { t: (typeof translations)["en"] }) {
                 )}
               </div>
               <p className={`mt-1.5 text-sm ${p.highlight ? "text-white/65" : "text-graphite/70"}`}>{p.for}</p>
-              <p className="mt-8 flex items-baseline gap-1.5">
-                <span className={`text-[3.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-lime" : "text-forest"}`}>${p.price}</span>
-                <span className={`text-sm font-medium ${p.highlight ? "text-white/60" : "text-graphite/70"}`}>{t.pricing.perMonth}</span>
-              </p>
+              {p.included ? (
+                <p className={`mt-8 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-lime" : "text-forest"}`}>
+                  {t.pricing.included}
+                </p>
+              ) : p.soon ? (
+                <p className={`mt-8 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-white/40" : "text-graphite/40"}`}>
+                  {t.pricing.soon}
+                </p>
+              ) : (
+                <p className="mt-8 flex items-baseline gap-1.5">
+                  <span className={`text-[3.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-lime" : "text-forest"}`}>${p.price}</span>
+                  <span className={`text-sm font-medium ${p.highlight ? "text-white/60" : "text-graphite/70"}`}>{t.pricing.perMonth}</span>
+                </p>
+              )}
               <ul className={`mt-8 flex-1 space-y-3 border-t pt-8 ${p.highlight ? "border-white/12" : "border-forest/[0.07]"}`}>
                 {p.points.map((pt) => (
                   <li key={pt} className={`flex items-start gap-3 text-[15px] ${p.highlight ? "text-white/85" : "text-graphite"}`}>
@@ -263,9 +307,19 @@ function Pricing({ t }: { t: (typeof translations)["en"] }) {
                   </li>
                 ))}
               </ul>
-              <Btn href={`/signup?type=${PLAN_TYPES[i]}`} variant={p.highlight ? "primary" : "dark"} className="mt-9 w-full">
-                {t.pricing.start}
-              </Btn>
+              {p.soon ? (
+                <span
+                  className={`mt-9 flex w-full items-center justify-center rounded-2xl px-7 py-3.5 text-[15px] font-semibold ${
+                    p.highlight ? "border border-white/20 text-white/40" : "border border-forest/15 text-graphite/40"
+                  }`}
+                >
+                  {t.pricing.soon}
+                </span>
+              ) : (
+                <Btn href="/signup?type=RESTAURANT" variant={p.highlight ? "primary" : "dark"} className="mt-9 w-full">
+                  {t.pricing.start}
+                </Btn>
+              )}
             </div>
           </Reveal>
         ))}

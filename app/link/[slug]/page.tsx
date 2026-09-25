@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { db } from "@/lib/db";
 import { recordPageView } from "@/lib/analytics";
-import { getEnabledModules } from "@/lib/modules";
 import { jsonLdScriptProps } from "@/lib/json-ld";
 import { ensureTrialEndsAt, getBillingStatus } from "@/lib/billing-status";
 import UnavailableMessage from "@/components/unavailable-message";
@@ -27,9 +26,11 @@ export async function generateMetadata({ params }: { params: { slug: string } })
   };
 }
 
+// Smartlink es gratis e incluido para cualquier tenant — a diferencia
+// de /menu y /book, no hay ningún chequeo de módulo acá.
 export default async function PublicSmartLinkPage({ params }: { params: { slug: string } }) {
   const tenant = await db.tenant.findUnique({ where: { slug: params.slug } });
-  if (!tenant || tenant.suspended || !getEnabledModules(tenant).includes("SMARTLINK")) notFound();
+  if (!tenant || tenant.suspended) notFound();
 
   const subscription = await db.subscription.findUnique({ where: { tenantId: tenant.id } });
   const trialEndsAt = await ensureTrialEndsAt(db, tenant);

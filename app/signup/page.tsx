@@ -1,18 +1,11 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { authTranslations, getStoredLang, translateApiError, type Lang } from "@/lib/i18n-auth";
 
 const GREEN = "#002D09";
 const LIME = "#E7FF00";
-const GREEN_TINT = "#eaf2e6";
-
-type BusinessType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
-
-function isBusinessType(v: string | null): v is BusinessType {
-  return v === "RESTAURANT" || v === "SMALL_BUSINESS" || v === "SMARTLINK";
-}
 
 export default function SignupPage() {
   return (
@@ -24,8 +17,11 @@ export default function SignupPage() {
 
 function SignupForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const preselected = searchParams.get("type");
+  // Restaurantes es el único producto que se vende hoy — Citas y
+  // Smartlink dejaron de ser algo que se elige al registrarse (Citas
+  // ya no se vende, y Smartlink viene incluido gratis con cualquier
+  // cuenta), así que ya no hace falta un selector acá.
+  const businessType = "RESTAURANT" as const;
 
   const [lang, setLang] = useState<Lang>("en");
   // El idioma se decide por lo que la persona eligió en la landing —
@@ -34,20 +30,12 @@ function SignupForm() {
     setLang(getStoredLang());
   }, []);
 
-  const [businessType, setBusinessType] = useState<BusinessType>(
-    isBusinessType(preselected) ? preselected : "RESTAURANT"
-  );
   const [form, setForm] = useState({ businessName: "", name: "", email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const t = authTranslations[lang].signup;
   const errors = authTranslations[lang].errors;
-  const businessTypeOptions: { value: BusinessType; label: string }[] = [
-    { value: "RESTAURANT", label: t.businessTypes.RESTAURANT },
-    { value: "SMALL_BUSINESS", label: t.businessTypes.SMALL_BUSINESS },
-    { value: "SMARTLINK", label: t.businessTypes.SMARTLINK },
-  ];
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -97,28 +85,6 @@ function SignupForm() {
 
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 4, color: GREEN }}>{t.title}</h1>
         <p style={{ color: "#666", marginBottom: 24, fontSize: 14 }}>{t.subtitle}</p>
-
-        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
-          {businessTypeOptions.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => setBusinessType(opt.value)}
-              style={{
-                flex: 1,
-                padding: "10px 6px",
-                borderRadius: 10,
-                fontSize: 12,
-                fontWeight: 600,
-                border: businessType === opt.value ? `1.5px solid ${GREEN}` : "1px solid #ddd",
-                background: businessType === opt.value ? GREEN_TINT : "white",
-                color: GREEN,
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <input

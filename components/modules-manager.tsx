@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { UtensilsCrossed, Calendar, Link2, Check, Clock, Send } from "lucide-react";
+import { UtensilsCrossed, Check, Clock, Send, ShoppingBag } from "lucide-react";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import DashboardCard from "@/components/dashboard-card";
 import { formatCurrency } from "@/lib/currency";
 
 type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
 
-// Mismos precios que en /dashboard/billing y la landing — si alguna
-// vez cambian, hay que actualizarlos en los 3 lugares (no hay un solo
+// Mismo precio que en /dashboard/billing y la landing — si alguna vez
+// cambia, hay que actualizarlo en los 3 lugares (no hay un solo
 // archivo compartido de precios visible al cliente todavía).
+//
+// Citas y Smartlink ya no aparecen acá: Citas se dejó de vender como
+// producto, y Smartlink pasó a ser gratis e incluido para cualquier
+// tenant (ya no es algo que se active/desactive por módulo).
 const MODULE_PRICES: Record<ModuleType, number> = {
   SMARTLINK: 12.9,
   SMALL_BUSINESS: 29.9,
@@ -24,18 +28,6 @@ const MODULES: { type: ModuleType; label: string; description: string; icon: any
     label: "Menú",
     description: "Menú digital con fotos, categorías y platos destacados.",
     icon: UtensilsCrossed,
-  },
-  {
-    type: "SMALL_BUSINESS",
-    label: "Citas",
-    description: "Agenda de citas, reservas online y bloqueo de horarios.",
-    icon: Calendar,
-  },
-  {
-    type: "SMARTLINK",
-    label: "Smartlink",
-    description: "Un perfil con todos tus enlaces, listo para compartir.",
-    icon: Link2,
   },
 ];
 
@@ -160,6 +152,21 @@ export default function ModulesManager({
               </div>
             );
           })}
+
+          {/* Todavía no existe — es solo un adelanto de lo que viene,
+              no hay nada que activar ni solicitar acá. */}
+          <div className="border border-[#002D09]/10 rounded-xl p-4 flex items-center gap-4 opacity-50">
+            <div className="w-10 h-10 rounded-xl bg-[#F7F8F4] flex items-center justify-center shrink-0">
+              <ShoppingBag size={18} className="text-[#002D09]" aria-hidden />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">Zertoo Orders</p>
+              <p className="text-xs text-[#343233]/60">Centraliza, acepta e imprime todos tus pedidos en un solo lugar.</p>
+            </div>
+            <span className="text-xs font-semibold px-3 py-2 rounded-lg shrink-0 bg-[#F7F8F4] text-[#343233]/60">
+              Próximamente
+            </span>
+          </div>
         </div>
 
         {error && <p className="text-red-600 text-sm mt-3">{error}</p>}

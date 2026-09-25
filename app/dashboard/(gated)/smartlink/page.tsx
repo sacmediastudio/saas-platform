@@ -2,18 +2,15 @@ import { redirect } from "next/navigation";
 import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getViewsTrend, getTotalViews } from "@/lib/analytics";
-import { getEnabledModules, moduleDashboardPath } from "@/lib/modules";
 import SmartLinkEditor from "./smartlink-editor";
 
+// Smartlink es gratis e incluido para cualquier tenant — a diferencia
+// de Menú/Citas, no hay ningún chequeo de enabledModules acá.
 export default async function SmartLinkPage() {
   const session = await requirePagePermission("SMARTLINK");
 
   const tenant = await db.tenant.findUnique({ where: { id: session.tenantId } });
   if (!tenant) redirect("/login");
-  const enabledModules = getEnabledModules(tenant);
-  if (!enabledModules.includes("SMARTLINK")) {
-    redirect(moduleDashboardPath(enabledModules[0]));
-  }
 
   const [items, viewsTrend, totalViews, clicksByType] = await Promise.all([
     db.smartLinkItem.findMany({

@@ -58,18 +58,23 @@ export default function DashboardShell({
   }
   const t = dashboardTranslations[lang];
 
-  const MODULE_NAV: Record<ModuleType, { href: string; label: string; icon: any; permissionKey: PermissionKey }> = {
+  const MODULE_NAV: Record<"RESTAURANT" | "SMALL_BUSINESS", { href: string; label: string; icon: any; permissionKey: PermissionKey }> = {
     RESTAURANT: { href: "/dashboard/menu", label: t.nav.menu, icon: UtensilsCrossed, permissionKey: "MENU" },
     SMALL_BUSINESS: { href: "/dashboard/bookings", label: t.nav.bookings, icon: Calendar, permissionKey: "BOOKINGS" },
-    SMARTLINK: { href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2, permissionKey: "SMARTLINK" },
   };
-  const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"];
+  const MODULE_ORDER: ("RESTAURANT" | "SMALL_BUSINESS")[] = ["RESTAURANT", "SMALL_BUSINESS"];
 
-  // El nav muestra un link por cada módulo activo del negocio (puede
-  // ser más de uno), en un orden fijo, más las secciones comunes. Cada
-  // item lleva su permissionKey — si el negocio tiene ese módulo
-  // activo pero el STAFF no tiene el permiso puntual, el item de
-  // todas formas aparece (para que sepa que existe) pero deshabilitado.
+  // El nav muestra un link por cada módulo pago activo del negocio
+  // (puede ser más de uno), en un orden fijo, más las secciones
+  // comunes. Cada item lleva su permissionKey — si el negocio tiene
+  // ese módulo activo pero el STAFF no tiene el permiso puntual, el
+  // item de todas formas aparece (para que sepa que existe) pero
+  // deshabilitado.
+  //
+  // Smartlink ya NO es un módulo pago — es gratis e incluido para
+  // cualquier tenant, por eso vive acá abajo junto con Reseñas/FAQs/
+  // Promociones en vez de en MODULE_NAV, sin que enabledModules lo
+  // condicione para nada.
   const navItems: { href: string; label: string; icon: any; permissionKey: PermissionKey | null }[] = [
     ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
     ...(enabledModules.includes("RESTAURANT")
@@ -78,6 +83,7 @@ export default function DashboardShell({
           { href: "/dashboard/menu-leads", label: t.nav.menuLeads, icon: Gift, permissionKey: "MENU_LEADS" as const },
         ]
       : []),
+    { href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2, permissionKey: "SMARTLINK" as const },
     { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star, permissionKey: "REVIEWS" as const },
     { href: "/dashboard/customers", label: t.nav.customers, icon: Users, permissionKey: "CUSTOMERS" as const },
     { href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion, permissionKey: "FAQS" as const },

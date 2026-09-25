@@ -5,9 +5,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://zertoo.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Zertoo | Menú digital, citas y smartlink para tu negocio",
+  title: "Zertoo | Menú digital, Zertoo Eats y smartlink para tu restaurante",
   description:
-    "Zertoo digitaliza tu negocio en minutos: menú digital para restaurantes, sistema de citas y perfil de enlaces. 14 días gratis, sin tarjeta de crédito.",
+    "Zertoo digitaliza tu restaurante en minutos: menú digital, descubrimiento y pedidos con Zertoo Eats, y un perfil de enlaces gratis incluido. 14 días gratis, sin tarjeta de crédito.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
