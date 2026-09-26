@@ -64,6 +64,33 @@ function renderInline(text: string): React.ReactNode {
   );
 }
 
+// "Ding" de dos notas sintetizado con Web Audio API — nada de sumar un
+// archivo de audio al repo para un sonido de dos segundos. Los
+// navegadores bloquean el autoplay de audio sin interacción previa
+// del usuario en esa pestaña, así que esto puede fallar en silencio
+// (por diseño: mejor un aviso sin sonido que un error en consola).
+function playChatNotificationSound() {
+  try {
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+    [0, 0.12].forEach((offset, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = i === 0 ? 880 : 1108.73; // A5 -> C#6
+      gain.gain.setValueAtTime(0, now + offset);
+      gain.gain.linearRampToValueAtTime(0.15, now + offset + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.35);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + offset);
+      osc.stop(now + offset + 0.4);
+    });
+  } catch {
+    // Bloqueado por la política de autoplay del navegador — sin drama.
+  }
+}
+
 const COPY: Record<Lang, { greeting: string; placeholder: string; title: string; genericError: string }> = {
   es: {
     greeting: "¡Hola! Soy el asistente de Zertoo. ¿En qué te puedo ayudar? Puedo contarte sobre precios, productos y cómo empezar.",
@@ -89,10 +116,31 @@ export default function LandingChatWidget({ lang }: { lang: Lang }) {
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
+  // Si la persona ya tocó el botón por su cuenta (para abrir o para
+  // cerrar) antes de que dispare el timer, no le pisamos la decisión
+  // abriéndolo solo igual.
+  const userToggledRef = useRef(false);
 
   useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, open]);
+
+  // Se abre solo una vez por sesión de pestaña (no en cada visita a la
+  // página dentro de la misma sesión) — como un "che, hay un asistente
+  // acá" la primera vez, sin volver a interrumpir si ya lo vieron.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (sessionStorage.getItem("zertoo_chat_auto_opened")) return;
+
+    const timer = setTimeout(() => {
+      sessionStorage.setItem("zertoo_chat_auto_opened", "1");
+      if (userToggledRef.current) return;
+      setOpen(true);
+      playChatNotificationSound();
+    }, 4000);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
@@ -131,7 +179,10 @@ export default function LandingChatWidget({ lang }: { lang: Lang }) {
   return (
     <>
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          userToggledRef.current = true;
+          setOpen((v) => !v);
+        }}
         aria-label={open ? "Cerrar chat" : "Abrir chat"}
         className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-forest text-white shadow-[0_12px_30px_-10px_rgba(0,45,9,0.55)] transition-transform hover:scale-105"
       >
