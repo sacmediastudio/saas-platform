@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone, LogOut } from "lucide-react";
+import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone, LogOut, Heart, ChevronDown } from "lucide-react";
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 import type { PermissionKey } from "@/lib/permissions";
@@ -64,6 +64,10 @@ export default function DashboardShell({
   };
   const MODULE_ORDER: ("RESTAURANT" | "SMALL_BUSINESS")[] = ["RESTAURANT", "SMALL_BUSINESS"];
 
+  type LeafItem = { kind: "leaf"; href: string; label: string; icon: any; permissionKey: PermissionKey | null };
+  type GroupItem = { kind: "group"; label: string; icon: any; children: LeafItem[] };
+  const leaf = (item: Omit<LeafItem, "kind">): LeafItem => ({ kind: "leaf", ...item });
+
   // El nav muestra un link por cada módulo pago activo del negocio
   // (puede ser más de uno), en un orden fijo, más las secciones
   // comunes. Cada item lleva su permissionKey — si el negocio tiene
@@ -72,32 +76,53 @@ export default function DashboardShell({
   // deshabilitado.
   //
   // Smartlink ya NO es un módulo pago — es gratis e incluido para
-  // cualquier tenant, por eso vive acá abajo junto con Reseñas/FAQs/
-  // Promociones en vez de en MODULE_NAV, sin que enabledModules lo
-  // condicione para nada.
-  const navItems: { href: string; label: string; icon: any; permissionKey: PermissionKey | null }[] = [
-    ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => MODULE_NAV[m]),
+  // cualquier tenant, por eso vive acá abajo junto con Reseñas/FAQs
+  // en vez de en MODULE_NAV, sin que enabledModules lo condicione
+  // para nada.
+  //
+  // Reward/Promotions/Stamps van agrupados bajo "Loyalty" — un grupo
+  // colapsable, no un módulo ni un permiso en sí mismo (cada hijo
+  // sigue chequeando su propio permissionKey igual que antes).
+  const navItems: (LeafItem | GroupItem)[] = [
+    ...MODULE_ORDER.filter((m) => enabledModules.includes(m)).map((m) => leaf(MODULE_NAV[m])),
     ...(enabledModules.includes("RESTAURANT")
-      ? [
-          { href: "/dashboard/orders", label: t.nav.orders, icon: ShoppingBag, permissionKey: "ORDERS" as const },
-          { href: "/dashboard/menu-leads", label: t.nav.menuLeads, icon: Gift, permissionKey: "MENU_LEADS" as const },
-        ]
+      ? [leaf({ href: "/dashboard/orders", label: t.nav.orders, icon: ShoppingBag, permissionKey: "ORDERS" })]
       : []),
-    { href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2, permissionKey: "SMARTLINK" as const },
-    { href: "/dashboard/reviews", label: t.nav.reviews, icon: Star, permissionKey: "REVIEWS" as const },
-    { href: "/dashboard/customers", label: t.nav.customers, icon: Users, permissionKey: "CUSTOMERS" as const },
-    { href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion, permissionKey: "FAQS" as const },
-    { href: "/dashboard/promotions", label: t.nav.promotions, icon: Megaphone, permissionKey: "PROMOTIONS" as const },
-    { href: "/dashboard/loyalty", label: t.nav.loyalty, icon: Stamp, permissionKey: "LOYALTY" as const },
-    { href: "/dashboard/modules", label: t.nav.modules, icon: Blocks, permissionKey: "MODULES" as const },
-    { href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard, permissionKey: "BILLING" as const },
-    { href: "/dashboard/settings", label: t.nav.settings, icon: Settings, permissionKey: "SETTINGS" as const },
+    leaf({ href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2, permissionKey: "SMARTLINK" }),
+    leaf({ href: "/dashboard/reviews", label: t.nav.reviews, icon: Star, permissionKey: "REVIEWS" }),
+    leaf({ href: "/dashboard/customers", label: t.nav.customers, icon: Users, permissionKey: "CUSTOMERS" }),
+    leaf({ href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion, permissionKey: "FAQS" }),
+    {
+      kind: "group",
+      label: t.nav.loyaltyGroup,
+      icon: Heart,
+      children: [
+        ...(enabledModules.includes("RESTAURANT")
+          ? [leaf({ href: "/dashboard/menu-leads", label: t.nav.menuLeads, icon: Gift, permissionKey: "MENU_LEADS" })]
+          : []),
+        leaf({ href: "/dashboard/promotions", label: t.nav.promotions, icon: Megaphone, permissionKey: "PROMOTIONS" }),
+        leaf({ href: "/dashboard/loyalty", label: t.nav.loyalty, icon: Stamp, permissionKey: "LOYALTY" }),
+      ],
+    },
+    leaf({ href: "/dashboard/modules", label: t.nav.modules, icon: Blocks, permissionKey: "MODULES" }),
+    leaf({ href: "/dashboard/billing", label: t.nav.billing, icon: CreditCard, permissionKey: "BILLING" }),
+    leaf({ href: "/dashboard/settings", label: t.nav.settings, icon: Settings, permissionKey: "SETTINGS" }),
     // Solo el dueño ve y administra el equipo — nunca es un permiso que
     // se pueda tildar, ni siquiera aparece deshabilitado para STAFF (ver
     // requireOwner() en lib/auth.ts: administrar staff queda afuera del
     // sistema de permisos a propósito, para que nadie se autoescale).
-    ...(role === "OWNER" ? [{ href: "/dashboard/team", label: t.nav.team, icon: Users, permissionKey: null }] : []),
+    ...(role === "OWNER" ? [leaf({ href: "/dashboard/team", label: t.nav.team, icon: Users, permissionKey: null })] : []),
   ];
+
+  const loyaltyGroupHrefs = navItems.find((i): i is GroupItem => i.kind === "group")?.children.map((c) => c.href) ?? [];
+  const [loyaltyOpen, setLoyaltyOpen] = useState(() => loyaltyGroupHrefs.includes(pathname));
+  useEffect(() => {
+    if (loyaltyGroupHrefs.includes(pathname)) setLoyaltyOpen(true);
+    // Solo se auto-expande al entrar a una de sus páginas — si la
+    // persona la cierra a mano después, no se le vuelve a abrir sola
+    // mientras siga en esa misma página.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const TenantBadge = ({ size = "w-8 h-8" }: { size?: string }) =>
     tenant.logoUrl ? (
@@ -128,42 +153,76 @@ export default function DashboardShell({
     </div>
   );
 
+  const NavLeafRow = ({
+    href,
+    label,
+    icon: Icon,
+    permissionKey,
+    onNavigate,
+    indented,
+  }: LeafItem & { onNavigate?: () => void; indented?: boolean }) => {
+    const active = pathname === href;
+    // El dueño siempre tiene todo prendido — el toggle solo aplica a
+    // STAFF. El link sigue visible aunque esté apagado (así sabe que
+    // la sección existe), pero en gris y sin poder entrar; el bloqueo
+    // real pasa en el servidor (requirePagePermission), no acá.
+    const enabled = role === "OWNER" || !permissionKey || permissions.includes(permissionKey);
+    const padding = indented ? "pl-9 pr-3" : "px-3";
+
+    if (!enabled) {
+      return (
+        <span
+          aria-disabled="true"
+          title={t.nav.disabledHint}
+          className={`flex items-center gap-2.5 ${padding} py-2.5 rounded-xl text-sm font-medium text-[#343233]/30 cursor-not-allowed select-none`}
+        >
+          <Icon size={16} aria-hidden />
+          {label}
+        </span>
+      );
+    }
+
+    return (
+      <Link
+        href={href}
+        onClick={onNavigate}
+        className={`flex items-center gap-2.5 ${padding} py-2.5 rounded-xl text-sm font-medium transition-colors ${
+          active ? "bg-[#002D09] text-white" : "text-[#343233] hover:bg-[#F7F8F4] hover:text-[#002D09]"
+        }`}
+      >
+        <Icon size={16} aria-hidden />
+        {label}
+      </Link>
+    );
+  };
+
   const NavLinks = ({ onNavigate }: { onNavigate?: () => void }) => (
     <nav className="flex flex-col gap-0.5">
-      {navItems.map(({ href, label, icon: Icon, permissionKey }) => {
-        const active = pathname === href;
-        // El dueño siempre tiene todo prendido — el toggle solo aplica
-        // a STAFF. El link sigue visible aunque esté apagado (así sabe
-        // que la sección existe), pero en gris y sin poder entrar; el
-        // bloqueo real pasa en el servidor (requirePagePermission), no acá.
-        const enabled = role === "OWNER" || !permissionKey || permissions.includes(permissionKey);
+      {navItems.map((item) => {
+        if (item.kind === "leaf") return <NavLeafRow key={item.href} {...item} onNavigate={onNavigate} />;
 
-        if (!enabled) {
-          return (
-            <span
-              key={href}
-              aria-disabled="true"
-              title={t.nav.disabledHint}
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-[#343233]/30 cursor-not-allowed select-none"
-            >
-              <Icon size={16} aria-hidden />
-              {label}
-            </span>
-          );
-        }
-
+        const groupActive = item.children.some((c) => c.href === pathname);
         return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={`flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
-              active ? "bg-[#002D09] text-white" : "text-[#343233] hover:bg-[#F7F8F4] hover:text-[#002D09]"
-            }`}
-          >
-            <Icon size={16} aria-hidden />
-            {label}
-          </Link>
+          <div key={item.label}>
+            <button
+              type="button"
+              onClick={() => setLoyaltyOpen((v) => !v)}
+              className={`flex w-full items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                groupActive ? "text-[#002D09]" : "text-[#343233] hover:bg-[#F7F8F4] hover:text-[#002D09]"
+              }`}
+            >
+              <item.icon size={16} aria-hidden />
+              <span className="flex-1 text-left">{item.label}</span>
+              <ChevronDown size={14} aria-hidden className={`transition-transform ${loyaltyOpen ? "rotate-180" : ""}`} />
+            </button>
+            {loyaltyOpen && (
+              <div className="flex flex-col gap-0.5 mt-0.5">
+                {item.children.map((child) => (
+                  <NavLeafRow key={child.href} {...child} onNavigate={onNavigate} indented />
+                ))}
+              </div>
+            )}
+          </div>
         );
       })}
     </nav>
