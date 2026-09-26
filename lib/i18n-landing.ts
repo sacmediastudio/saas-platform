@@ -223,8 +223,8 @@ export const translations = {
     nav: { products: "Productos", hardware: "Hardware NFC", pricing: "Precios", faq: "Preguntas", viewPlans: "Ver planes", login: "Iniciar sesión", start: "Empieza gratis" },
     hero: {
       badge: "Menú digital, descubrimiento y pedidos en una plataforma",
-      titlePrefix: "Una plataforma. Infinitas formas de conectar con",
-      titleHighlight: "tus clientes.",
+      titlePrefix: "Una Plataforma. infinitas formas de conectar y gestionar",
+      titleHighlight: "tu restaurante.",
       subtitle:
         "Menú digital para tu restaurante, descubrimiento y pedidos con Zertoo Eats, y un perfil de enlaces gratis para todo lo demás — todo desde un mismo dashboard.",
       ctaPrimary: "Empieza gratis",
