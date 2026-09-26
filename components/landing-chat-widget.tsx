@@ -9,6 +9,61 @@ interface ChatMessage {
   content: string;
 }
 
+// El bot responde en markdown liviano (**negrita**, listas con "-" o
+// "1."). En vez de sumar una librería de markdown entera para un chat
+// widget chico con un formato bastante predecible (lo controla el
+// system prompt), esto solo convierte lo que realmente aparece:
+// negrita inline, y líneas de lista agrupadas en una viñeta con
+// espaciado — que es justo lo que hacía ilegible la respuesta antes
+// (todo corrido en un solo párrafo, sin separación visual).
+function renderMessageContent(content: string) {
+  const lines = content.split("\n");
+  const blocks: React.ReactNode[] = [];
+  let listItems: string[] = [];
+
+  function flushList() {
+    if (listItems.length === 0) return;
+    const items = listItems;
+    blocks.push(
+      <ul key={`ul-${blocks.length}`} className="flex flex-col gap-1 pl-4">
+        {items.map((item, i) => (
+          <li key={i} className="list-disc marker:text-forest/60">
+            {renderInline(item)}
+          </li>
+        ))}
+      </ul>
+    );
+    listItems = [];
+  }
+
+  lines.forEach((rawLine, i) => {
+    const line = rawLine.trim();
+    const listMatch = line.match(/^(?:[-•*]|\d+\.)\s+(.*)$/);
+    if (listMatch) {
+      listItems.push(listMatch[1]);
+      return;
+    }
+    flushList();
+    if (line.length === 0) return; // el espaciado entre bloques lo da el gap del contenedor
+    blocks.push(<p key={`p-${i}`}>{renderInline(line)}</p>);
+  });
+  flushList();
+
+  return <div className="flex flex-col gap-2">{blocks}</div>;
+}
+
+function renderInline(text: string): React.ReactNode {
+  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={i} className="font-semibold">
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={i}>{part}</span>
+    )
+  );
+}
+
 const COPY: Record<Lang, { greeting: string; placeholder: string; title: string; genericError: string }> = {
   es: {
     greeting: "¡Hola! Soy el asistente de Zertoo. ¿En qué te puedo ayudar? Puedo contarte sobre precios, productos y cómo empezar.",
@@ -100,7 +155,7 @@ export default function LandingChatWidget({ lang }: { lang: Lang }) {
                   m.role === "user" ? "self-end bg-forest text-white" : "self-start bg-[#F7F8F4] text-graphite"
                 }`}
               >
-                {m.content}
+                {renderMessageContent(m.content)}
               </div>
             ))}
             {sending && (
