@@ -5,8 +5,8 @@ export const translations = {
     nav: { products: "Products", hardware: "NFC Hardware", pricing: "Pricing", faq: "FAQ", viewPlans: "View plans", login: "Log in", start: "Start free" },
     hero: {
       badge: "Digital menu, discovery and orders — all in one platform",
-      titlePrefix: "One platform. Every way your",
-      titleHighlight: "customers find you.",
+      titlePrefix: "One platform. Everything you need to connect and run",
+      titleHighlight: "your restaurant.",
       subtitle:
         "Digital menu for your restaurant, discovery and delivery through Zertoo Eats, and a free smartlink page for everything else you offer — all from one dashboard.",
       ctaPrimary: "Start free",
