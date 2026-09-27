@@ -7,6 +7,7 @@ import { SUPPORTED_CURRENCIES } from "@/lib/currency";
 import { TIMEZONES } from "@/lib/timezone";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
+import type { ModuleType } from "@/lib/modules";
 import DashboardCard from "@/components/dashboard-card";
 import BusinessHoursEditor from "@/components/business-hours-editor";
 import AccountEmailSection from "@/components/account-email-section";
@@ -48,7 +49,7 @@ export default function SettingsForm({
   pendingAccountEmail,
 }: {
   tenant: TenantData;
-  enabledModules: ("RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK")[];
+  enabledModules: ModuleType[];
   accountEmail: string;
   pendingAccountEmail: string | null;
 }) {

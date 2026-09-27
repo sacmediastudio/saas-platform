@@ -12,6 +12,7 @@ export const PRICE_ID_BY_MODULE: Record<ModuleType, string | undefined> = {
   RESTAURANT: process.env.STRIPE_PRICE_RESTAURANT,
   SMALL_BUSINESS: process.env.STRIPE_PRICE_SMALL_BUSINESS,
   SMARTLINK: process.env.STRIPE_PRICE_SMARTLINK,
+  ORDERS: process.env.STRIPE_PRICE_ORDERS,
 };
 
 // Solo exige el Price de Restaurantes — es el único módulo que se

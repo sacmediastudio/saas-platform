@@ -1,27 +1,30 @@
-export type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
+export type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK" | "ORDERS";
 
-export const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"];
+export const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK", "ORDERS"];
 
 export const MODULE_LABELS: Record<ModuleType, string> = {
   RESTAURANT: "Menú",
   SMALL_BUSINESS: "Citas",
   SMARTLINK: "Smartlink",
+  ORDERS: "Orders",
 };
 
 export const MODULE_DESCRIPTIONS: Record<ModuleType, string> = {
   RESTAURANT: "Menú digital con fotos, categorías y platos destacados.",
   SMALL_BUSINESS: "Agenda de citas, reservas online y bloqueo de horarios.",
   SMARTLINK: "Un perfil con todos tus enlaces, listo para compartir.",
+  ORDERS: "Centraliza, acepta e imprime todos tus pedidos en un solo lugar.",
 };
 
 // Precio mensual (USD) de cada módulo — se muestra en la landing y en
 // /dashboard/billing. El cobro real se hace en Stripe (Price ids en
-// STRIPE_PRICE_RESTAURANT/SMALL_BUSINESS/SMARTLINK) — si cambias el
-// precio acá, también hay que actualizarlo en Stripe para que coincida.
+// STRIPE_PRICE_RESTAURANT/SMALL_BUSINESS/SMARTLINK/ORDERS) — si cambias
+// el precio acá, también hay que actualizarlo en Stripe para que coincida.
 export const MODULE_PRICES: Record<ModuleType, number> = {
   SMARTLINK: 12.9,
   SMALL_BUSINESS: 29.9,
   RESTAURANT: 39.9,
+  ORDERS: 59.9,
 };
 
 /**

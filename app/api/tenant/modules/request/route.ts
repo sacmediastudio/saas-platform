@@ -6,8 +6,8 @@ import { getEnabledModules, type ModuleType } from "@/lib/modules";
 
 // Citas y Smartlink ya no son módulos solicitables: Citas se dejó de
 // vender, y Smartlink pasó a ser gratis e incluido para todos — no
-// hace falta pedirlo. Restaurant queda como el único módulo pago real.
-const schema = z.object({ module: z.enum(["RESTAURANT"]) });
+// hace falta pedirlo. Restaurant y Orders son los módulos pagos reales.
+const schema = z.object({ module: z.enum(["RESTAURANT", "ORDERS"]) });
 
 // GET /api/tenant/modules/request — solicitudes del negocio, para
 // saber en el dashboard cuáles ya están pendientes (y no dejar pedir
@@ -36,6 +36,19 @@ export async function POST(req: NextRequest) {
 
   if (getEnabledModules(tenant as any).includes(target)) {
     return NextResponse.json({ error: "Ese módulo ya está activo." }, { status: 400 });
+  }
+
+  // Orders es un complemento operativo de Menu + Eats, no un producto
+  // suelto — sin un menú online activo y sin Eats prendido no hay nada
+  // que Orders pueda centralizar.
+  if (target === "ORDERS") {
+    const enabled = getEnabledModules(tenant as any);
+    if (!enabled.includes("RESTAURANT") || !tenant.nowEnabled) {
+      return NextResponse.json(
+        { error: "Para activar Orders primero necesitás tener Menú y Zertoo Eats activos." },
+        { status: 400 }
+      );
+    }
   }
 
   const existing = await db.moduleActivationRequest.findFirst({

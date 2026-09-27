@@ -17,6 +17,7 @@ const MODULE_LABELS: Record<string, string> = {
   RESTAURANT: "Menú",
   SMALL_BUSINESS: "Citas",
   SMARTLINK: "Smartlink",
+  ORDERS: "Orders",
 };
 
 export default function ModuleRequestsView({ requests: initialRequests }: { requests: ModuleRequest[] }) {

@@ -19,7 +19,10 @@ export default async function SettingsPage() {
       tenant={{
         name: tenant.name,
         slug: tenant.slug,
-        businessType: tenant.businessType,
+        // businessType nunca es "ORDERS" en la práctica — ese valor del
+        // enum compartido solo existe como módulo activable, jamás como
+        // tipo de negocio elegido en el signup.
+        businessType: tenant.businessType as "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK",
         logoUrl: tenant.logoUrl,
         heroImageUrl: tenant.heroImageUrl,
         heroTagline: tenant.heroTagline,

@@ -22,6 +22,12 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
   const enabledModules = getEnabledModules(tenant);
   const countByModule = { RESTAURANT: menuItemCount, SMALL_BUSINESS: bookingCount, SMARTLINK: smartLinkItemCount };
   const countLabel = { RESTAURANT: "Platos", SMALL_BUSINESS: "Citas", SMARTLINK: "Links" };
+  // Orders no tiene página pública ni un conteo de contenido propio
+  // (vive en orders.zertoo.app, operativo) — se queda afuera de estos
+  // dos bloques, que asumen ambas cosas para RESTAURANT/SMALL_BUSINESS/SMARTLINK.
+  const contentModules = enabledModules.filter(
+    (m): m is "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK" => m !== "ORDERS"
+  );
 
   return (
     <div className="max-w-2xl flex flex-col gap-5">
@@ -39,7 +45,7 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
         </h1>
       </div>
       <div className="flex flex-wrap items-center gap-2 mb-6">
-        {enabledModules.map((m) => (
+        {contentModules.map((m) => (
           <a
             key={m}
             href={`/${modulePublicPrefix(m)}/${tenant.slug}`}
@@ -50,6 +56,9 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
             {MODULE_LABELS[m]}
           </a>
         ))}
+        {enabledModules.includes("ORDERS") && (
+          <span className="text-xs px-2.5 py-1 rounded-md bg-[#F7F8F4] text-[#343233]/70">Orders activo</span>
+        )}
       </div>
 
       <div className="mb-7">
@@ -57,7 +66,7 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 divide-x divide-black/[0.06]">
-        {enabledModules.map((m) => (
+        {contentModules.map((m) => (
           <Stat key={m} label={countLabel[m]} value={countByModule[m]} />
         ))}
         <Stat label="Reseñas" value={reviewCount} />

@@ -50,6 +50,7 @@ export default async function AdminTenantsPage({
           <option value="RESTAURANT">Menú</option>
           <option value="SMALL_BUSINESS">Citas</option>
           <option value="SMARTLINK">Smartlink</option>
+          <option value="ORDERS">Orders</option>
         </select>
         <button type="submit" className="text-sm font-semibold px-4 py-2 rounded-lg bg-[#E7FF00] text-[#002D09]">
           Buscar

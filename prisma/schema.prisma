@@ -15,6 +15,10 @@ enum BusinessType {
   RESTAURANT
   SMALL_BUSINESS
   SMARTLINK
+  // Módulo pago de operación de pedidos en vivo (tablero de cocina,
+  // estaciones, impresión, mesas) — requiere RESTAURANT activo, ver
+  // regla de negocio en POST /api/tenant/modules/request.
+  ORDERS
 }
 
 enum Plan {

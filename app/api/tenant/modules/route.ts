@@ -6,7 +6,7 @@ import { getEnabledModules, type ModuleType } from "@/lib/modules";
 import { getStripe, isStripeConfigured, PRICE_ID_BY_MODULE } from "@/lib/stripe";
 
 const schema = z.object({
-  module: z.enum(["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK"]),
+  module: z.enum(["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK", "ORDERS"]),
   enabled: z.boolean(),
 });
 

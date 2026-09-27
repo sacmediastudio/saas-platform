@@ -23,6 +23,7 @@ interface SubscriptionData {
 function moduleLabel(m: ModuleType, t: ReturnType<typeof useDashboardLang>["t"]): string {
   if (m === "RESTAURANT") return t.nav.menu;
   if (m === "SMALL_BUSINESS") return t.nav.bookings;
+  if (m === "ORDERS") return t.nav.orders;
   return t.nav.smartlink;
 }
 

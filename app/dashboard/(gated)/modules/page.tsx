@@ -13,10 +13,13 @@ export default async function ModulesPage() {
     where: { tenantId: session.tenantId, status: "pending" },
   });
 
+  const enabledModules = getEnabledModules(tenant);
+
   return (
     <ModulesManager
-      initialEnabled={getEnabledModules(tenant)}
+      initialEnabled={enabledModules}
       initialPending={pendingRequests.map((r) => r.module) as any}
+      ordersUnlocked={enabledModules.includes("RESTAURANT") && tenant.nowEnabled}
     />
   );
 }

@@ -5,8 +5,7 @@ import { Plus, Trash2, X, Users, Copy, Check, Settings2 } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { PERMISSION_KEYS, PERMISSION_MODULE_DEPENDENCY, type PermissionKey } from "@/lib/permissions";
-
-type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
+import type { ModuleType } from "@/lib/modules";
 
 interface StaffMember {
   id: string;

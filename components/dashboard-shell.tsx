@@ -7,10 +7,9 @@ import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, Cred
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 import type { PermissionKey } from "@/lib/permissions";
+import type { ModuleType } from "@/lib/modules";
 
 const LOGO = "/logo.svg";
-
-type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK";
 
 export default function DashboardShell({
   tenant,
