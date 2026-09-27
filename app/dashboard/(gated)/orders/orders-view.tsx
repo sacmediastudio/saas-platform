@@ -27,7 +27,7 @@ interface Order {
   fulfillment: "PICKUP" | "DELIVERY";
   deliveryAddress: string | null;
   notes: string | null;
-  status: "PENDING" | "CONFIRMED" | "READY" | "COMPLETED" | "CANCELLED";
+  status: "NEW" | "ACCEPTED" | "PREPARING" | "READY" | "REJECTED" | "COMPLETED" | "CANCELLED";
   subtotal: number;
   deliveryFee: number;
   total: number;
@@ -57,21 +57,29 @@ export default function OrdersView({
   const [etaError, setEtaError] = useState(false);
 
   const STATUS_META: Record<Order["status"], { label: string; className: string }> = {
-    PENDING: { label: t.orders.statusPending, className: "bg-amber-50 text-amber-700" },
-    CONFIRMED: { label: t.orders.statusConfirmed, className: "bg-blue-50 text-blue-700" },
+    NEW: { label: t.orders.statusPending, className: "bg-amber-50 text-amber-700" },
+    ACCEPTED: { label: t.orders.statusConfirmed, className: "bg-blue-50 text-blue-700" },
+    PREPARING: { label: t.orders.statusPreparing, className: "bg-blue-50 text-blue-700" },
     READY: { label: t.orders.statusReady, className: "bg-green-50 text-green-700" },
+    REJECTED: { label: t.orders.statusRejected, className: "bg-red-50 text-red-700" },
     COMPLETED: { label: t.orders.statusCompleted, className: "bg-[#F7F8F4] text-[#343233]" },
     CANCELLED: { label: t.orders.statusCancelled, className: "bg-red-50 text-red-700" },
   };
 
+  // Esta vista (el dashboard "clásico" de Pedidos) todavía no ofrece
+  // Preparando/Rechazar como pasos manuales — esos los introduce el
+  // tablero en vivo de Zertoo Orders (Fase 1). Acá solo se necesita que
+  // el tipo cubra los 7 estados reales del enum.
   const NEXT_ACTION: Partial<Record<Order["status"], { label: string; next: Order["status"] }>> = {
-    PENDING: { label: t.orders.confirm, next: "CONFIRMED" },
-    CONFIRMED: { label: t.orders.markReady, next: "READY" },
+    NEW: { label: t.orders.confirm, next: "ACCEPTED" },
+    ACCEPTED: { label: t.orders.markReady, next: "READY" },
     READY: { label: t.orders.complete, next: "COMPLETED" },
   };
 
-  const activeOrders = orders.filter((o) => o.status === "PENDING" || o.status === "CONFIRMED" || o.status === "READY");
-  const historyOrders = orders.filter((o) => o.status === "COMPLETED" || o.status === "CANCELLED");
+  const activeOrders = orders.filter(
+    (o) => o.status === "NEW" || o.status === "ACCEPTED" || o.status === "PREPARING" || o.status === "READY"
+  );
+  const historyOrders = orders.filter((o) => o.status === "COMPLETED" || o.status === "CANCELLED" || o.status === "REJECTED");
   const shown = tab === "active" ? activeOrders : historyOrders;
 
   async function handleSave() {
@@ -108,7 +116,7 @@ export default function OrdersView({
   // demás transiciones (marcar listo, completar, cancelar) no
   // necesitan ese dato y se disparan directo.
   function handleAction(order: Order, action: { label: string; next: Order["status"] }) {
-    if (action.next === "CONFIRMED") {
+    if (action.next === "ACCEPTED") {
       setEtaMinutes("20");
       setEtaError(false);
       setEtaModalOrder(order);
@@ -124,7 +132,7 @@ export default function OrdersView({
       setEtaError(true);
       return;
     }
-    await updateStatus(etaModalOrder, "CONFIRMED", { etaMinutes: minutes });
+    await updateStatus(etaModalOrder, "ACCEPTED", { etaMinutes: minutes });
     setEtaModalOrder(null);
   }
 

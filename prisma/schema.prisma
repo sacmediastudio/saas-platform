@@ -222,6 +222,8 @@ model Tenant {
   // checkout público pasa a pedir "elegí tu local" y esos campos se
   // leen de la Location elegida en su lugar.
   locations           Location[]
+  preparationStations PreparationStation[]
+  printers            Printer[]
 
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
@@ -305,11 +307,18 @@ model MenuCategory {
   // no arriesgar traducciones incorrectas de ingredientes/alérgenos).
   nameEn    String?
   sortOrder Int      @default(0)
+  // A qué estación de cocina/barra van los pedidos de esta categoría
+  // (ej. "Hamburguesas" → Cocina, "Cócteles" → Barra) — null significa
+  // "sin enrutar todavía", no un error; Zertoo Orders puede seguir
+  // funcionando sin estaciones configuradas.
+  stationId String?
 
-  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  items  MenuItem[]
+  tenant  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  station PreparationStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
+  items   MenuItem[]
 
   @@index([tenantId])
+  @@index([stationId])
   @@map("menu_categories")
 }
 
@@ -341,15 +350,22 @@ model MenuItem {
   featured    Boolean        @default(false)
   allergens   String[]       @default([])
   sortOrder   Int            @default(0)
+  // Solo para el caso puntual de un plato que necesita ir a otra
+  // estación distinta de la de su categoría (ej. una hamburguesa "fría"
+  // servida desde la Barra) — null (el caso normal) hereda la estación
+  // de MenuCategory.stationId.
+  stationId String?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
 
   tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   category MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  station  PreparationStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
   addOns   MenuItemAddOn[]
 
   @@index([tenantId])
   @@index([tenantId, categoryId])
+  @@index([stationId])
   @@map("menu_items")
 }
 
@@ -779,9 +795,11 @@ enum OrderFulfillment {
 }
 
 enum OrderStatus {
-  PENDING // recién llegó, el negocio todavía no lo vio
-  CONFIRMED // el negocio lo aceptó y lo está preparando
+  NEW // recién llegó, el negocio todavía no lo vio
+  ACCEPTED // el negocio lo aceptó, todavía no arrancó a prepararlo
+  PREPARING // se está preparando en cocina/barra
   READY // listo para retirar, o en camino si es delivery
+  REJECTED // el negocio lo rechazó (sin stock, cerrado, etc.) — no llega a prepararse
   COMPLETED
   CANCELLED
 }
@@ -801,7 +819,16 @@ model MenuOrder {
   fulfillment     OrderFulfillment
   deliveryAddress String? // solo si fulfillment = DELIVERY
   notes           String?
-  status          OrderStatus      @default(PENDING)
+  status          OrderStatus      @default(NEW)
+  // Timestamp de cada transición de estado — nullable porque un pedido
+  // recién creado no pasó por ninguna todavía. Alimentan el tablero en
+  // vivo de Zertoo Orders (cronómetro por pedido) y reportes de tiempos
+  // más adelante; no reemplazan a updatedAt, que se pisa en cada cambio.
+  acceptedAt      DateTime?
+  preparingAt     DateTime?
+  readyAt         DateTime?
+  completedAt     DateTime?
+  rejectedAt      DateTime?
   // Idioma que el cliente tenía seleccionado al hacer el pedido —
   // mismo criterio que Booking.language, para mandarle la confirmación
   // por WhatsApp en el idioma correcto.
@@ -873,6 +900,42 @@ model MenuOrderItem {
   order MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@map("menu_order_items")
+}
+
+// Estación de preparación (Cocina, Barra, Caja) a la que se enrutan
+// las líneas de un pedido según su categoría — ver MenuCategory.stationId.
+model PreparationStation {
+  id       String @id @default(cuid())
+  tenantId String
+  name     String
+
+  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  categories MenuCategory[]
+  items      MenuItem[]
+  printers   Printer[]
+
+  @@index([tenantId])
+  @@map("preparation_stations")
+}
+
+// Impresora térmica de una estación, hablada por el Print Bridge
+// (proceso aparte en la red local del restaurante, fuera de este repo)
+// vía ESC/POS sobre la IP/puerto acá guardados — nunca expuesta a
+// internet, solo alcanzable desde la LAN del negocio.
+model Printer {
+  id        String  @id @default(cuid())
+  tenantId  String
+  stationId String?
+  name      String
+  ipAddress String
+  port      Int     @default(9100)
+
+  tenant  Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  station PreparationStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId])
+  @@index([stationId])
+  @@map("printers")
 }
 
 // Un negocio ya no puede activar un módulo nuevo con un clic — deja
