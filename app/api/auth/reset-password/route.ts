@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "@/lib/db";
-import { signSession, sessionCookieName } from "@/lib/auth";
+import { signSession, sessionCookieName, sessionCookieOptions } from "@/lib/auth";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
 const schema = z.object({
@@ -53,12 +53,6 @@ export async function POST(req: NextRequest) {
 
   const token = signSession({ userId: user.id, tenantId: user.tenantId, role: user.role });
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(sessionCookieName, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  res.cookies.set(sessionCookieName, token, sessionCookieOptions());
   return res;
 }

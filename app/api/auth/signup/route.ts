@@ -3,7 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import type { Prisma } from "@prisma/client";
 import { db } from "@/lib/db";
-import { signSession, sessionCookieName } from "@/lib/auth";
+import { signSession, sessionCookieName, sessionCookieOptions } from "@/lib/auth";
 import { sendVerificationEmail, generateVerificationCode } from "@/lib/email";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 
@@ -100,12 +100,6 @@ export async function POST(req: NextRequest) {
 
   const token = signSession({ userId: user.id, tenantId: tenant.id, role: "OWNER" });
   const res = NextResponse.json({ tenant: { slug: tenant.slug } }, { status: 201 });
-  res.cookies.set(sessionCookieName, token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
-    maxAge: 60 * 60 * 24 * 7,
-  });
+  res.cookies.set(sessionCookieName, token, sessionCookieOptions());
   return res;
 }

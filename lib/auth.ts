@@ -7,6 +7,35 @@ import { type PermissionKey } from "./permissions";
 const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-me";
 const COOKIE_NAME = "session";
 
+// Sin definir, la cookie queda "host-only" (funciona en localhost sin tocar
+// nada). En producción se configura a ".zertoo.app" para que la MISMA sesión
+// sea válida en cualquier subdominio (zertoo.app, orders.zertoo.app) — sin
+// esto, alguien logueado en el dashboard tendría que loguearse de nuevo en
+// Zertoo Orders.
+const COOKIE_DOMAIN = process.env.SESSION_COOKIE_DOMAIN;
+export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+
+/** Mismas opciones en los 3 lugares que fijan la sesión (signup/login/reset) — un solo lugar para no desincronizarlas. */
+export function sessionCookieOptions(maxAge: number = SESSION_MAX_AGE_SECONDS) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    path: "/",
+    ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
+    maxAge,
+  };
+}
+
+/** Para logout — mismo domain/path que sessionCookieOptions(), si no coinciden el navegador no la borra de verdad. */
+export function clearedSessionCookieOptions() {
+  return {
+    path: "/",
+    ...(COOKIE_DOMAIN ? { domain: COOKIE_DOMAIN } : {}),
+    maxAge: 0,
+  };
+}
+
 export interface SessionPayload {
   userId: string;
   tenantId: string;
