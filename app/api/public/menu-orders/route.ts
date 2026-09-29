@@ -7,6 +7,7 @@ import { sendOrderConfirmationWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/
 import { formatCurrency } from "@/lib/currency";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { getEnabledModules } from "@/lib/modules";
+import { buildOrderItems } from "@/lib/order-builder";
 
 const schema = z.object({
   slug: z.string(),
@@ -89,51 +90,14 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // Precios reales de la base de datos, nunca confiar en lo que mande
-  // el cliente — evita que alguien manipule el precio desde el navegador.
-  const menuItems = await db.menuItem.findMany({
-    where: { id: { in: data.items.map((i) => i.menuItemId) }, tenantId: tenant.id },
-    include: { addOns: true, category: { select: { stationId: true } } },
-  });
-  if (menuItems.length !== data.items.length) {
-    return NextResponse.json({ error: "Algún plato ya no está disponible." }, { status: 400 });
+  // Precios reales de la base de datos, add-ons válidos y stationId
+  // congelado — misma lógica que usa el pedido de un mesero (Fase 2).
+  const built = await buildOrderItems(tenant.id, data.items);
+  if (!built.ok) {
+    return NextResponse.json({ error: built.error }, { status: 400 });
   }
-  // Un plato de precio variable no tiene un número real para cobrar —
-  // no debería llegar hasta acá (el botón de agregar no aparece para
-  // esos platos), pero por las dudas se rechaza explícitamente en vez
-  // de dejarlo pasar con precio 0.
-  const variablePriceItem = menuItems.find((m) => m.variablePrice);
-  if (variablePriceItem) {
-    return NextResponse.json(
-      { error: `"${variablePriceItem.name}" tiene precio variable — hay que consultarlo directo en el local.` },
-      { status: 400 }
-    );
-  }
-
-  const orderItems = data.items.map((i) => {
-    const menuItem = menuItems.find((m) => m.id === i.menuItemId)!;
-    // Solo se aceptan add-ons que de verdad pertenezcan a ESTE plato —
-    // evita que alguien mande el id de un add-on de otro negocio/plato
-    // para inflar o alterar el pedido.
-    const selectedAddOns = (i.addOnIds ?? [])
-      .map((id) => menuItem.addOns.find((a) => a.id === id))
-      .filter((a): a is (typeof menuItem.addOns)[number] => Boolean(a));
-    const addOnsTotal = selectedAddOns.reduce((sum, a) => sum + a.price, 0);
-
-    return {
-      name: menuItem.name,
-      price: Number(menuItem.price) + addOnsTotal,
-      quantity: i.quantity,
-      notes: i.notes,
-      addOns: selectedAddOns.length > 0 ? selectedAddOns.map((a) => ({ name: a.name, price: a.price })) : undefined,
-      // Se congela acá, igual que name/price — si el negocio reconfigura
-      // estaciones después, este pedido no cambia de dónde se imprime.
-      // MenuItem.stationId manda si está seteado (anula la estación de
-      // su categoría); si no, hereda la de MenuCategory.stationId.
-      stationId: menuItem.stationId ?? menuItem.category.stationId ?? null,
-    };
-  });
-  const subtotal = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const orderItems = built.items;
+  const subtotal = built.subtotal;
   const deliveryFee = data.fulfillment === "DELIVERY" ? (effectiveDeliveryFee ?? 0) : 0;
   const total = subtotal + deliveryFee;
 

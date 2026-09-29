@@ -70,8 +70,9 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   // Avisos al CLIENTE por WhatsApp — no deben tumbar el cambio de
   // estado si Twilio falla, solo queda logueado (mismo criterio que
-  // /api/public/menu-orders).
-  if (parsed.data.status === "ACCEPTED" && parsed.data.etaMinutes) {
+  // /api/public/menu-orders). No aplica a DINE_IN (Fase 2): ahí no hay
+  // un teléfono de cliente real que avisar, el mesero está presente.
+  if (order.fulfillment !== "DINE_IN" && parsed.data.status === "ACCEPTED" && parsed.data.etaMinutes) {
     await sendOrderConfirmedWithEtaWhatsApp({
       toPhone: order.customerPhone,
       customerName: order.customerName,
@@ -79,7 +80,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       etaMinutes: parsed.data.etaMinutes,
       language: order.language,
     }).catch((err) => console.error("No se pudo avisar la confirmación por WhatsApp:", err));
-  } else if (parsed.data.status === "READY") {
+  } else if (order.fulfillment !== "DINE_IN" && parsed.data.status === "READY") {
     const notes = READY_FULFILLMENT_NOTE[order.language] ?? READY_FULFILLMENT_NOTE.es;
     await sendOrderReadyWhatsApp({
       toPhone: order.customerPhone,

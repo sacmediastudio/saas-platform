@@ -5,6 +5,7 @@
 // requirePermission() en lib/auth.ts.
 export const PERMISSION_KEYS = [
   "ORDERS",
+  "WAITER",
   "MENU",
   "MENU_LEADS",
   "BOOKINGS",
@@ -51,9 +52,13 @@ export const DEFAULT_STAFF_PERMISSIONS: PermissionKey[] = [
 // cualquier tenant (ver el pivot de producto), así que el toggle de
 // staff para esa sección tiene que estar siempre visible en
 // /dashboard/team — de ahí que no aparezca acá.
-export const PERMISSION_MODULE_DEPENDENCY: Partial<Record<PermissionKey, "RESTAURANT" | "SMALL_BUSINESS">> = {
+export const PERMISSION_MODULE_DEPENDENCY: Partial<Record<PermissionKey, "RESTAURANT" | "SMALL_BUSINESS" | "ORDERS">> = {
   MENU: "RESTAURANT",
   MENU_LEADS: "RESTAURANT",
   ORDERS: "RESTAURANT",
   BOOKINGS: "SMALL_BUSINESS",
+  // Zertoo Waiter (Fase 2) es parte del módulo pago Orders, no de la
+  // toma de pedidos básica que ya viene gratis con Restaurant — por
+  // eso depende del módulo ORDERS, no de RESTAURANT como el de arriba.
+  WAITER: "ORDERS",
 };

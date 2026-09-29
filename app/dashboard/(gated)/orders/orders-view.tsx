@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, Check, Bike, Store, MapPin, Zap, Printer as PrinterIcon } from "lucide-react";
+import { ShoppingBag, Check, Bike, Store, MapPin, Zap, Printer as PrinterIcon, Utensils } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { formatCurrency } from "@/lib/currency";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
@@ -26,7 +26,7 @@ interface Order {
   customerName: string;
   customerEmail: string;
   customerPhone: string;
-  fulfillment: "PICKUP" | "DELIVERY";
+  fulfillment: "PICKUP" | "DELIVERY" | "DINE_IN";
   deliveryAddress: string | null;
   notes: string | null;
   status: "NEW" | "ACCEPTED" | "PREPARING" | "READY" | "REJECTED" | "COMPLETED" | "CANCELLED";
@@ -306,8 +306,21 @@ export default function OrdersView({
                   )}
 
                   <div className="flex items-center gap-1.5 text-xs text-[#343233]/70 mb-2">
-                    {order.fulfillment === "PICKUP" ? <Store size={13} aria-hidden /> : <Bike size={13} aria-hidden />}
-                    {order.fulfillment === "PICKUP" ? t.orders.pickupShort : `${t.orders.delivery} — ${order.deliveryAddress}`}
+                    {order.fulfillment === "PICKUP" && (
+                      <>
+                        <Store size={13} aria-hidden /> {t.orders.pickupShort}
+                      </>
+                    )}
+                    {order.fulfillment === "DELIVERY" && (
+                      <>
+                        <Bike size={13} aria-hidden /> {t.orders.delivery} — {order.deliveryAddress}
+                      </>
+                    )}
+                    {order.fulfillment === "DINE_IN" && (
+                      <>
+                        <Utensils size={13} aria-hidden /> {t.orders.dineInShort} — {order.customerName}
+                      </>
+                    )}
                   </div>
 
                   <div className="text-sm mb-2">

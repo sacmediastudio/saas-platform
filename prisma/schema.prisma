@@ -241,6 +241,7 @@ model Tenant {
   locations           Location[]
   preparationStations PreparationStation[]
   printers            Printer[]
+  restaurantTables    RestaurantTable[]
 
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
@@ -307,9 +308,21 @@ model User {
   emailChangeCodeExpiresAt    DateTime?
   emailChangeCodeSentAt       DateTime?
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  // PIN de 4 dígitos para "fichar" en la tablet compartida de Zertoo
+  // Waiter (Fase 2) — hash determinístico (SHA-256 + pepper fijo en
+  // lib/pin.ts), a propósito NO bcrypt: hace falta poder buscar "¿qué
+  // mesero tiene este PIN?" con una consulta directa. La sesión JWT ya
+  // existente sigue siendo el límite de seguridad real; el PIN es solo
+  // un selector de identidad sobre esa sesión, no un secreto crítico
+  // en sí mismo. Único por tenant, nunca globalmente (dos restaurantes
+  // distintos pueden tener el mismo PIN sin problema).
+  pinHash String?
+
+  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  waiterOrders MenuOrder[]     @relation("WaiterOrders")
 
   @@index([tenantId])
+  @@unique([tenantId, pinHash])
   @@map("users")
 }
 
@@ -809,6 +822,7 @@ model CampaignLog {
 enum OrderFulfillment {
   PICKUP
   DELIVERY
+  DINE_IN
 }
 
 enum OrderStatus {
@@ -835,6 +849,13 @@ model MenuOrder {
   customerPhone   String
   fulfillment     OrderFulfillment
   deliveryAddress String? // solo si fulfillment = DELIVERY
+  // Solo para fulfillment = DINE_IN (Fase 2) — quién tomó el pedido y en
+  // qué mesa. customerName para dine-in se completa con el nombre de la
+  // mesa (ej. "Mesa 5"), ya que ahí no hay cliente real que identificar
+  // por correo/teléfono (customerEmail/Phone quedan vacíos a propósito,
+  // no se pisan con datos inventados).
+  tableId         String?
+  waiterId        String?
   notes           String?
   status          OrderStatus      @default(NEW)
   // Timestamp de cada transición de estado — nullable porque un pedido
@@ -858,12 +879,39 @@ model MenuOrder {
 
   tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   location Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  table    RestaurantTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
+  waiter   User?           @relation("WaiterOrders", fields: [waiterId], references: [id], onDelete: SetNull)
   items    MenuOrderItem[]
 
   @@index([tenantId])
   @@index([tenantId, status])
   @@index([locationId])
+  @@index([tableId])
   @@map("menu_orders")
+}
+
+// Mesa física del salón (Fase 2, Zertoo Waiter) — el estado ("libre"/
+// "ocupada"/"ocupada hace demasiado") NO se guarda acá, se calcula al
+// vuelo según si tiene un MenuOrder DINE_IN abierto y desde cuándo,
+// mismo criterio que el cronómetro del tablero en vivo: nunca puede
+// desincronizarse de la realidad.
+model RestaurantTable {
+  id         String  @id @default(cuid())
+  tenantId   String
+  locationId String?
+  // Texto libre ("Salón"/"Terraza"/"Barra") — cada negocio define sus
+  // propias zonas, no hace falta un enum nuevo por cada restaurante.
+  zone       String?
+  name       String
+  seats      Int?
+  sortOrder  Int     @default(0)
+
+  tenant   Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  orders   MenuOrder[]
+
+  @@index([tenantId])
+  @@map("restaurant_tables")
 }
 
 // Local físico adicional de un mismo negocio (franquicias con 2+
@@ -891,8 +939,9 @@ model Location {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
-  tenant Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orders MenuOrder[]
+  tables RestaurantTable[]
 
   @@index([tenantId])
   @@map("locations")

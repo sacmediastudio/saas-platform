@@ -4,10 +4,11 @@ import { getEnabledModules } from "@/lib/modules";
 import OrdersView from "./orders-view";
 import LocationsManager from "./locations-manager";
 import StationsPrintersManager from "./stations-printers-manager";
+import TablesManager from "./tables-manager";
 
 export default async function OrdersPage() {
   const session = await requirePagePermission("ORDERS");
-  const [tenant, orders, locations, stations, printers, categories] = await Promise.all([
+  const [tenant, orders, locations, stations, printers, categories, tables] = await Promise.all([
     db.tenant.findUnique({
       where: { id: session.tenantId },
       select: {
@@ -41,6 +42,10 @@ export default async function OrdersPage() {
       where: { tenantId: session.tenantId },
       select: { id: true, name: true, stationId: true },
       orderBy: { sortOrder: "asc" },
+    }),
+    db.restaurantTable.findMany({
+      where: { tenantId: session.tenantId },
+      orderBy: [{ zone: "asc" }, { sortOrder: "asc" }],
     }),
   ]);
 
@@ -85,6 +90,7 @@ export default async function OrdersPage() {
         initialCategories={categories}
         initialPrintBridgeConfigured={Boolean(tenant?.printBridgeApiKeyCreatedAt)}
       />
+      <TablesManager moduleEnabled={ordersModuleEnabled} initialTables={tables} />
     </div>
   );
 }

@@ -14,7 +14,7 @@ export default async function TeamPage() {
   const [staff, tenant] = await Promise.all([
     db.user.findMany({
       where: { tenantId: session.tenantId },
-      select: { id: true, name: true, email: true, role: true, permissions: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, permissions: true, createdAt: true, pinHash: true },
       orderBy: { createdAt: "asc" },
     }),
     db.tenant.findUnique({ where: { id: session.tenantId } }),
@@ -22,7 +22,8 @@ export default async function TeamPage() {
 
   return (
     <TeamView
-      initialStaff={staff}
+      // Nunca se manda el hash al cliente, solo si tiene uno configurado.
+      initialStaff={staff.map(({ pinHash, ...s }) => ({ ...s, hasPin: Boolean(pinHash) }))}
       currentUserId={session.userId}
       enabledModules={tenant ? getEnabledModules(tenant) : []}
     />

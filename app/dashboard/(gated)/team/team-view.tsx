@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Trash2, X, Users, Copy, Check, Settings2 } from "lucide-react";
+import { Plus, Trash2, X, Users, Copy, Check, Settings2, KeyRound } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { PERMISSION_KEYS, PERMISSION_MODULE_DEPENDENCY, type PermissionKey } from "@/lib/permissions";
@@ -14,6 +14,7 @@ interface StaffMember {
   role: "OWNER" | "STAFF";
   permissions: string[];
   createdAt: string | Date;
+  hasPin: boolean;
 }
 
 export default function TeamView({
@@ -31,6 +32,7 @@ export default function TeamView({
   const [busy, setBusy] = useState<string | null>(null);
   const [inviteLink, setInviteLink] = useState<{ email: string; url: string } | null>(null);
   const [editingPerms, setEditingPerms] = useState<StaffMember | null>(null);
+  const [editingPin, setEditingPin] = useState<StaffMember | null>(null);
 
   const visibleKeys = PERMISSION_KEYS.filter((key) => {
     const dep = PERMISSION_MODULE_DEPENDENCY[key];
@@ -83,6 +85,14 @@ export default function TeamView({
                 >
                   {member.role === "OWNER" ? t.team.roleOwner : t.team.roleStaff}
                 </span>
+                <button
+                  onClick={() => setEditingPin(member)}
+                  aria-label={t.team.pinLabel}
+                  className={`shrink-0 ml-1 ${member.hasPin ? "text-[#002D09]" : "text-[#343233]/60"} hover:text-[#002D09]`}
+                  title={member.hasPin ? t.team.pinConfigured : t.team.pinNotConfigured}
+                >
+                  <KeyRound size={14} aria-hidden />
+                </button>
                 {member.role === "STAFF" && (
                   <>
                     <button
@@ -132,6 +142,118 @@ export default function TeamView({
           }}
         />
       )}
+
+      {editingPin && (
+        <PinModal
+          member={editingPin}
+          onClose={() => setEditingPin(null)}
+          onSaved={(hasPin) => {
+            setStaff((prev) => prev.map((s) => (s.id === editingPin.id ? { ...s, hasPin } : s)));
+            setEditingPin(null);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function PinModal({
+  member,
+  onClose,
+  onSaved,
+}: {
+  member: StaffMember;
+  onClose: () => void;
+  onSaved: (hasPin: boolean) => void;
+}) {
+  const { t } = useDashboardLang();
+  const [pin, setPin] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSave() {
+    setError(null);
+    if (!/^\d{4}$/.test(pin)) {
+      setError(t.team.pinInvalid);
+      return;
+    }
+    setSaving(true);
+    const res = await fetch(`/api/tenant/staff/${member.id}/pin`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pin }),
+    });
+    if (res.ok) {
+      onSaved(true);
+      return;
+    }
+    let message = t.team.saveFailed;
+    try {
+      const body = await res.json();
+      if (typeof body.error === "string") message = body.error;
+    } catch {}
+    setError(message);
+    setSaving(false);
+  }
+
+  async function handleRemove() {
+    setSaving(true);
+    const res = await fetch(`/api/tenant/staff/${member.id}/pin`, { method: "DELETE" });
+    if (res.ok) onSaved(false);
+    setSaving(false);
+  }
+
+  return (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 px-4">
+      <div className="bg-white border border-[#002D09]/10 rounded-xl w-full max-w-sm p-5">
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-base font-semibold">{t.team.pinTitle}</h2>
+          <button onClick={onClose} aria-label={t.common.cancel} className="text-[#343233]/60 hover:text-[#002D09]">
+            <X size={18} aria-hidden />
+          </button>
+        </div>
+        <p className="text-sm text-[#343233]/70 mb-4">{t.team.pinSubtitle(member.name)}</p>
+
+        <input
+          value={pin}
+          onChange={(e) => setPin(e.target.value.replace(/\D/g, "").slice(0, 4))}
+          inputMode="numeric"
+          maxLength={4}
+          placeholder="••••"
+          className={`${inputClass} text-center text-lg tracking-[0.5em]`}
+        />
+
+        {error && <p className="text-red-600 text-sm mt-2">{error}</p>}
+
+        <div className="flex gap-2 mt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-[#002D09]/15 text-sm hover:bg-[#F7F8F4]"
+          >
+            {t.common.cancel}
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={saving || pin.length !== 4}
+            className="flex-1 py-2 rounded-lg bg-[#E7FF00] text-[#002D09] text-sm font-medium hover:brightness-105 disabled:opacity-50"
+          >
+            {saving ? t.common.saving : t.common.save}
+          </button>
+        </div>
+
+        {member.hasPin && (
+          <button
+            type="button"
+            onClick={handleRemove}
+            disabled={saving}
+            className="w-full mt-2 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
+          >
+            {t.team.pinRemove}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
