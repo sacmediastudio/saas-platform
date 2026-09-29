@@ -21,6 +21,7 @@ export default async function OrdersPage() {
         enabledModules: true,
         ordersAutoAccept: true,
         ordersAutoPrint: true,
+        printBridgeApiKeyCreatedAt: true,
       },
     }),
     db.menuOrder.findMany({
@@ -82,6 +83,7 @@ export default async function OrdersPage() {
         initialStations={stations}
         initialPrinters={printers}
         initialCategories={categories}
+        initialPrintBridgeConfigured={Boolean(tenant?.printBridgeApiKeyCreatedAt)}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChefHat, Printer as PrinterIcon, Plus, Pencil, Trash2, Lock } from "lucide-react";
+import { ChefHat, Printer as PrinterIcon, Plus, Pencil, Trash2, Lock, KeyRound, Copy, Check } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 
@@ -28,11 +28,13 @@ export default function StationsPrintersManager({
   initialStations,
   initialPrinters,
   initialCategories,
+  initialPrintBridgeConfigured,
 }: {
   moduleEnabled: boolean;
   initialStations: Station[];
   initialPrinters: PrinterItem[];
   initialCategories: CategoryRow[];
+  initialPrintBridgeConfigured: boolean;
 }) {
   const { t } = useDashboardLang();
   const s = t.orders.stationsPrinters;
@@ -40,6 +42,10 @@ export default function StationsPrintersManager({
   const [stations, setStations] = useState(initialStations);
   const [printers, setPrinters] = useState(initialPrinters);
   const [categories, setCategories] = useState(initialCategories);
+  const [bridgeConfigured, setBridgeConfigured] = useState(initialPrintBridgeConfigured);
+  const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const [bridgeBusy, setBridgeBusy] = useState(false);
 
   const [addingStation, setAddingStation] = useState(false);
   const [stationName, setStationName] = useState("");
@@ -162,6 +168,38 @@ export default function StationsPrintersManager({
       setCategories((prev) => prev.map((c) => (c.id === categoryId ? category : c)));
     }
     setSavingRouting(null);
+  }
+
+  async function generateBridgeKey() {
+    if (bridgeConfigured && !confirm(s.confirmRegenerateBridgeKey)) return;
+    setBridgeBusy(true);
+    const res = await fetch("/api/tenant/print-bridge-key", { method: "POST" });
+    if (res.ok) {
+      const { apiKey } = await res.json();
+      setNewApiKey(apiKey);
+      setBridgeConfigured(true);
+      setCopied(false);
+    }
+    setBridgeBusy(false);
+  }
+
+  async function revokeBridgeKey() {
+    if (!confirm(s.confirmRevokeBridgeKey)) return;
+    setBridgeBusy(true);
+    const res = await fetch("/api/tenant/print-bridge-key", { method: "DELETE" });
+    if (res.ok) {
+      setBridgeConfigured(false);
+      setNewApiKey(null);
+    }
+    setBridgeBusy(false);
+  }
+
+  function copyBridgeKey() {
+    if (!newApiKey) return;
+    navigator.clipboard.writeText(newApiKey).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   }
 
   return (
@@ -373,6 +411,54 @@ export default function StationsPrintersManager({
             ))}
           </div>
         )}
+      </DashboardCard>
+
+      <DashboardCard>
+        <h3 className="text-sm font-semibold mb-1 flex items-center gap-2">
+          <KeyRound size={16} aria-hidden /> {s.bridgeTitle}
+        </h3>
+        <p className="text-xs text-[#343233]/70 mb-4">{s.bridgeSubtitle}</p>
+
+        {newApiKey ? (
+          <div className="border border-amber-300 bg-amber-50 rounded-lg p-3 mb-3">
+            <p className="text-xs font-semibold text-amber-800 mb-2">{s.bridgeKeyShownOnce}</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 text-xs bg-white border border-amber-200 rounded px-2 py-1.5 overflow-x-auto whitespace-nowrap">
+                {newApiKey}
+              </code>
+              <button
+                onClick={copyBridgeKey}
+                className="shrink-0 flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-md bg-white border border-amber-200 hover:bg-amber-100"
+              >
+                {copied ? <Check size={13} aria-hidden /> : <Copy size={13} aria-hidden />}
+                {copied ? s.copied : s.copy}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-xs text-[#343233]/60 mb-3">
+            {bridgeConfigured ? s.bridgeConfigured : s.bridgeNotConfigured}
+          </p>
+        )}
+
+        <div className="flex gap-2">
+          <button
+            onClick={generateBridgeKey}
+            disabled={bridgeBusy}
+            className="text-xs font-semibold px-3 h-8 rounded-lg bg-[#E7FF00] text-[#002D09] disabled:opacity-50"
+          >
+            {bridgeConfigured ? s.regenerateBridgeKey : s.generateBridgeKey}
+          </button>
+          {bridgeConfigured && (
+            <button
+              onClick={revokeBridgeKey}
+              disabled={bridgeBusy}
+              className="text-xs font-semibold px-3 h-8 rounded-lg border border-red-500/30 text-red-600 hover:bg-red-50 disabled:opacity-50"
+            >
+              {s.revokeBridgeKey}
+            </button>
+          )}
+        </div>
       </DashboardCard>
     </div>
   );

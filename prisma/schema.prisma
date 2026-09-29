@@ -223,6 +223,14 @@ model Tenant {
   // guardado igual si lo desactivan después, simplemente queda inerte.
   ordersAutoAccept    Boolean @default(false)
   ordersAutoPrint     Boolean @default(false)
+  // Credencial del Print Bridge (ítem 5) — un proceso sin usuario
+  // logueado corriendo en la red del restaurante, así que no puede
+  // usar la cookie de sesión. Se guarda solo el hash (SHA-256) de la
+  // key real, mismo criterio que passwordHash — la key real solo se ve
+  // una vez, al generarla, y no se puede recuperar después, solo
+  // regenerar.
+  printBridgeApiKeyHash      String?   @unique
+  printBridgeApiKeyCreatedAt DateTime?
   menuOrders          MenuOrder[]
   // Ubicaciones adicionales para negocios con más de un local (ej.
   // franquicias) — opcional. Si el tenant no tiene ninguna, el pedido
@@ -910,6 +918,10 @@ model MenuOrderItem {
   // mismo criterio que name/price: si el negocio reconfigura las
   // estaciones después, los pedidos viejos no cambian de estación.
   stationId String?
+  // Marca cuándo el Print Bridge confirmó que esta línea salió impresa
+  // — null significa "todavía no". Es lo que evita imprimir la misma
+  // línea dos veces en cada ciclo de polling del bridge.
+  printedAt DateTime?
 
   order   MenuOrder           @relation(fields: [orderId], references: [id], onDelete: Cascade)
   station PreparationStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
