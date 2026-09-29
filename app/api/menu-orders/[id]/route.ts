@@ -4,6 +4,23 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { sendOrderConfirmedWithEtaWhatsApp, sendOrderReadyWhatsApp } from "@/lib/whatsapp";
 
+// El tablero en vivo de Zertoo Orders (orders.zertoo.app) llama a este
+// endpoint cross-origin para avanzar el estado de un pedido, reusando
+// esta misma lógica (avisos por WhatsApp incluidos) en vez de
+// duplicarla allá. La sesión llega vía la cookie compartida de
+// `.zertoo.app` (ver Fase 0) — por eso hace falta `credentials`.
+const ALLOWED_ORIGIN = process.env.ORDERS_APP_ORIGIN || "https://orders.zertoo.app";
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+  "Access-Control-Allow-Credentials": "true",
+  "Access-Control-Allow-Methods": "PATCH, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
+}
+
 const schema = z.object({
   status: z.enum(["NEW", "ACCEPTED", "PREPARING", "READY", "REJECTED", "COMPLETED", "CANCELLED"]),
   // Solo se usa (y se exige en el frontend) al confirmar — es lo que le
@@ -32,13 +49,13 @@ const STATUS_TIMESTAMP_FIELD: Partial<Record<z.infer<typeof schema>["status"], s
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await requirePermission("ORDERS");
   const parsed = schema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Estado inválido" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Estado inválido" }, { status: 400, headers: CORS_HEADERS });
 
   const existing = await db.menuOrder.findFirst({
     where: { id: params.id, tenantId: session.tenantId },
     include: { tenant: true, location: true },
   });
-  if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404 });
+  if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404, headers: CORS_HEADERS });
 
   const timestampField = STATUS_TIMESTAMP_FIELD[parsed.data.status];
   const order = await db.menuOrder.update({
@@ -73,5 +90,5 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }).catch((err) => console.error("No se pudo avisar que el pedido está listo por WhatsApp:", err));
   }
 
-  return NextResponse.json({ order });
+  return NextResponse.json({ order }, { headers: CORS_HEADERS });
 }
