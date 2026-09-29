@@ -1,11 +1,13 @@
 import { requirePagePermission } from "@/lib/auth";
 import { db } from "@/lib/db";
+import { getEnabledModules } from "@/lib/modules";
 import OrdersView from "./orders-view";
 import LocationsManager from "./locations-manager";
+import StationsPrintersManager from "./stations-printers-manager";
 
 export default async function OrdersPage() {
   const session = await requirePagePermission("ORDERS");
-  const [tenant, orders, locations] = await Promise.all([
+  const [tenant, orders, locations, stations, printers, categories] = await Promise.all([
     db.tenant.findUnique({
       where: { id: session.tenantId },
       select: {
@@ -15,6 +17,8 @@ export default async function OrdersPage() {
         deliveryFee: true,
         minDeliveryAmount: true,
         currency: true,
+        businessType: true,
+        enabledModules: true,
       },
     }),
     db.menuOrder.findMany({
@@ -24,7 +28,20 @@ export default async function OrdersPage() {
       take: 200,
     }),
     db.location.findMany({ where: { tenantId: session.tenantId }, orderBy: { sortOrder: "asc" } }),
+    db.preparationStation.findMany({ where: { tenantId: session.tenantId }, orderBy: { name: "asc" } }),
+    db.printer.findMany({
+      where: { tenantId: session.tenantId },
+      include: { station: { select: { id: true, name: true } } },
+      orderBy: { name: "asc" },
+    }),
+    db.menuCategory.findMany({
+      where: { tenantId: session.tenantId },
+      select: { id: true, name: true, stationId: true },
+      orderBy: { sortOrder: "asc" },
+    }),
   ]);
+
+  const ordersModuleEnabled = tenant ? getEnabledModules(tenant).includes("ORDERS") : false;
 
   return (
     <div className="flex flex-col gap-5">
@@ -55,6 +72,12 @@ export default async function OrdersPage() {
         }))}
       />
       <LocationsManager initialLocations={locations} />
+      <StationsPrintersManager
+        moduleEnabled={ordersModuleEnabled}
+        initialStations={stations}
+        initialPrinters={printers}
+        initialCategories={categories}
+      />
     </div>
   );
 }

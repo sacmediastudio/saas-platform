@@ -1,3 +1,5 @@
+import { db } from "./db";
+
 export type ModuleType = "RESTAURANT" | "SMALL_BUSINESS" | "SMARTLINK" | "ORDERS";
 
 export const MODULE_ORDER: ModuleType[] = ["RESTAURANT", "SMALL_BUSINESS", "SMARTLINK", "ORDERS"];
@@ -39,6 +41,25 @@ export function getEnabledModules(tenant: {
 }): ModuleType[] {
   if (tenant.enabledModules && tenant.enabledModules.length > 0) return tenant.enabledModules;
   return [tenant.businessType];
+}
+
+/**
+ * Igual que requirePermission() en lib/auth.ts, pero para el candado de
+ * módulo pago en vez de un permiso de staff — evita que un negocio sin
+ * Orders activo llegue a las rutas de Estaciones/Impresoras/Category
+ * Routing por API directa, aunque el frontend ya esconda esas pantallas.
+ */
+export async function requireModuleEnabled(tenantId: string, module: ModuleType): Promise<void> {
+  const tenant = await db.tenant.findUnique({
+    where: { id: tenantId },
+    select: { businessType: true, enabledModules: true },
+  });
+  if (!tenant || !getEnabledModules(tenant).includes(module)) {
+    throw new Response(JSON.stringify({ error: `Este negocio no tiene el módulo ${MODULE_LABELS[module]} activo.` }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 }
 
 export function moduleDashboardPath(m: ModuleType): string {
