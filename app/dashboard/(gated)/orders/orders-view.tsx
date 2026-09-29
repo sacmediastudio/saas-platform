@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, Check, Bike, Store, MapPin } from "lucide-react";
+import { ShoppingBag, Check, Bike, Store, MapPin, Zap, Printer as PrinterIcon } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
 import { formatCurrency } from "@/lib/currency";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
@@ -12,6 +12,8 @@ interface Settings {
   deliveryEnabled: boolean;
   deliveryFee: number | null;
   minDeliveryAmount: number | null;
+  ordersAutoAccept: boolean;
+  ordersAutoPrint: boolean;
 }
 interface OrderItem {
   id: string;
@@ -40,10 +42,12 @@ export default function OrdersView({
   initialSettings,
   currency,
   initialOrders,
+  ordersModuleEnabled,
 }: {
   initialSettings: Settings;
   currency: string;
   initialOrders: Order[];
+  ordersModuleEnabled: boolean;
 }) {
   const { t } = useDashboardLang();
   const [settings, setSettings] = useState(initialSettings);
@@ -208,6 +212,34 @@ export default function OrdersView({
                 </label>
               </div>
             )}
+
+            <div className="flex flex-col gap-3 mb-4 pt-3 border-t border-[#002D09]/10">
+              <label className={`flex items-center gap-3 ${!ordersModuleEnabled ? "opacity-50" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={settings.ordersAutoAccept}
+                  disabled={!ordersModuleEnabled}
+                  onChange={(e) => setSettings({ ...settings, ordersAutoAccept: e.target.checked })}
+                  className="w-4 h-4 accent-[#E7FF00]"
+                />
+                <Zap size={15} aria-hidden />
+                <span className="text-sm">{t.orders.stationsPrinters.autoAccept}</span>
+              </label>
+              <label className={`flex items-center gap-3 ${!ordersModuleEnabled ? "opacity-50" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={settings.ordersAutoPrint}
+                  disabled={!ordersModuleEnabled}
+                  onChange={(e) => setSettings({ ...settings, ordersAutoPrint: e.target.checked })}
+                  className="w-4 h-4 accent-[#E7FF00]"
+                />
+                <PrinterIcon size={15} aria-hidden />
+                <span className="text-sm">{t.orders.stationsPrinters.autoPrint}</span>
+              </label>
+              {!ordersModuleEnabled && (
+                <p className="text-xs text-[#343233]/50">{t.orders.stationsPrinters.autoTogglesLocked}</p>
+              )}
+            </div>
           </>
         )}
 

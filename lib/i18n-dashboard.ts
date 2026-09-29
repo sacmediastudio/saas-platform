@@ -545,6 +545,9 @@ export const dashboardTranslations = {
         routingTitle: "Category routing",
         routingSubtitle: "Assign each menu category to the station that should print it.",
         noCategories: "You don't have any menu categories yet — add some from the Menu page first.",
+        autoAccept: "Auto Accept — accept new orders automatically as soon as they come in",
+        autoPrint: "Auto Print — send the ticket to print automatically once an order is accepted",
+        autoTogglesLocked: "Requires the Orders module active.",
       },
     },
     qrCode: {
@@ -1218,6 +1221,9 @@ export const dashboardTranslations = {
         routingTitle: "Enrutamiento por categoría",
         routingSubtitle: "Asigná cada categoría del menú a la estación que tiene que imprimirla.",
         noCategories: "Todavía no tenés categorías de menú — agregá algunas desde la página de Menú primero.",
+        autoAccept: "Auto Accept — aceptar pedidos nuevos automáticamente apenas entran",
+        autoPrint: "Auto Print — mandar a imprimir el ticket automáticamente al aceptar un pedido",
+        autoTogglesLocked: "Necesita el módulo Orders activo.",
       },
     },
     qrCode: {

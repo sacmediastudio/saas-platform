@@ -19,6 +19,8 @@ export default async function OrdersPage() {
         currency: true,
         businessType: true,
         enabledModules: true,
+        ordersAutoAccept: true,
+        ordersAutoPrint: true,
       },
     }),
     db.menuOrder.findMany({
@@ -52,8 +54,11 @@ export default async function OrdersPage() {
           deliveryEnabled: tenant?.deliveryEnabled ?? false,
           deliveryFee: tenant?.deliveryFee ?? null,
           minDeliveryAmount: tenant?.minDeliveryAmount ?? null,
+          ordersAutoAccept: tenant?.ordersAutoAccept ?? false,
+          ordersAutoPrint: tenant?.ordersAutoPrint ?? false,
         }}
         currency={tenant?.currency ?? "USD"}
+        ordersModuleEnabled={ordersModuleEnabled}
         initialOrders={orders.map((o) => ({
           id: o.id,
           customerName: o.customerName,

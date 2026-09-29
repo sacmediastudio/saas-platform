@@ -218,6 +218,11 @@ model Tenant {
   deliveryEnabled     Boolean @default(false)
   deliveryFee         Float?
   minDeliveryAmount   Float?
+  // Solo tienen efecto real si el tenant tiene el módulo ORDERS activo
+  // (ver requireModuleEnabled en lib/modules.ts) — el toggle queda
+  // guardado igual si lo desactivan después, simplemente queda inerte.
+  ordersAutoAccept    Boolean @default(false)
+  ordersAutoPrint     Boolean @default(false)
   menuOrders          MenuOrder[]
   // Ubicaciones adicionales para negocios con más de un local (ej.
   // franquicias) — opcional. Si el tenant no tiene ninguna, el pedido

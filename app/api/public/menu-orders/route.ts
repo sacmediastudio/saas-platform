@@ -6,6 +6,7 @@ import { sendOrderConfirmationEmail } from "@/lib/email";
 import { sendOrderConfirmationWhatsApp, sendNewOrderAlertWhatsApp } from "@/lib/whatsapp";
 import { formatCurrency } from "@/lib/currency";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { getEnabledModules } from "@/lib/modules";
 
 const schema = z.object({
   slug: z.string(),
@@ -138,7 +139,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const order = await db.menuOrder.create({
+  let order = await db.menuOrder.create({
     data: {
       tenantId: tenant.id,
       locationId: location?.id,
@@ -156,6 +157,19 @@ export async function POST(req: NextRequest) {
     },
     include: { items: true },
   });
+
+  // Auto Accept (Fase 1, ítem 3) — solo tiene efecto si el módulo Orders
+  // está activo, aunque el toggle haya quedado guardado en true. Salta
+  // directo a ACCEPTED sin pasar por "Nuevos" en el tablero en vivo; no
+  // dispara el WhatsApp de "confirmado en X minutos" porque ese requiere
+  // un ETA que acá nadie eligió a mano.
+  if (tenant.ordersAutoAccept && getEnabledModules(tenant).includes("ORDERS")) {
+    order = await db.menuOrder.update({
+      where: { id: order.id },
+      data: { status: "ACCEPTED", acceptedAt: new Date() },
+      include: { items: true },
+    });
+  }
 
   await upsertCustomer({
     tenantId: tenant.id,
