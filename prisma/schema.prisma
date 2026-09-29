@@ -905,9 +905,16 @@ model MenuOrderItem {
   // los pedidos viejos no se alteran retroactivamente.
   addOns   Json?
   notes    String? // algo muy específico de esta línea, ej. "sin cebolla"
+  // Estación a la que se enruta esta línea — se congela al momento del
+  // pedido (MenuItem.stationId, o si no tiene, MenuCategory.stationId),
+  // mismo criterio que name/price: si el negocio reconfigura las
+  // estaciones después, los pedidos viejos no cambian de estación.
+  stationId String?
 
-  order MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  order   MenuOrder           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  station PreparationStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
 
+  @@index([stationId])
   @@map("menu_order_items")
 }
 
@@ -918,9 +925,10 @@ model PreparationStation {
   tenantId String
   name     String
 
-  tenant     Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant     Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   categories MenuCategory[]
   items      MenuItem[]
+  orderItems MenuOrderItem[]
   printers   Printer[]
 
   @@index([tenantId])

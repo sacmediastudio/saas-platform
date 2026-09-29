@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
   // el cliente — evita que alguien manipule el precio desde el navegador.
   const menuItems = await db.menuItem.findMany({
     where: { id: { in: data.items.map((i) => i.menuItemId) }, tenantId: tenant.id },
-    include: { addOns: true },
+    include: { addOns: true, category: { select: { stationId: true } } },
   });
   if (menuItems.length !== data.items.length) {
     return NextResponse.json({ error: "Algún plato ya no está disponible." }, { status: 400 });
@@ -126,6 +126,11 @@ export async function POST(req: NextRequest) {
       quantity: i.quantity,
       notes: i.notes,
       addOns: selectedAddOns.length > 0 ? selectedAddOns.map((a) => ({ name: a.name, price: a.price })) : undefined,
+      // Se congela acá, igual que name/price — si el negocio reconfigura
+      // estaciones después, este pedido no cambia de dónde se imprime.
+      // MenuItem.stationId manda si está seteado (anula la estación de
+      // su categoría); si no, hereda la de MenuCategory.stationId.
+      stationId: menuItem.stationId ?? menuItem.category.stationId ?? null,
     };
   });
   const subtotal = orderItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
