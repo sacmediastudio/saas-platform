@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { sendOrderConfirmedWithEtaWhatsApp, sendOrderReadyWhatsApp } from "@/lib/whatsapp";
+import { withAuthErrors } from "@/lib/api-route";
 
 // El tablero en vivo de Zertoo Orders (orders.zertoo.app) llama a este
 // endpoint cross-origin para avanzar el estado de un pedido, reusando
@@ -47,49 +48,51 @@ const STATUS_TIMESTAMP_FIELD: Partial<Record<z.infer<typeof schema>["status"], s
 
 // PATCH /api/menu-orders/[id] — el negocio avanza el pedido por sus estados.
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const session = await requirePermission("ORDERS");
-  const parsed = schema.safeParse(await req.json());
-  if (!parsed.success) return NextResponse.json({ error: "Estado inválido" }, { status: 400, headers: CORS_HEADERS });
+  return withAuthErrors(async () => {
+    const session = await requirePermission("ORDERS");
+    const parsed = schema.safeParse(await req.json());
+    if (!parsed.success) return NextResponse.json({ error: "Estado inválido" }, { status: 400, headers: CORS_HEADERS });
 
-  const existing = await db.menuOrder.findFirst({
-    where: { id: params.id, tenantId: session.tenantId },
-    include: { tenant: true, location: true },
-  });
-  if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404, headers: CORS_HEADERS });
+    const existing = await db.menuOrder.findFirst({
+      where: { id: params.id, tenantId: session.tenantId },
+      include: { tenant: true, location: true },
+    });
+    if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404, headers: CORS_HEADERS });
 
-  const timestampField = STATUS_TIMESTAMP_FIELD[parsed.data.status];
-  const order = await db.menuOrder.update({
-    where: { id: params.id },
-    data: { status: parsed.data.status, ...(timestampField ? { [timestampField]: new Date() } : {}) },
-    include: { items: true },
-  });
+    const timestampField = STATUS_TIMESTAMP_FIELD[parsed.data.status];
+    const order = await db.menuOrder.update({
+      where: { id: params.id },
+      data: { status: parsed.data.status, ...(timestampField ? { [timestampField]: new Date() } : {}) },
+      include: { items: true },
+    });
 
-  // Con varias ubicaciones, "tu pedido en {negocio}" a secas sería
-  // ambiguo — se usa el nombre de la location del pedido cuando existe.
-  const businessName = existing.location ? `${existing.tenant.name} - ${existing.location.name}` : existing.tenant.name;
+    // Con varias ubicaciones, "tu pedido en {negocio}" a secas sería
+    // ambiguo — se usa el nombre de la location del pedido cuando existe.
+    const businessName = existing.location ? `${existing.tenant.name} - ${existing.location.name}` : existing.tenant.name;
 
-  // Avisos al CLIENTE por WhatsApp — no deben tumbar el cambio de
-  // estado si Twilio falla, solo queda logueado (mismo criterio que
-  // /api/public/menu-orders). No aplica a DINE_IN (Fase 2): ahí no hay
-  // un teléfono de cliente real que avisar, el mesero está presente.
-  if (order.fulfillment !== "DINE_IN" && parsed.data.status === "ACCEPTED" && parsed.data.etaMinutes) {
-    await sendOrderConfirmedWithEtaWhatsApp({
-      toPhone: order.customerPhone,
-      customerName: order.customerName,
-      businessName,
-      etaMinutes: parsed.data.etaMinutes,
-      language: order.language,
-    }).catch((err) => console.error("No se pudo avisar la confirmación por WhatsApp:", err));
-  } else if (order.fulfillment !== "DINE_IN" && parsed.data.status === "READY") {
-    const notes = READY_FULFILLMENT_NOTE[order.language] ?? READY_FULFILLMENT_NOTE.es;
-    await sendOrderReadyWhatsApp({
-      toPhone: order.customerPhone,
-      customerName: order.customerName,
-      businessName,
-      fulfillmentNote: notes[order.fulfillment],
-      language: order.language,
-    }).catch((err) => console.error("No se pudo avisar que el pedido está listo por WhatsApp:", err));
-  }
+    // Avisos al CLIENTE por WhatsApp — no deben tumbar el cambio de
+    // estado si Twilio falla, solo queda logueado (mismo criterio que
+    // /api/public/menu-orders). No aplica a DINE_IN (Fase 2): ahí no hay
+    // un teléfono de cliente real que avisar, el mesero está presente.
+    if (order.fulfillment !== "DINE_IN" && parsed.data.status === "ACCEPTED" && parsed.data.etaMinutes) {
+      await sendOrderConfirmedWithEtaWhatsApp({
+        toPhone: order.customerPhone,
+        customerName: order.customerName,
+        businessName,
+        etaMinutes: parsed.data.etaMinutes,
+        language: order.language,
+      }).catch((err) => console.error("No se pudo avisar la confirmación por WhatsApp:", err));
+    } else if (order.fulfillment !== "DINE_IN" && parsed.data.status === "READY") {
+      const notes = READY_FULFILLMENT_NOTE[order.language] ?? READY_FULFILLMENT_NOTE.es;
+      await sendOrderReadyWhatsApp({
+        toPhone: order.customerPhone,
+        customerName: order.customerName,
+        businessName,
+        fulfillmentNote: notes[order.fulfillment],
+        language: order.language,
+      }).catch((err) => console.error("No se pudo avisar que el pedido está listo por WhatsApp:", err));
+    }
 
-  return NextResponse.json({ order }, { headers: CORS_HEADERS });
+    return NextResponse.json({ order }, { headers: CORS_HEADERS });
+  }, CORS_HEADERS);
 }
