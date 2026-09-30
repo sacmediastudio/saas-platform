@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import jwt from "jsonwebtoken";
 import { db } from "./db";
@@ -55,11 +55,18 @@ export function verifySession(token: string): SessionPayload | null {
 }
 
 /**
- * Lee la sesión actual desde la cookie httpOnly.
- * Devuelve null si no hay sesión válida — cada API route decide qué
- * hacer con eso (normalmente responder 401).
+ * Lee la sesión actual — cookie httpOnly (web) o header Authorization
+ * Bearer (app nativa, que no tiene cookie jar de navegador). Se prueba
+ * el header primero porque es más barato de leer y porque un cliente
+ * nativo nunca manda la cookie; el resto de la app (requireTenant,
+ * requireOwner, requirePermission, etc.) no se entera del cambio, todos
+ * pasan por acá.
  */
 export async function getSession(): Promise<SessionPayload | null> {
+  const authHeader = headers().get("authorization");
+  if (authHeader?.startsWith("Bearer ")) {
+    return verifySession(authHeader.slice("Bearer ".length));
+  }
   const token = cookies().get(COOKIE_NAME)?.value;
   if (!token) return null;
   return verifySession(token);

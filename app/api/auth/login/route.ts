@@ -27,7 +27,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
 
-  const user = await db.user.findUnique({ where: { email: parsed.data.email } });
+  const user = await db.user.findUnique({
+    where: { email: parsed.data.email },
+    include: { tenant: { select: { name: true } } },
+  });
   const valid = user ? await bcrypt.compare(parsed.data.password, user.passwordHash) : false;
 
   // Mismo mensaje de error exista o no el usuario, para no filtrar
@@ -37,7 +40,7 @@ export async function POST(req: NextRequest) {
   }
 
   const token = signSession({ userId: user.id, tenantId: user.tenantId, role: user.role });
-  const res = NextResponse.json({ ok: true });
+  const res = NextResponse.json({ ok: true, token, tenantName: user.tenant.name });
   res.cookies.set(sessionCookieName, token, sessionCookieOptions());
   return res;
 }
