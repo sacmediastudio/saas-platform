@@ -1,14 +1,38 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { authTranslations, getStoredLang, translateApiError, type Lang } from "@/lib/i18n-auth";
 
 const GREEN = "#002D09";
 const LIME = "#E7FF00";
 
+// Adónde puede mandarnos de vuelta ?next= tras loguearse — solo
+// subdominios propios (ej. orders.zertoo.app redirigiendo acá porque
+// alguien entró sin sesión a /mesas). Nunca un dominio ajeno.
+function safeNextUrl(next: string | null): string | null {
+  if (!next) return null;
+  try {
+    const url = new URL(next);
+    const isOwnHost = url.hostname === "zertoo.app" || url.hostname.endsWith(".zertoo.app");
+    const isLocalDev = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+    return isOwnHost || isLocalDev ? url.toString() : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [lang, setLang] = useState<Lang>("en");
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState<string | null>(null);
@@ -48,6 +72,11 @@ export default function LoginPage() {
         return;
       }
 
+      const next = safeNextUrl(searchParams.get("next"));
+      if (next) {
+        window.location.href = next;
+        return;
+      }
       router.push("/dashboard");
       router.refresh();
     } catch (err) {
