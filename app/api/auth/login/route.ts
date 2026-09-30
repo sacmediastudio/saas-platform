@@ -40,7 +40,10 @@ export async function POST(req: NextRequest) {
   }
 
   const token = signSession({ userId: user.id, tenantId: user.tenantId, role: user.role });
-  const res = NextResponse.json({ ok: true, token, tenantName: user.tenant.name });
+  // token/tenantId/role/tenantName son para la app nativa (sin cookie
+  // jar de navegador, necesita guardarlos ella misma) — el login web
+  // ignora estos campos, solo le importa el Set-Cookie de abajo.
+  const res = NextResponse.json({ ok: true, token, tenantId: user.tenantId, role: user.role, tenantName: user.tenant.name });
   res.cookies.set(sessionCookieName, token, sessionCookieOptions());
   return res;
 }
