@@ -73,6 +73,46 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: built.error }, { status: 400, headers: CORS_HEADERS });
     }
 
+    // Una mesa mantiene UNA sola cuenta abierta por visita — si ya hay
+    // un pedido DINE_IN sin cobrar para esta mesa, los platos nuevos se
+    // suman a ESE pedido en vez de crear uno nuevo (así el mesero puede
+    // volver a la mesa y seguir agregando hasta que se cobre). Una vez
+    // cobrada (status COMPLETED), deja de contar como "abierta" y la
+    // próxima visita arma un pedido nuevo solo, sin lógica extra acá.
+    const existingOrder = await db.menuOrder.findFirst({
+      where: {
+        tenantId: session.tenantId,
+        tableId: table.id,
+        fulfillment: "DINE_IN",
+        status: { in: ["NEW", "ACCEPTED", "PREPARING", "READY"] },
+      },
+    });
+
+    if (existingOrder) {
+      const newSubtotal = existingOrder.subtotal + built.subtotal;
+      const wasReady = existingOrder.status === "READY";
+      const order = await db.$transaction(async (tx) => {
+        await tx.menuOrderItem.createMany({
+          data: built.items.map((i) => ({ ...i, orderId: existingOrder.id })),
+        });
+        return tx.menuOrder.update({
+          where: { id: existingOrder.id },
+          data: {
+            waiterId: waiter.id,
+            subtotal: newSubtotal,
+            total: newSubtotal,
+            notes: data.notes ? [existingOrder.notes, data.notes].filter(Boolean).join(" / ") : existingOrder.notes,
+            // /api/print-bridge/jobs solo mira ACCEPTED/PREPARING — si el
+            // pedido ya estaba en READY, hay que devolverlo para atrás o
+            // las líneas nuevas (printedAt null) nunca se imprimirían.
+            ...(wasReady ? { status: "ACCEPTED" as const, readyAt: null } : {}),
+          },
+          include: { items: true },
+        });
+      });
+      return NextResponse.json({ order }, { status: 200, headers: CORS_HEADERS });
+    }
+
     const order = await db.menuOrder.create({
       data: {
         tenantId: session.tenantId,

@@ -52,9 +52,9 @@ enum ReviewStatus {
 }
 
 model Tenant {
-  id               String       @id @default(cuid())
+  id               String         @id @default(cuid())
   name             String
-  slug             String       @unique
+  slug             String         @unique
   businessType     BusinessType
   // Se fija una sola vez, al crear la cuenta ("7 días gratis" de la
   // landing) — nunca se recalcula. Un negocio sin suscripción real de
@@ -68,13 +68,13 @@ model Tenant {
   // decide con este array — así un negocio puede tener Menú + Smartlink
   // a la vez, por ejemplo. Ver lib/modules.ts.
   enabledModules   BusinessType[] @default([])
-  plan             Plan         @default(STARTER)
-  stripeCustomerId String?      @unique
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
+  plan             Plan           @default(STARTER)
+  stripeCustomerId String?        @unique
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   // Perfil público del negocio (usado en /menu/[slug] y /book/[slug])
-  logoUrl       String?
+  logoUrl               String?
   // Logo dedicado para los pases de Apple/Google Wallet — separado
   // del logo normal a propósito. El logo del dashboard/menú casi
   // siempre tiene fondo blanco de fábrica, y sobre el color de marca
@@ -82,23 +82,23 @@ model Tenant {
   // puede subir una versión en PNG con transparencia de verdad,
   // pensada específicamente para este uso. Si no la carga, se sigue
   // usando el logo normal como respaldo.
-  walletLogoUrl String?
-  heroImageUrl  String?
-  heroTagline   String?
+  walletLogoUrl         String?
+  heroImageUrl          String?
+  heroTagline           String?
   // Solo aplica al módulo de Menú: si se muestra la foto de cada plato
   // en la lista completa (no solo en Destacados). Default false para no
   // cambiar el comportamiento de negocios que ya estaban usando esto.
-  menuShowPhotos Boolean @default(false)
-  contactEmail  String?
-  contactPhone  String?
-  address       String?
+  menuShowPhotos        Boolean @default(false)
+  contactEmail          String?
+  contactPhone          String?
+  address               String?
   // Idioma fijo para los avisos operativos por WhatsApp (ej. pedido
   // nuevo) — una preferencia que el negocio elige una sola vez en
   // Ajustes, deliberada. Distinta del idioma del panel (ese cambia
   // seguido con solo tocar ES/EN, y sería raro que un aviso operativo
   // cambie de idioma según qué botón se haya tocado por última vez).
-  alertLanguage String  @default("es")
-  currency      String  @default("USD")
+  alertLanguage         String  @default("es")
+  currency              String  @default("USD")
   // Segunda moneda opcional en el menú público (ej. "$20 / Afl. 35")
   // — pensado para mercados donde 2 monedas circulan a la vez (como
   // Aruba, con el florín fijo al dólar). Tasa fija que el negocio
@@ -106,50 +106,50 @@ model Tenant {
   // mayoría de estas monedas están ancladas y no fluctúan día a día.
   secondaryCurrencyCode String?
   secondaryCurrencyRate Float?
-  themeBgColor  String  @default("#ffffff")
-  themeTextColor String @default("#002D09")
-  buttonColor      String @default("#E7FF00")
-  buttonTextColor  String @default("#002D09")
+  themeBgColor          String  @default("#ffffff")
+  themeTextColor        String  @default("#002D09")
+  buttonColor           String  @default("#E7FF00")
+  buttonTextColor       String  @default("#002D09")
   // Color de fondo de las tarjetas del menú público — tanto de cada
   // categoría como de la sección de Destacados. Por defecto blanco,
   // para que se note contra el fondo si el negocio eligió un fondo
   // de otro color.
-  menuCardColor String @default("#ffffff")
+  menuCardColor         String  @default("#ffffff")
   // Color de texto para lo que va DIRECTO sobre el fondo de la página
   // (el título "Destacados", el nav de categorías) — separado de
   // themeTextColor, que además se usa para el texto DENTRO de las
   // tarjetas del menú (nombre y descripción de cada plato). Si el
   // negocio elige un fondo de color fuerte, puede necesitar un color
   // de texto distinto ahí que adentro de las tarjetas blancas.
-  menuPageTextColor String @default("#002D09")
+  menuPageTextColor     String  @default("#002D09")
 
   // ---------- Zertoo Eats (directorio público, ese es otro proyecto/
   // despliegue aparte, pero comparte esta misma base de datos) ----------
   // El negocio decide si quiere aparecer ahí — apagado por defecto, no
   // es algo que se activa solo.
-  nowEnabled   Boolean      @default(false)
-  nowCategory  NowCategory?
+  nowEnabled           Boolean               @default(false)
+  nowCategory          NowCategory?
   // Segunda etiqueta opcional de "ambiente" — el negocio elige como
   // máximo una (ver enum NowSecondaryCategory arriba).
   nowSecondaryCategory NowSecondaryCategory?
   // Opcional a propósito — un negocio que todavía no lo cargó sigue
   // apareciendo en el directorio, solo no entra en el filtro por precio.
-  nowPriceRange NowPriceRange?
+  nowPriceRange        NowPriceRange?
   // Destacado en Zertoo Eats — lo cura el admin de Zertoo a mano, el
   // negocio no puede activarse esto solo (ver /admin, mismo patrón que
   // las solicitudes de módulo).
-  nowFeatured  Boolean      @default(false)
+  nowFeatured          Boolean               @default(false)
   // Nivel arriba de nowFeatured — el carrusel de portada al principio
   // de la app/sitio, para la suscripción más cara. Igual que
   // nowFeatured, lo activa solo el admin desde /admin/now, nunca el
   // negocio por su cuenta.
-  nowSpotlight Boolean      @default(false)
+  nowSpotlight         Boolean               @default(false)
   // Coordenadas reales del negocio, para "cerca de mí" — se completan
   // una sola vez (geocodificando la dirección), no en cada visita.
   // Suficientemente preciso para ORDENAR por cercanía, no para
   // navegar exacto — para eso está googleMapsUrl más abajo.
-  latitude     Float?
-  longitude    Float?
+  latitude             Float?
+  longitude            Float?
   // Link de Google Maps que el propio negocio pega (ej. su ficha de
   // Google Business ya compartida) — cuando existe, "Cómo llegar" en
   // Zertoo Eats usa ESTO directo en vez de construir una ruta a partir
@@ -158,110 +158,110 @@ model Tenant {
   // dirección de texto puede caer en la manzana correcta, pero no en
   // la puerta exacta). Opcional — si no está, se sigue usando el
   // sistema de coordenadas de arriba como respaldo.
-  googleMapsUrl String?
+  googleMapsUrl        String?
   // Link externo de reservas (OpenTable, Resy, su propio Calendly, etc.)
   // que el negocio pega desde Ajustes. Cuando existe, la app de Zertoo
   // Eats muestra un botón "Reservar ahora" en vez de "Compartir" en la
   // ficha del negocio — opcional, si no está cargado se sigue mostrando
   // "Compartir" como antes.
-  nowReservationUrl String?
-  moments      Moment[]
+  nowReservationUrl    String?
+  moments              Moment[]
   // Promociones que el negocio publica en Zertoo Eats (ej. "2x1 los
   // martes") — el negocio las carga y desactiva él mismo, sin curación
   // del admin (a diferencia de nowFeatured). Solo se muestran en la API
   // pública mientras el negocio también tenga nowEnabled=true.
-  promotions   Promotion[]
+  promotions           Promotion[]
 
   // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
   // libres después de cada cita antes de que se pueda reservar la
   // siguiente (limpieza, preparación, etc).
-  bufferMinutes Int @default(15)
+  bufferMinutes Int    @default(15)
   // Zona horaria real del negocio (identificador IANA, ej. "America/Aruba").
   // Todo el cálculo de horario de atención, choques de citas, y el
   // calendario del dashboard se hace en base a esta — nunca en base a
   // la zona horaria del servidor (Railway corre en UTC), que es lo que
   // causaba que algunas citas no aparecieran bien en el calendario.
-  timezone String @default("America/Aruba")
+  timezone      String @default("America/Aruba")
 
   // Recordatorios de citas por WhatsApp — activado por defecto (reduce
   // ausencias), cada negocio puede apagarlo o cambiar cuántas horas antes.
-  remindersEnabled     Boolean @default(true)
-  reminderHoursBefore  Int     @default(24)
+  remindersEnabled    Boolean @default(true)
+  reminderHoursBefore Int     @default(24)
 
   // Programa de sellos/fidelidad simple — cada visita confirmada (cita o
   // reseña, según el módulo) suma un sello por correo del cliente. Sin
   // costo, sin app nueva — el correo que ya capturamos es el identificador.
-  loyaltyEnabled      Boolean @default(false)
-  loyaltyVisitsNeeded Int     @default(6)
-  loyaltyReward       String  @default("Tu próxima visita es gratis")
+  loyaltyEnabled      Boolean       @default(false)
+  loyaltyVisitsNeeded Int           @default(6)
+  loyaltyReward       String        @default("Tu próxima visita es gratis")
   loyaltyCards        LoyaltyCard[]
 
   // "Postre gratis" (o cualquier premio) en el menú — captura nombre,
   // correo y WhatsApp de un cliente nuevo a cambio de un código de
   // canje que se le manda por WhatsApp. Solo aplica al módulo de Menú.
-  menuLeadEnabled     Boolean @default(false)
-  menuLeadButtonLabel String  @default("Postre gratis 🎁")
-  menuLeadRewardText  String  @default("un postre gratis en tu próxima visita")
+  menuLeadEnabled          Boolean                   @default(false)
+  menuLeadButtonLabel      String                    @default("Postre gratis 🎁")
+  menuLeadRewardText       String                    @default("un postre gratis en tu próxima visita")
   // Tope de códigos nuevos por día — sin esto, alguien decidido podría
   // ir generando códigos con correos inventados sin ningún límite real
   // más que la ventana de 1 hora del rate limit por IP.
-  menuLeadDailyLimit  Int     @default(20)
-  menuLeads           MenuLead[]
-  customers           Customer[]
+  menuLeadDailyLimit       Int                       @default(20)
+  menuLeads                MenuLead[]
+  customers                Customer[]
   moduleActivationRequests ModuleActivationRequest[]
 
   // Pedidos desde el menú (pickup / delivery) — se paga al retirar o
   // recibir, sin pasarela de pago online por ahora. Pickup y delivery
   // se activan por separado porque no todo negocio ofrece ambos.
-  orderingEnabled     Boolean @default(false)
-  pickupEnabled       Boolean @default(true)
-  deliveryEnabled     Boolean @default(false)
-  deliveryFee         Float?
-  minDeliveryAmount   Float?
+  orderingEnabled            Boolean              @default(false)
+  pickupEnabled              Boolean              @default(true)
+  deliveryEnabled            Boolean              @default(false)
+  deliveryFee                Float?
+  minDeliveryAmount          Float?
   // Solo tienen efecto real si el tenant tiene el módulo ORDERS activo
   // (ver requireModuleEnabled en lib/modules.ts) — el toggle queda
   // guardado igual si lo desactivan después, simplemente queda inerte.
-  ordersAutoAccept    Boolean @default(false)
-  ordersAutoPrint     Boolean @default(false)
+  ordersAutoAccept           Boolean              @default(false)
+  ordersAutoPrint            Boolean              @default(false)
   // Credencial del Print Bridge (ítem 5) — un proceso sin usuario
   // logueado corriendo en la red del restaurante, así que no puede
   // usar la cookie de sesión. Se guarda solo el hash (SHA-256) de la
   // key real, mismo criterio que passwordHash — la key real solo se ve
   // una vez, al generarla, y no se puede recuperar después, solo
   // regenerar.
-  printBridgeApiKeyHash      String?   @unique
+  printBridgeApiKeyHash      String?              @unique
   printBridgeApiKeyCreatedAt DateTime?
-  menuOrders          MenuOrder[]
+  menuOrders                 MenuOrder[]
   // Ubicaciones adicionales para negocios con más de un local (ej.
   // franquicias) — opcional. Si el tenant no tiene ninguna, el pedido
   // sigue usando pickup/delivery/deliveryFee/minDeliveryAmount de
   // arriba tal cual funciona hoy; en cuanto agrega la primera, el
   // checkout público pasa a pedir "elegí tu local" y esos campos se
   // leen de la Location elegida en su lugar.
-  locations           Location[]
-  preparationStations PreparationStation[]
-  printers            Printer[]
-  restaurantTables    RestaurantTable[]
+  locations                  Location[]
+  preparationStations        PreparationStation[]
+  printers                   Printer[]
+  restaurantTables           RestaurantTable[]
 
   // El panel de admin puede suspender una cuenta (ej. impago, abuso).
   // Mientras esté en true, el dashboard de ese negocio queda bloqueado.
   suspended Boolean @default(false)
 
-  users          User[]
-  menuCategories MenuCategory[]
-  menuItems      MenuItem[]
-  services       Service[]
-  staffMembers   StaffMember[]
-  availabilityBlocks AvailabilityBlock[]
-  bookings       Booking[]
-  reviews        Review[]
-  smartLinkItems SmartLinkItem[]
-  pageViews      PageView[]
-  businessHours  BusinessHours[]
-  externalReviewLinks ExternalReviewLink[]
-  faqItems FaqItem[]
+  users                    User[]
+  menuCategories           MenuCategory[]
+  menuItems                MenuItem[]
+  services                 Service[]
+  staffMembers             StaffMember[]
+  availabilityBlocks       AvailabilityBlock[]
+  bookings                 Booking[]
+  reviews                  Review[]
+  smartLinkItems           SmartLinkItem[]
+  pageViews                PageView[]
+  businessHours            BusinessHours[]
+  externalReviewLinks      ExternalReviewLink[]
+  faqItems                 FaqItem[]
   googleCalendarConnection GoogleCalendarConnection?
-  subscription   Subscription?
+  subscription             Subscription?
 
   @@map("tenants")
 }
@@ -287,10 +287,10 @@ model User {
   // de este campo no quedan bloqueadas sin querer. El signup nuevo
   // sobrescribe esto a `false` explícitamente para las cuentas que sí
   // deben verificar su correo.
-  emailVerified              Boolean   @default(true)
-  verificationCode           String?
-  verificationCodeExpiresAt  DateTime?
-  verificationCodeSentAt     DateTime?
+  emailVerified             Boolean   @default(true)
+  verificationCode          String?
+  verificationCodeExpiresAt DateTime?
+  verificationCodeSentAt    DateTime?
 
   // Recuperación de contraseña — token largo (no un código corto), va
   // en un link por correo, mismo criterio de "cooldown" que arriba
@@ -303,10 +303,10 @@ model User {
   // reemplaza a `email` cuando se confirma el código; hasta entonces
   // el correo viejo sigue siendo válido para hacer login. Mismo
   // criterio de cooldown/código-de-6-dígitos que la verificación inicial.
-  pendingEmail                String?
-  emailChangeCode             String?
-  emailChangeCodeExpiresAt    DateTime?
-  emailChangeCodeSentAt       DateTime?
+  pendingEmail             String?
+  emailChangeCode          String?
+  emailChangeCodeExpiresAt DateTime?
+  emailChangeCodeSentAt    DateTime?
 
   // PIN de 4 dígitos para "fichar" en la tablet compartida de Zertoo
   // Waiter (Fase 2) — hash determinístico (SHA-256 + pepper fijo en
@@ -318,25 +318,25 @@ model User {
   // distintos pueden tener el mismo PIN sin problema).
   pinHash String?
 
-  tenant       Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  waiterOrders MenuOrder[]     @relation("WaiterOrders")
+  tenant       Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  waiterOrders MenuOrder[] @relation("WaiterOrders")
 
-  @@index([tenantId])
   @@unique([tenantId, pinHash])
+  @@index([tenantId])
   @@map("users")
 }
 
 // ---------- Módulo Menú ----------
 
 model MenuCategory {
-  id        String   @id @default(cuid())
+  id        String  @id @default(cuid())
   tenantId  String
   name      String
   // Traducción manual opcional al inglés (no automática — la escribe el
   // dueño, para no depender de un servicio de traducción de pago y para
   // no arriesgar traducciones incorrectas de ingredientes/alérgenos).
   nameEn    String?
-  sortOrder Int      @default(0)
+  sortOrder Int     @default(0)
   // A qué estación de cocina/barra van los pedidos de esta categoría
   // (ej. "Hamburguesas" → Cocina, "Cócteles" → Barra) — null significa
   // "sin enrutar todavía", no un error; Zertoo Orders puede seguir
@@ -353,43 +353,43 @@ model MenuCategory {
 }
 
 model MenuItem {
-  id          String         @id @default(cuid())
-  tenantId    String
-  categoryId  String
-  name        String
+  id            String         @id @default(cuid())
+  tenantId      String
+  categoryId    String
+  name          String
   // Traducción manual opcional del nombre — mismo criterio que
   // descriptionEn. Antes se dejaba sin traducir a propósito (podía
   // ser una marca o un plato regional), pero ahora es opcional por
   // pedido explícito: si no se completa, el menú en inglés sigue
   // mostrando el nombre original tal cual.
-  nameEn      String?
-  description String?
+  nameEn        String?
+  description   String?
   // Traducción manual opcional de la descripción — mismo criterio que
   // MenuCategory.nameEn.
   descriptionEn String?
-  price       Decimal        @db.Decimal(10, 2)
+  price         Decimal        @db.Decimal(10, 2)
   // Para platos que se venden por peso/tamaño (ej. pescado entero) —
   // cuando está activo, el menú público muestra "Preguntar"/"Ask" en
   // vez de un precio, y el plato queda afuera del carrito de pedidos
   // (no hay forma de calcular un total automático sin un precio real).
   // "price" sigue guardando algo (0 por defecto) pero no se usa/muestra
   // mientras esto esté activo.
-  variablePrice Boolean      @default(false)
-  imageUrl    String?
-  status      MenuItemStatus @default(AVAILABLE)
-  featured    Boolean        @default(false)
-  allergens   String[]       @default([])
-  sortOrder   Int            @default(0)
+  variablePrice Boolean        @default(false)
+  imageUrl      String?
+  status        MenuItemStatus @default(AVAILABLE)
+  featured      Boolean        @default(false)
+  allergens     String[]       @default([])
+  sortOrder     Int            @default(0)
   // Solo para el caso puntual de un plato que necesita ir a otra
   // estación distinta de la de su categoría (ej. una hamburguesa "fría"
   // servida desde la Barra) — null (el caso normal) hereda la estación
   // de MenuCategory.stationId.
-  stationId String?
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  stationId     String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
 
-  tenant   Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  category MenuCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tenant   Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  category MenuCategory        @relation(fields: [categoryId], references: [id], onDelete: Cascade)
   station  PreparationStation? @relation(fields: [stationId], references: [id], onDelete: SetNull)
   addOns   MenuItemAddOn[]
 
@@ -465,25 +465,25 @@ model Service {
 }
 
 model Booking {
-  id            String        @id @default(cuid())
-  tenantId      String
-  serviceId     String
-  staffId       String?
-  customerName  String
-  customerEmail String
-  customerPhone String?
-  datetime      DateTime
-  status        BookingStatus @default(PENDING)
-  createdAt     DateTime      @default(now())
+  id             String        @id @default(cuid())
+  tenantId       String
+  serviceId      String
+  staffId        String?
+  customerName   String
+  customerEmail  String
+  customerPhone  String?
+  datetime       DateTime
+  status         BookingStatus @default(PENDING)
+  createdAt      DateTime      @default(now())
   // Si el negocio tiene Google Calendar conectado, acá queda el id del
   // evento creado allá — para poder borrarlo si la cita se cancela.
-  googleEventId String?
+  googleEventId  String?
   // Marca cuándo se mandó el recordatorio por WhatsApp — null significa
   // que todavía no se ha mandado. Evita que el cron job lo mande dos veces.
   reminderSentAt DateTime?
   // Idioma que el cliente tenía seleccionado al reservar (es|en) — se usa
   // para elegir la variante correcta de la plantilla de WhatsApp.
-  language String @default("es")
+  language       String        @default("es")
 
   tenant  Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   service Service      @relation(fields: [serviceId], references: [id])
@@ -497,15 +497,15 @@ model Booking {
 // ---------- Módulo Reviews (transversal) ----------
 
 model Review {
-  id           String       @id @default(cuid())
-  tenantId     String
-  reviewerName String
+  id            String       @id @default(cuid())
+  tenantId      String
+  reviewerName  String
   customerEmail String? // opcional — si se da, alimenta el CRM de clientes
-  rating       Int // 1-5
-  comment      String?
-  source       String       @default("manual") // qr | booking | manual
-  status       ReviewStatus @default(PUBLISHED)
-  createdAt    DateTime     @default(now())
+  rating        Int // 1-5
+  comment       String?
+  source        String       @default("manual") // qr | booking | manual
+  status        ReviewStatus @default(PUBLISHED)
+  createdAt     DateTime     @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -530,19 +530,19 @@ enum SmartLinkType {
 }
 
 model SmartLinkItem {
-  id        String        @id @default(cuid())
-  tenantId  String
-  type      SmartLinkType
-  label     String
+  id         String        @id @default(cuid())
+  tenantId   String
+  type       SmartLinkType
+  label      String
   // Para WHATSAPP: solo dígitos (se arma el link wa.me al mostrarlo).
   // Para PHONE: número tal cual (se arma el link tel: al mostrarlo).
   // Para VCARD: no se usa — el archivo .vcf se arma con los datos de
   // contacto del negocio (Ajustes), así que puede ir vacío.
   // Para el resto: una URL completa que se usa directo como href.
   value      String?
-  clickCount Int      @default(0)
-  sortOrder Int           @default(0)
-  createdAt DateTime      @default(now())
+  clickCount Int           @default(0)
+  sortOrder  Int           @default(0)
+  createdAt  DateTime      @default(now())
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -668,21 +668,21 @@ model Promotion {
 // solo las notificaciones sin dejar nombre/correo/teléfono, y viceversa
 // (dejar sus datos sin activar notificaciones todavía).
 model Subscriber {
-  id                  String   @id @default(cuid())
-  name                String?
+  id                   String   @id @default(cuid())
+  name                 String?
   // Único (cuando está presente) para poder actualizar el mismo
   // registro si la persona vuelve a completar el form sin token de
   // push todavía cargado, en vez de crear un duplicado.
-  email               String?  @unique
-  phone               String?
+  email                String?  @unique
+  phone                String?
   // Token de Expo Push (ExponentPushToken[...]) — único por
   // instalación de la app, así un mismo dispositivo que reabre el form
   // actualiza su registro en vez de duplicarlo.
-  pushToken           String?  @unique
-  notificationsEnabled Boolean @default(false)
-  lang                String   @default("es")
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  pushToken            String?  @unique
+  notificationsEnabled Boolean  @default(false)
+  lang                 String   @default("es")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   @@map("subscribers")
 }
@@ -703,7 +703,7 @@ model LoyaltyCard {
   // sin esto no hay forma de responder bien al protocolo de PassKit.
   updatedAt       DateTime @updatedAt
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant        Tenant                     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   walletDevices WalletDeviceRegistration[]
 
   @@unique([tenantId, customerEmail])
@@ -738,11 +738,11 @@ model LoyaltyAccountVerification {
 // nada. Este es el mecanismo que exige el protocolo de PassKit de
 // Apple, no algo que se pueda simplificar.
 model WalletDeviceRegistration {
-  id                       String   @id @default(cuid())
-  deviceLibraryIdentifier  String
-  pushToken                String
-  loyaltyCardId            String
-  createdAt                DateTime @default(now())
+  id                      String   @id @default(cuid())
+  deviceLibraryIdentifier String
+  pushToken               String
+  loyaltyCardId           String
+  createdAt               DateTime @default(now())
 
   loyaltyCard LoyaltyCard @relation(fields: [loyaltyCardId], references: [id], onDelete: Cascade)
 
@@ -755,19 +755,19 @@ model WalletDeviceRegistration {
 // desde el menú público — nombre/correo/WhatsApp, y un código corto que
 // se le manda por WhatsApp para canjear en el local.
 model MenuLead {
-  id           String    @id @default(cuid())
-  tenantId     String
-  name         String
-  email        String
-  phone        String
-  claimCode    String    @unique
-  redeemedAt   DateTime?
-  createdAt    DateTime  @default(now())
+  id          String    @id @default(cuid())
+  tenantId    String
+  name        String
+  email       String
+  phone       String
+  claimCode   String    @unique
+  redeemedAt  DateTime?
+  createdAt   DateTime  @default(now())
   // Identificador guardado en el dispositivo de quien reclama — evita
   // que la misma persona junte varios códigos rotando entre correos
   // inventados desde el mismo celular. Nulo en leads viejos, de antes
   // de que existiera esto.
-  deviceToken  String?
+  deviceToken String?
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -805,16 +805,16 @@ model Customer {
 // Historial de campañas de email/WhatsApp mandadas desde el panel de
 // admin de Zertoo — no es por negocio, es a nivel plataforma.
 model CampaignLog {
-  id            String   @id @default(cuid())
-  adminEmail    String
-  channel       String // email | whatsapp
-  tenantFilter  String? // null = todos los negocios, o el id de uno específico
-  subject       String?
-  message       String
+  id             String   @id @default(cuid())
+  adminEmail     String
+  channel        String // email | whatsapp
+  tenantFilter   String? // null = todos los negocios, o el id de uno específico
+  subject        String?
+  message        String
   recipientCount Int
-  sentCount     Int
-  failedCount   Int
-  createdAt     DateTime @default(now())
+  sentCount      Int
+  failedCount    Int
+  createdAt      DateTime @default(now())
 
   @@map("campaign_logs")
 }
@@ -833,6 +833,11 @@ enum OrderStatus {
   REJECTED // el negocio lo rechazó (sin stock, cerrado, etc.) — no llega a prepararse
   COMPLETED
   CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
 }
 
 // Un pedido hecho desde el menú público — se paga al retirar/recibir,
@@ -874,14 +879,22 @@ model MenuOrder {
   subtotal        Float
   deliveryFee     Float            @default(0)
   total           Float
+  // Solo para fulfillment = DINE_IN — timestamp explícito de "esta
+  // cuenta ya se cobró entera" (mismo criterio que acceptedAt/readyAt/
+  // completedAt: no se deriva sumando OrderPayment en cada poll, se
+  // escribe atómico junto con status:COMPLETED en el endpoint de cobro,
+  // así nunca puede desincronizarse). PICKUP/DELIVERY nunca la usan —
+  // esos se pagan al retirar/recibir, sin este paso.
+  paidAt          DateTime?
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  tenant   Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  location Location?       @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  tenant   Tenant           @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  location Location?        @relation(fields: [locationId], references: [id], onDelete: SetNull)
   table    RestaurantTable? @relation(fields: [tableId], references: [id], onDelete: SetNull)
-  waiter   User?           @relation("WaiterOrders", fields: [waiterId], references: [id], onDelete: SetNull)
+  waiter   User?            @relation("WaiterOrders", fields: [waiterId], references: [id], onDelete: SetNull)
   items    MenuOrderItem[]
+  payments OrderPayment[]
 
   @@index([tenantId])
   @@index([tenantId, status])
@@ -951,17 +964,17 @@ model Location {
 // no una referencia en vivo) — así si el negocio cambia el precio del
 // plato después, los pedidos viejos no se alteran retroactivamente.
 model MenuOrderItem {
-  id       String @id @default(cuid())
-  orderId  String
-  name     String
-  price    Float
-  quantity Int
+  id        String    @id @default(cuid())
+  orderId   String
+  name      String
+  price     Float
+  quantity  Int
   // Snapshot de los add-ons elegidos (nombre + precio de cada uno, tal
   // como estaban al momento del pedido) — guardado como JSON, igual
   // criterio que name/price: si el negocio cambia sus add-ons después,
   // los pedidos viejos no se alteran retroactivamente.
-  addOns   Json?
-  notes    String? // algo muy específico de esta línea, ej. "sin cebolla"
+  addOns    Json?
+  notes     String? // algo muy específico de esta línea, ej. "sin cebolla"
   // Estación a la que se enruta esta línea — se congela al momento del
   // pedido (MenuItem.stationId, o si no tiene, MenuCategory.stationId),
   // mismo criterio que name/price: si el negocio reconfigura las
@@ -977,6 +990,23 @@ model MenuOrderItem {
 
   @@index([stationId])
   @@map("menu_order_items")
+}
+
+// Un cobro contra un MenuOrder DINE_IN — una fila si se paga todo junto,
+// varias si se hace split check (cada parte, su propio método). No hay
+// reembolsos/anulaciones acá a propósito: MVP de un restaurante piloto,
+// no un sistema de contabilidad.
+model OrderPayment {
+  id        String        @id @default(cuid())
+  orderId   String
+  method    PaymentMethod
+  amount    Float
+  createdAt DateTime      @default(now())
+
+  order MenuOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@map("order_payments")
 }
 
 // Estación de preparación (Cocina, Barra, Caja) a la que se enrutan
@@ -1103,13 +1133,13 @@ enum NowPriceRange {
 // contención extra (esto termina en LA página de Zertoo, no solo en
 // la del negocio).
 model Moment {
-  id             String    @id @default(cuid())
-  tenantId       String
-  imageUrl       String
-  submitterName  String? // quien sube la foto no tiene cuenta ni login
-  status         String    @default("pending") // pending | approved | rejected
-  createdAt      DateTime  @default(now())
-  approvedAt     DateTime?
+  id            String    @id @default(cuid())
+  tenantId      String
+  imageUrl      String
+  submitterName String? // quien sube la foto no tiene cuenta ni login
+  status        String    @default("pending") // pending | approved | rejected
+  createdAt     DateTime  @default(now())
+  approvedAt    DateTime?
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -1176,18 +1206,18 @@ model AdminActivityLog {
 }
 
 model Subscription {
-  id                   String   @id @default(cuid())
-  tenantId             String   @unique
+  id                   String    @id @default(cuid())
+  tenantId             String    @unique
   // Un Customer de Stripe por negocio — se reutiliza tanto para el
   // checkout como para el portal de facturación (así el negocio no
   // tiene que volver a poner su tarjeta cada vez).
   stripeCustomerId     String?
-  stripeSubscriptionId String?  @unique
-  plan                 Plan     @default(STARTER)
-  status               String   @default("trialing") // trialing | active | past_due | canceled
+  stripeSubscriptionId String?   @unique
+  plan                 Plan      @default(STARTER)
+  status               String    @default("trialing") // trialing | active | past_due | canceled
   currentPeriodEnd     DateTime?
 
-  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant Tenant                   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   items  SubscriptionModuleItem[]
 
   @@map("subscriptions")
