@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // satori (recibos impresos, lib/receipt-render.ts) carga archivos .wasm
+  // de su carpeta en node_modules (yoga, harfbuzz); si Next los empaqueta
+  // dentro del bundle de la ruta, el .wasm queda afuera y el recibo falla
+  // con ENOENT. Como paquetes externos se resuelven desde node_modules.
+  experimental: {
+    serverComponentsExternalPackages: ["satori", "harfbuzzjs", "sharp"],
+  },
   images: {
     // El dominio real de esta instalación es el bucket público de R2 de
     // abajo (ver S3_PUBLIC_URL_BASE). Antes esto tenía comodines amplios
