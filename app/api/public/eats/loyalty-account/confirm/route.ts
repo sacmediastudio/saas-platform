@@ -3,6 +3,7 @@ import { z } from "zod";
 import crypto from "crypto";
 import { db } from "@/lib/db";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { isReviewDemoEmail, reviewDemoCodeMatches } from "@/lib/review-demo";
 
 const schema = z.object({ email: z.string().email(), code: z.string().length(6) });
 
@@ -27,6 +28,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Datos inválidos" }, { status: 400 });
   }
   const email = parsed.data.email.toLowerCase().trim();
+
+  // Cuenta demo de App Review: el código fijo reemplaza al del correo.
+  if (isReviewDemoEmail(email)) {
+    if (!reviewDemoCodeMatches(parsed.data.code)) {
+      return NextResponse.json({ error: "El código no es correcto." }, { status: 400 });
+    }
+    const demoToken = crypto.randomBytes(32).toString("hex");
+    await db.loyaltyAccountVerification.upsert({
+      where: { email },
+      update: { accessToken: demoToken, verifiedAt: new Date() },
+      create: { email, accessToken: demoToken, verifiedAt: new Date() },
+    });
+    return NextResponse.json({ accessToken: demoToken });
+  }
 
   const account = await db.loyaltyAccountVerification.findUnique({ where: { email } });
   if (!account || !account.verificationCode || !account.verificationCodeExpiresAt) {

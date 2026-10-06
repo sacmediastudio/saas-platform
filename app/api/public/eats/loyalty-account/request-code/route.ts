@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { sendLoyaltyAccountVerificationEmail, generateVerificationCode } from "@/lib/email";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
+import { isReviewDemoEmail } from "@/lib/review-demo";
 
 const schema = z.object({ email: z.string().email() });
 
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Correo inválido" }, { status: 400 });
   }
   const email = parsed.data.email.toLowerCase().trim();
+
+  // Cuenta demo de App Review: no se manda correo, el código es fijo.
+  if (isReviewDemoEmail(email)) return NextResponse.json({ ok: true });
 
   const existing = await db.loyaltyAccountVerification.findUnique({ where: { email } });
   if (existing?.verificationCodeSentAt && Date.now() - existing.verificationCodeSentAt.getTime() < COOLDOWN_MS) {
