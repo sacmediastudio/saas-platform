@@ -1,9 +1,8 @@
 import { NextRequest } from "next/server";
 import { handleOrderPayment, orderPaymentOptions } from "@/lib/order-payments";
 
-// Alias de /api/tenant/menu-orders/[id]/payments — las apps ya instaladas
-// (builds anteriores de Zertoo Orders) llaman a esta ruta vieja, así que
-// se mantiene apuntando a la misma lógica.
+// POST /api/tenant/menu-orders/[id]/payments — cobra cualquier pedido
+// (mesa, pickup o delivery). La lógica vive en lib/order-payments.ts.
 export const OPTIONS = orderPaymentOptions;
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {

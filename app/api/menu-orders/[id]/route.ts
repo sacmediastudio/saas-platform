@@ -59,14 +59,13 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     });
     if (!existing) return NextResponse.json({ error: "No encontrado" }, { status: 404, headers: CORS_HEADERS });
 
-    // Una mesa (DINE_IN) solo puede completarse a través del endpoint de
-    // cobro (POST /api/tenant/dine-in-orders/[id]/payments) — este PATCH
-    // sigue sirviendo para el resto de sus transiciones (aceptar/
-    // preparar/listo/rechazar) sin cambios. PICKUP/DELIVERY no se tocan:
-    // esos se completan igual que siempre, sin cobro (se pagan al
-    // retirar/recibir).
-    if (existing.fulfillment === "DINE_IN" && parsed.data.status === "COMPLETED") {
-      return NextResponse.json({ error: "Cobrá la mesa antes de completarla." }, { status: 400, headers: CORS_HEADERS });
+    // Ningún pedido puede completarse sin cobrarse: el único camino a
+    // COMPLETED es el endpoint de cobro (POST /api/tenant/menu-orders/[id]/
+    // payments), que además deja el recibo en cola. Este PATCH sigue
+    // sirviendo para el resto de las transiciones (aceptar/preparar/listo/
+    // rechazar/cancelar).
+    if (parsed.data.status === "COMPLETED" && !existing.paidAt) {
+      return NextResponse.json({ error: "Cobrá el pedido antes de completarlo." }, { status: 400, headers: CORS_HEADERS });
     }
 
     const timestampField = STATUS_TIMESTAMP_FIELD[parsed.data.status];

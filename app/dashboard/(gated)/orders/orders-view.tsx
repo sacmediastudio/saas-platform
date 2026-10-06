@@ -285,7 +285,10 @@ export default function OrdersView({
           <div className="flex flex-col gap-3">
             {shown.map((order) => {
               const meta = STATUS_META[order.status];
-              const action = NEXT_ACTION[order.status];
+              // READY ya no tiene "Completar" a secas: un pedido solo se cierra
+              // al cobrarse, y el cobro se hace desde la app Zertoo Orders.
+              const pendingPayment = order.status === "READY";
+              const action = pendingPayment ? undefined : NEXT_ACTION[order.status];
               return (
                 <div key={order.id} className="border border-[#002D09]/10 rounded-lg p-4">
                   <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
@@ -338,6 +341,19 @@ export default function OrdersView({
                   )}
 
                   <p className="text-sm font-bold mb-3">{formatCurrency(order.total, currency)}</p>
+
+                  {pendingPayment && (
+                    <div className="flex gap-2 items-center">
+                      <span className="text-xs font-semibold px-3 py-1.5 rounded-md bg-[#E7FF00]/40 text-[#002D09]">{t.orders.paymentPending}</span>
+                      <button
+                        onClick={() => updateStatus(order, "CANCELLED")}
+                        disabled={busyId === order.id}
+                        className="text-xs px-3 py-1.5 rounded-md border border-[#002D09]/15 hover:bg-[#F7F8F4] disabled:opacity-50"
+                      >
+                        {t.orders.cancel}
+                      </button>
+                    </div>
+                  )}
 
                   {action && (
                     <div className="flex gap-2">

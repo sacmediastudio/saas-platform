@@ -9,6 +9,7 @@ const createSchema = z.object({
   ipAddress: z.string().min(1).max(45),
   port: z.number().int().min(1).max(65535).default(9100),
   stationId: z.string().nullable().optional(),
+  printsReceipts: z.boolean().optional(),
 });
 
 // GET /api/tenant/order-printers
@@ -46,6 +47,7 @@ export async function POST(req: NextRequest) {
       ipAddress: parsed.data.ipAddress,
       port: parsed.data.port,
       stationId: parsed.data.stationId || null,
+      printsReceipts: parsed.data.printsReceipts ?? false,
     },
     include: { station: { select: { id: true, name: true } } },
   });

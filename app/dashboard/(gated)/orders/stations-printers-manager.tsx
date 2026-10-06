@@ -15,6 +15,7 @@ interface PrinterItem {
   ipAddress: string;
   port: number;
   stationId: string | null;
+  printsReceipts: boolean;
   station: { id: string; name: string } | null;
 }
 interface CategoryRow {
@@ -146,6 +147,20 @@ export default function StationsPrintersManager({
     });
     if (res.ok) {
       const { printer } = await res.json();
+      setPrinters((prev) => prev.map((p) => (p.id === printerId ? printer : p)));
+    }
+  }
+
+  async function togglePrinterReceipts(printerId: string, printsReceipts: boolean) {
+    const res = await fetch(`/api/tenant/order-printers/${printerId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ printsReceipts }),
+    });
+    if (res.ok) {
+      const { printer } = await res.json();
+      // Varias impresoras pueden estar marcadas; el recibo sale en la
+      // primera por nombre entre las marcadas.
       setPrinters((prev) => prev.map((p) => (p.id === printerId ? printer : p)));
     }
   }
@@ -309,6 +324,14 @@ export default function StationsPrintersManager({
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <label className="flex items-center gap-1.5 text-xs text-[#343233]/80 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={p.printsReceipts}
+                      onChange={(e) => togglePrinterReceipts(p.id, e.target.checked)}
+                    />
+                    {s.printsReceipts}
+                  </label>
                   <select
                     value={p.stationId ?? ""}
                     onChange={(e) => updatePrinterStation(p.id, e.target.value)}

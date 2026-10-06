@@ -9,6 +9,7 @@ const updateSchema = z.object({
   ipAddress: z.string().min(1).max(45).optional(),
   port: z.number().int().min(1).max(65535).optional(),
   stationId: z.string().nullable().optional(),
+  printsReceipts: z.boolean().optional(),
 });
 
 async function findOwnedPrinter(tenantId: string, id: string) {
