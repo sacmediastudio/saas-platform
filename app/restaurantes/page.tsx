@@ -6,7 +6,7 @@ import RestaurantPageClient from "./restaurant-page-client";
 // que queda fijo en español, el idioma por defecto del sitio (ver
 // lang="es" en app/layout.tsx).
 export const metadata: Metadata = {
-  title: "Módulo Restaurantes | Zertoo",
+  title: "Zertoo Menu | Zertoo",
   description:
     "Menú digital, avisos de pedidos por WhatsApp, varias ubicaciones y métricas de pedidos para tu restaurante — todo en un solo panel.",
 };

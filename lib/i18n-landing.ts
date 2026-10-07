@@ -15,7 +15,7 @@ export const translations = {
       publishedIn: "Published in",
       panelUrl: "panel.zertoo.com",
     },
-    ticker: ["Digital menu", "Zertoo Eats", "Free Smartlink", "Zertoo Orders — soon", "NFC hardware", "Reviews", "Custom domain"],
+    ticker: ["Digital menu", "Loyalty Program", "Zertoo Eats", "Free Smartlink", "Zertoo Orders — soon", "NFC hardware", "Reviews", "Custom domain"],
     products: {
       title: "One product, three ways to use it",
       subtitle:
@@ -26,10 +26,10 @@ export const translations = {
       items: [
         {
           id: "restaurants",
-          name: "Restaurants",
+          name: "Zertoo Menu",
           price: "39.90",
           desc: "Your restaurant's menu, always up to date.",
-          benefits: ["Photos for every dish, tap to zoom", "Unlimited categories, sold-out items", "Featured dishes section", "Bilingual menu (EN/ES)", "Customer wishlist (favorites)", "WhatsApp order confirmation for customers", "Instant WhatsApp alert when a new order comes in", "New-customer reward via WhatsApp", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "Custom branding & local currency"],
+          benefits: ["Photos for every dish, tap to zoom", "Unlimited categories, sold-out items", "Featured dishes section", "Bilingual menu (EN/ES)", "Customer wishlist (favorites)", "WhatsApp order confirmation for customers", "Instant WhatsApp alert when a new order comes in", "Loyalty Program with digital stamps in Apple & Google Wallet", "New-customer reward via WhatsApp", "Reviews + Google/TripAdvisor links", "FAQ chat widget", "Custom branding & local currency"],
         },
         {
           id: "eats",
@@ -78,7 +78,7 @@ export const translations = {
       included: "Included",
       soon: "Soon",
       plans: [
-        { name: "Restaurants", price: "39.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Reviews and local currency"], highlight: true },
+        { name: "Zertoo Menu", price: "39.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Loyalty Program for your customers", "Reviews and local currency"], highlight: true },
         { name: "Zertoo Eats", included: true, for: "Discovery, Pickup & Delivery", points: ["Zertoo Eats directory listing", "Pickup and Delivery orders", "Promotions and reviews", "Included, no extra cost"], highlight: false },
         { name: "Zertoo Orders", soon: true, for: "Centralized order management", points: ["Accept orders with one tap", "Automatic kitchen printing", "Kitchen / bar routing", "Order history"], highlight: false },
       ],
@@ -111,7 +111,7 @@ export const translations = {
       copyright: "A Certucce Digital LLC product. All rights reserved.",
     },
     restaurantPage: {
-      badge: "Restaurant Module",
+      badge: "Zertoo Menu",
       newBadge: "New",
       heroTitlePrefix: "Your restaurant, ready to",
       heroTitleHighlight: "sell more.",
@@ -182,12 +182,12 @@ export const translations = {
         {
           id: "loyalty",
           isNew: false,
-          title: "A stamp card your customers keep in their pocket",
+          title: "A Loyalty Program your customers keep in their pocket",
           subtitle: "Every purchase adds a stamp — no app to install, no paper card to lose.",
           bullets: [
-            "Digital stamps for every purchase or visit",
+            "Loyalty Program with digital stamps for every purchase or visit",
             "Saves to Apple Wallet or Google Wallet in one tap",
-            "Redeem rewards straight from your dashboard",
+            "Redeem Loyalty Program rewards straight from your dashboard",
           ],
         },
         {
@@ -233,7 +233,7 @@ export const translations = {
       publishedIn: "Publicado en",
       panelUrl: "panel.zertoo.com",
     },
-    ticker: ["Menú digital", "Zertoo Eats", "Smartlink gratis", "Zertoo Orders — pronto", "Hardware NFC", "Reseñas", "Dominio propio"],
+    ticker: ["Menú digital", "Loyalty Program", "Zertoo Eats", "Smartlink gratis", "Zertoo Orders — pronto", "Hardware NFC", "Reseñas", "Dominio propio"],
     products: {
       title: "Un producto, tres formas de usarlo",
       subtitle: "No todos los negocios necesitan lo mismo. Por eso Zertoo ofrece tres experiencias diferentes construidas sobre la misma plataforma.",
@@ -243,10 +243,10 @@ export const translations = {
       items: [
         {
           id: "restaurantes",
-          name: "Restaurantes",
+          name: "Zertoo Menu",
           price: "39.90",
           desc: "El menú de tu restaurante, siempre actualizado.",
-          benefits: ["Fotos de cada plato, toca para ampliar", "Categorías ilimitadas, agotados", "Sección de platos destacados", "Menú bilingüe (EN/ES)", "Lista de favoritos del cliente", "Confirmación de pedido por WhatsApp para el cliente", "Aviso instantáneo por WhatsApp cuando llega un pedido", "Premio de bienvenida por WhatsApp", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Marca y moneda local personalizables"],
+          benefits: ["Fotos de cada plato, toca para ampliar", "Categorías ilimitadas, agotados", "Sección de platos destacados", "Menú bilingüe (EN/ES)", "Lista de favoritos del cliente", "Confirmación de pedido por WhatsApp para el cliente", "Aviso instantáneo por WhatsApp cuando llega un pedido", "Loyalty Program con sellos digitales en Apple Wallet y Google Wallet", "Premio de bienvenida por WhatsApp", "Reseñas + links a Google/TripAdvisor", "Chat de preguntas frecuentes", "Marca y moneda local personalizables"],
         },
         {
           id: "eats",
@@ -295,7 +295,7 @@ export const translations = {
       included: "Incluido",
       soon: "Pronto",
       plans: [
-        { name: "Restaurantes", price: "39.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Reseñas y moneda local"], highlight: true },
+        { name: "Zertoo Menu", price: "39.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Loyalty Program para tus clientes", "Reseñas y moneda local"], highlight: true },
         { name: "Zertoo Eats", included: true, for: "Descubrimiento, Pickup y Delivery", points: ["Perfil en el directorio Zertoo Eats", "Pedidos Pickup y Delivery", "Promociones y reseñas", "Incluido, sin costo extra"], highlight: false },
         { name: "Zertoo Orders", soon: true, for: "Administración centralizada de pedidos", points: ["Acepta pedidos con un toque", "Impresión automática a cocina", "Enrutamiento cocina / barra", "Historial de pedidos"], highlight: false },
       ],
@@ -328,7 +328,7 @@ export const translations = {
       copyright: "Un producto de Certucce Digital LLC. Todos los derechos reservados.",
     },
     restaurantPage: {
-      badge: "Módulo Restaurantes",
+      badge: "Zertoo Menu",
       newBadge: "Nuevo",
       heroTitlePrefix: "Tu restaurante, listo para",
       heroTitleHighlight: "vender más.",
@@ -399,12 +399,12 @@ export const translations = {
         {
           id: "loyalty",
           isNew: false,
-          title: "Un programa de sellos que tus clientes llevan en el bolsillo",
+          title: "Un Loyalty Program que tus clientes llevan en el bolsillo",
           subtitle: "Cada compra suma un sello — sin apps que instalar, sin tarjetitas de papel que se pierden.",
           bullets: [
-            "Sellos digitales por cada compra o visita",
+            "Loyalty Program con sellos digitales por cada compra o visita",
             "Se guarda en Apple Wallet o Google Wallet con un toque",
-            "El premio se canjea directo desde el panel del negocio",
+            "El premio del Loyalty Program se canjea directo desde el panel del negocio",
           ],
         },
         {
