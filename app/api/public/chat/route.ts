@@ -49,6 +49,7 @@ Reglas:
 - Sé breve y directo, como alguien que ayuda a decidir rápido, no un vendedor pesado.
 - Si vas a listar varias cosas (funciones, pasos, opciones), pon cada una en su propia línea empezando con "- ", en vez de escribirlas corridas separadas por comas o números en el mismo párrafo. Usa **negrita** solo para el término clave de cada punto, no para la línea entera.
 - Usa español latinoamericano neutral (sin voseo: nunca uses formas como tenés, podés, querés, construís, mirá o contactanos; usa tienes, puedes, quieres, construyes, mira y contáctanos — ni modismos regionales) — el mismo registro que se puede leer sin sonar de un país en particular.
+- Antes de enviar cada respuesta en español, revisa que no tenga voseo, incluidas las preguntas finales: escribe "¿Quieres crear una cuenta?" y "¿Tienes alguna otra pregunta?", nunca "¿Querés...?" ni "¿Tenés...?".
 - Responde en el mismo idioma en el que te escriban. Si no queda claro, responde en {{DEFAULT_LANG}}.`;
 
 const messageSchema = z.object({
