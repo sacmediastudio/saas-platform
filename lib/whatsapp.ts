@@ -38,8 +38,18 @@ const TEMPLATE_ORDER_CONFIRMED_ETA_EN = process.env.TWILIO_TEMPLATE_ORDER_CONFIR
 const TEMPLATE_ORDER_READY_ES = process.env.TWILIO_TEMPLATE_ORDER_READY_ES || "";
 const TEMPLATE_ORDER_READY_EN = process.env.TWILIO_TEMPLATE_ORDER_READY_EN || "";
 
+// Plantilla de AUTENTICACIÓN (código de verificación de pedidos de
+// delivery) — hay que crearla y aprobarla en Twilio/Meta; mientras no
+// esté configurada, el código se manda por correo.
+const TEMPLATE_ORDER_VERIFY_ES = process.env.TWILIO_TEMPLATE_ORDER_VERIFY_ES || "";
+const TEMPLATE_ORDER_VERIFY_EN = process.env.TWILIO_TEMPLATE_ORDER_VERIFY_EN || "";
+
 export function isWhatsAppConfigured(): boolean {
   return Boolean(ACCOUNT_SID && AUTH_TOKEN && WHATSAPP_NUMBER);
+}
+
+export function isOrderVerifyWhatsAppConfigured(language: string): boolean {
+  return isWhatsAppConfigured() && Boolean(language === "en" ? TEMPLATE_ORDER_VERIFY_EN : TEMPLATE_ORDER_VERIFY_ES);
 }
 
 function normalizePhone(phone: string): string {
@@ -145,6 +155,22 @@ export async function sendMarketingMessage(params: {
     toPhone: params.toPhone,
     contentSid: params.contentSid,
     bodyParams: params.bodyParams,
+  });
+}
+
+/**
+ * Código de verificación para pedir delivery. Plantilla de autenticación:
+ * "{{1}} es tu código de verificación." — 1 variable: el código.
+ */
+export async function sendOrderVerificationWhatsApp(params: {
+  toPhone: string;
+  code: string;
+  language: string;
+}): Promise<void> {
+  await sendTemplateMessage({
+    toPhone: params.toPhone,
+    contentSid: params.language === "en" ? TEMPLATE_ORDER_VERIFY_EN : TEMPLATE_ORDER_VERIFY_ES,
+    bodyParams: [params.code],
   });
 }
 

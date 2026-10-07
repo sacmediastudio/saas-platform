@@ -732,6 +732,25 @@ model LoyaltyAccountVerification {
   @@map("loyalty_account_verifications")
 }
 
+// Verificación de contacto para pedidos de DELIVERY desde el menú
+// público — el cliente confirma con un código de 6 dígitos (WhatsApp si
+// hay plantilla aprobada, si no correo) y recibe un token que el
+// navegador recuerda, así los pedidos siguientes no vuelven a pedir
+// código. Se guarda solo el hash del código y del token.
+model OrderContactVerification {
+  id             String    @id @default(cuid())
+  phone          String    @unique
+  codeHash       String?
+  codeExpiresAt  DateTime?
+  codeSentAt     DateTime?
+  attempts       Int       @default(0)
+  tokenHash      String?
+  tokenExpiresAt DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@map("order_contact_verifications")
+}
+
 // Un dispositivo (iPhone) que agregó un pase a su Wallet, registrado
 // para recibir avisos push cuando ese pase cambie — así el sello
 // nuevo aparece solo, sin que el cliente tenga que volver a descargar

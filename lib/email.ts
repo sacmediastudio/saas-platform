@@ -58,6 +58,26 @@ export async function sendVerificationEmail(to: string, code: string, businessNa
   );
 }
 
+export async function sendOrderVerificationEmail(to: string, code: string, businessName: string, language: string) {
+  const en = language === "en";
+  await sendEmail(
+    to,
+    en ? `Your verification code: ${code}` : `Tu código de verificación: ${code}`,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">
+          ${en ? `Use this code to confirm your delivery order at <strong>${businessName}</strong>:` : `Usa este código para confirmar tu pedido a domicilio en <strong>${businessName}</strong>:`}
+        </p>
+        <p style="font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #002D09; margin: 24px 0;">
+          ${code}
+        </p>
+        <p style="font-size: 12px; color: #888;">${en ? "This code expires in 15 minutes." : "Este código expira en 15 minutos."}</p>
+      </div>
+    `,
+    `Código de verificación de pedido para ${to}: ${code}\nConfigura RESEND_API_KEY para enviar correos reales. Ver lib/email.ts.`
+  );
+}
+
 export function generateVerificationCode(): string {
   return String(Math.floor(100000 + Math.random() * 900000));
 }

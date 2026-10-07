@@ -1167,6 +1167,9 @@ function CheckoutModal({
   const [orderNotes, setOrderNotes] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "done" | "error">("idle");
   const [error, setError] = useState("");
+  const [step, setStep] = useState<"form" | "code">("form");
+  const [code, setCode] = useState("");
+  const [channel, setChannel] = useState<"whatsapp" | "email">("email");
 
   // Si cambia de local y el que eligió antes ya no ofrece esa opción
   // (ej. tenía Delivery elegido y el nuevo local solo hace Pickup), se
@@ -1187,9 +1190,90 @@ function CheckoutModal({
   const belowMinimum =
     fulfillment === "DELIVERY" && effectiveMinDeliveryAmount !== null && subtotal < effectiveMinDeliveryAmount;
 
+  // Delivery pide un código de verificación (WhatsApp o correo); el
+  // navegador recuerda el token por teléfono para no repetirlo.
+  const VERIFY_KEY = "zertoo_order_verification";
+  function readStoredToken(): string | null {
+    try {
+      const raw = window.localStorage.getItem(VERIFY_KEY);
+      if (!raw) return null;
+      const stored = JSON.parse(raw) as { phone?: string; token?: string };
+      return stored.phone === phone.replace(/\D/g, "") && stored.token ? stored.token : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async function requestVerificationCode() {
+    setStatus("sending");
+    setError("");
+    try {
+      const res = await fetch("/api/public/menu-orders/verify/request", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ slug, phone, email, language }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error ?? (language === "en" ? "Couldn't send the code" : "No se pudo enviar el código"));
+        setStatus("error");
+        return;
+      }
+      setChannel(body.channel === "whatsapp" ? "whatsapp" : "email");
+      setCode("");
+      setStep("code");
+      setStatus("idle");
+    } catch {
+      setError(language === "en" ? "Couldn't connect to the server. Please try again." : "No se pudo conectar con el servidor. Intenta de nuevo.");
+      setStatus("error");
+    }
+  }
+
+  async function handleConfirmCode(e: React.FormEvent) {
+    e.preventDefault();
+    setStatus("sending");
+    setError("");
+    try {
+      const res = await fetch("/api/public/menu-orders/verify/confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone, code }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body.error ?? (language === "en" ? "Incorrect code" : "El código no es correcto"));
+        setStatus("error");
+        return;
+      }
+      try {
+        window.localStorage.setItem(VERIFY_KEY, JSON.stringify({ phone: phone.replace(/\D/g, ""), token: body.token }));
+      } catch {
+        // sin almacenamiento: se pedirá de nuevo la próxima vez
+      }
+      setStep("form");
+      await placeOrder(body.token);
+    } catch {
+      setError(language === "en" ? "Couldn't connect to the server. Please try again." : "No se pudo conectar con el servidor. Intenta de nuevo.");
+      setStatus("error");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (belowMinimum) return;
+    if (fulfillment === "DELIVERY") {
+      const stored = readStoredToken();
+      if (!stored) {
+        await requestVerificationCode();
+        return;
+      }
+      await placeOrder(stored);
+      return;
+    }
+    await placeOrder();
+  }
+
+  async function placeOrder(verificationToken?: string) {
     setStatus("sending");
     setError("");
     try {
@@ -1206,6 +1290,7 @@ function CheckoutModal({
           deliveryAddress: fulfillment === "DELIVERY" ? address : undefined,
           notes: orderNotes || undefined,
           language,
+          verificationToken,
           items: cartLines.map((l) => ({
             menuItemId: l.menuItemId,
             quantity: l.quantity,
@@ -1216,6 +1301,16 @@ function CheckoutModal({
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
+        if (body.code === "VERIFICATION_REQUIRED") {
+          // El token guardado venció o no corresponde: pedir un código nuevo.
+          try {
+            window.localStorage.removeItem(VERIFY_KEY);
+          } catch {
+            // ignorar
+          }
+          await requestVerificationCode();
+          return;
+        }
         setError(body.error ?? (language === "en" ? "Couldn't send your order" : "No se pudo enviar tu pedido"));
         setStatus("error");
         return;
@@ -1247,6 +1342,56 @@ function CheckoutModal({
               {language === "en" ? "Close" : "Cerrar"}
             </button>
           </div>
+        ) : step === "code" ? (
+          <form onSubmit={handleConfirmCode} className="flex flex-col gap-3">
+            <p className="text-lg font-semibold">{language === "en" ? "Verify your order" : "Verifica tu pedido"}</p>
+            <p className="text-sm opacity-70">
+              {channel === "whatsapp"
+                ? language === "en"
+                  ? "We sent a 6-digit code to your WhatsApp."
+                  : "Te mandamos un código de 6 dígitos por WhatsApp."
+                : language === "en"
+                  ? `We sent a 6-digit code to ${email}.`
+                  : `Te mandamos un código de 6 dígitos a ${email}.`}
+            </p>
+            <input
+              value={code}
+              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              required
+              placeholder="123456"
+              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base tracking-[0.3em] text-center"
+            />
+            {status === "error" && <p className="text-sm text-red-600">{error}</p>}
+            <div className="flex gap-2 mt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("form");
+                  setStatus("idle");
+                  setError("");
+                }}
+                className="flex-1 py-2.5 rounded-lg border border-neutral-200 text-sm"
+              >
+                {language === "en" ? "Back" : "Volver"}
+              </button>
+              <button
+                type="submit"
+                disabled={status === "sending" || code.length !== 6}
+                className="flex-1 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50"
+                style={{ backgroundColor: buttonColor, color: buttonTextColor }}
+              >
+                {status === "sending"
+                  ? language === "en"
+                    ? "Sending..."
+                    : "Enviando..."
+                  : language === "en"
+                    ? "Verify and send order"
+                    : "Verificar y enviar pedido"}
+              </button>
+            </div>
+          </form>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-3">
             <div className="flex items-center gap-2 mb-1">

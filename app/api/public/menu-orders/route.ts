@@ -8,6 +8,7 @@ import { formatCurrency } from "@/lib/currency";
 import { rateLimit, getClientIp } from "@/lib/rate-limit";
 import { getEnabledModules } from "@/lib/modules";
 import { buildOrderItems } from "@/lib/order-builder";
+import { isVerified, normalizeOrderPhone } from "@/lib/order-verification";
 
 const schema = z.object({
   slug: z.string(),
@@ -21,6 +22,8 @@ const schema = z.object({
   deliveryAddress: z.string().max(300).optional(),
   notes: z.string().max(300).optional(),
   language: z.enum(["es", "en"]).default("es"),
+  // Solo DELIVERY: token que entregó /verify/confirm para ese teléfono.
+  verificationToken: z.string().max(200).optional(),
   items: z
     .array(
       z.object({
@@ -87,6 +90,15 @@ export async function POST(req: NextRequest) {
     }
     if (!data.deliveryAddress) {
       return NextResponse.json({ error: "Falta la dirección de entrega." }, { status: 400 });
+    }
+    // Delivery exige contacto verificado con código — un pedido a
+    // domicilio falso cuesta un viaje real. Pickup no lo necesita.
+    const verified = await isVerified(normalizeOrderPhone(data.customerPhone), data.verificationToken);
+    if (!verified) {
+      return NextResponse.json(
+        { error: "Verifica tu contacto para pedir delivery.", code: "VERIFICATION_REQUIRED" },
+        { status: 403 }
+      );
     }
   }
 
