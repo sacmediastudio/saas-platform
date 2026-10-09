@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, HeadObjectCommand, GetObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 // Funciona igual para AWS S3 que para Cloudflare R2 (y cualquier otro
@@ -62,4 +62,57 @@ export async function createPresignedUpload(params: {
   const uploadUrl = await getSignedUrl(getClient(), command, { expiresIn: 300 }); // 5 min
 
   return { uploadUrl, publicUrl: publicUrlFor(key), key };
+}
+
+/** URL firmada de subida para un reel (video), bajo `<tenantId>/reels/`. */
+export async function createPresignedReelUpload(params: {
+  tenantId: string;
+  fileName: string;
+  fileType: string;
+}): Promise<{ uploadUrl: string; publicUrl: string; key: string }> {
+  const ext = params.fileName.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+  const key = `${params.tenantId}/reels/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  const command = new PutObjectCommand({ Bucket: BUCKET, Key: key, ContentType: params.fileType });
+  const uploadUrl = await getSignedUrl(getClient(), command, { expiresIn: 900 }); // 15 min: un video tarda más que una foto
+  return { uploadUrl, publicUrl: publicUrlFor(key), key };
+}
+
+/**
+ * Devuelve el key del bucket si la URL pública es de ESTE bucket y está
+ * bajo el prefijo dado (ej. `<tenantId>/`) — sirve para no aceptar
+ * URLs ajenas ni de otro negocio.
+ */
+export function keyFromPublicUrl(url: string, requiredPrefix: string): string | null {
+  const base = publicUrlFor("");
+  if (!url.startsWith(base)) return null;
+  const key = decodeURIComponent(url.slice(base.length));
+  return key.startsWith(requiredPrefix) && !key.includes("..") ? key : null;
+}
+
+export async function headObject(key: string): Promise<{ size: number; contentType: string | undefined } | null> {
+  try {
+    const res = await getClient().send(new HeadObjectCommand({ Bucket: BUCKET, Key: key }));
+    return { size: res.ContentLength ?? 0, contentType: res.ContentType };
+  } catch {
+    return null;
+  }
+}
+
+/** Lee un rango de bytes de un objeto (para inspeccionar la cabecera de un video sin bajarlo entero). */
+export async function getObjectRange(key: string, range: string): Promise<Buffer | null> {
+  try {
+    const res = await getClient().send(new GetObjectCommand({ Bucket: BUCKET, Key: key, Range: range }));
+    const bytes = await res.Body?.transformToByteArray();
+    return bytes ? Buffer.from(bytes) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteObject(key: string): Promise<void> {
+  try {
+    await getClient().send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }));
+  } catch (err) {
+    console.error("No se pudo borrar el objeto de S3/R2:", key, err);
+  }
 }

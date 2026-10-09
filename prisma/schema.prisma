@@ -171,6 +171,9 @@ model Tenant {
   // del admin (a diferencia de nowFeatured). Solo se muestran en la API
   // pública mientras el negocio también tenga nowEnabled=true.
   promotions           Promotion[]
+  // Reels (videos cortos de hasta 15 s, máximo 3 por negocio) que se
+  // muestran en la app y la web de Zertoo Eats.
+  reels                Reel[]
 
   // Solo aplica al módulo de Citas: minutos de "colchón" que se dejan
   // libres después de cada cita antes de que se pueda reservar la
@@ -659,6 +662,46 @@ model Promotion {
 
   @@index([tenantId])
   @@map("promotions")
+}
+
+// Video corto ("reel") de un negocio para Zertoo Eats: máximo 3 por
+// negocio y 15 segundos cada uno (lo hace cumplir la API, ver
+// lib/reels.ts). El video y su imagen de portada viven en el mismo
+// bucket S3/R2 que el resto de las fotos; acá solo se guardan las URLs.
+model Reel {
+  id          String   @id @default(cuid())
+  tenantId    String
+  videoUrl    String
+  posterUrl   String
+  durationSec Float
+  width       Int
+  height      Int
+  sizeBytes   Int
+  mimeType    String
+  caption     String?
+  likesCount  Int      @default(0)
+  createdAt   DateTime @default(now())
+
+  tenant Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  likes  ReelLike[]
+
+  @@index([tenantId])
+  @@index([createdAt])
+  @@map("reels")
+}
+
+// Un "me gusta" por dispositivo (sin cuentas): deviceId es un
+// identificador anónimo que genera cada app/navegador.
+model ReelLike {
+  id        String   @id @default(cuid())
+  reelId    String
+  deviceId  String
+  createdAt DateTime @default(now())
+
+  reel Reel @relation(fields: [reelId], references: [id], onDelete: Cascade)
+
+  @@unique([reelId, deviceId])
+  @@map("reel_likes")
 }
 
 // Alguien que dejó sus datos desde la app de Zertoo Eats para recibir
