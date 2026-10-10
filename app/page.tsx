@@ -172,7 +172,12 @@ function ProductCard({
             {moreInfoLabel}
           </Btn>
         ) : (
-          <Btn href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : "#precios"} variant="ghost" className="mt-8 w-full">
+          <Btn
+            href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : p.id === "eats" ? "https://zertooeats.com" : "#precios"}
+            {...(p.id === "eats" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+            variant="ghost"
+            className="mt-8 w-full"
+          >
             {moreInfoLabel}
           </Btn>
         )}
