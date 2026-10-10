@@ -168,9 +168,9 @@ function ProductCard({
           ))}
         </ul>
         {p.soon ? (
-          <span className="mt-8 flex w-full items-center justify-center rounded-2xl border border-forest/15 px-7 py-3.5 text-[15px] font-semibold text-graphite/40">
-            {soonLabel}
-          </span>
+          <Btn href="/orders" variant="ghost" className="mt-8 w-full">
+            {moreInfoLabel}
+          </Btn>
         ) : (
           <Btn href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : "#precios"} variant="ghost" className="mt-8 w-full">
             {moreInfoLabel}
