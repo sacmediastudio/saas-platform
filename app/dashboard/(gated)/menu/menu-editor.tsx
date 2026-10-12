@@ -7,6 +7,7 @@ import TrendStatCard from "@/components/trend-stat-card";
 import OrderStatsPanel from "./order-stats-panel";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
+import ImageCropper, { isCropAspect, readImageSize } from "@/components/image-cropper";
 import DashboardCard from "@/components/dashboard-card";
 import LinkQrButton from "@/components/link-qr-button";
 
@@ -395,17 +396,35 @@ function DishModal({
   const [saving, setSaving] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
 
-  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Si la foto ya es 4:3 se sube directo; si no, se abre el editor de recorte.
+  const [cropFile, setCropFile] = useState<File | null>(null);
+
+  async function uploadFinal(file: File) {
     setProcessingImage(true);
     try {
-      const publicUrl = await uploadImage(file);
+      const publicUrl = await uploadImage(file, 1200);
       setForm((f) => ({ ...f, imageUrl: publicUrl }));
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo subir la imagen. Intenta con otra foto.");
     } finally {
       setProcessingImage(false);
+    }
+  }
+
+  async function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite volver a elegir el mismo archivo
+    if (!file) return;
+    setError(null);
+    try {
+      const size = await readImageSize(file);
+      if (isCropAspect(size)) {
+        await uploadFinal(file);
+      } else {
+        setCropFile(file);
+      }
+    } catch {
+      setError("No se pudo leer la imagen. Intenta con otra foto.");
     }
   }
 
@@ -474,9 +493,9 @@ function DishModal({
           <div className="flex items-center gap-3">
             {form.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={form.imageUrl} alt="" className="w-14 h-14 rounded-lg object-cover shrink-0" />
+              <img src={form.imageUrl} alt="" className="w-[74px] h-14 rounded-lg object-cover shrink-0" />
             ) : (
-              <div className="w-14 h-14 rounded-lg bg-[#F7F8F4] flex items-center justify-center shrink-0 text-[#343233]/40">
+              <div className="w-[74px] h-14 rounded-lg bg-[#F7F8F4] flex items-center justify-center shrink-0 text-[#343233]/40">
                 <ImageIcon size={20} aria-hidden />
               </div>
             )}
@@ -496,6 +515,7 @@ function DishModal({
               )}
             </div>
           </div>
+          <p className="mt-1.5 text-[11px] text-[#343233]/55">{t.dishModal.photoHint}</p>
         </Field>
 
         <Field label={t.dishModal.name}>
@@ -650,6 +670,18 @@ function DishModal({
           submitLabel={mode === "create" ? t.common.add : t.common.save}
         />
       </form>
+      {cropFile && (
+        <ImageCropper
+          file={cropFile}
+          labels={t.dishModal.crop}
+          onCancel={() => setCropFile(null)}
+          onConfirm={async (blob) => {
+            const file = new File([blob], "plato.jpg", { type: "image/jpeg" });
+            setCropFile(null);
+            await uploadFinal(file);
+          }}
+        />
+      )}
     </ModalShell>
   );
 }

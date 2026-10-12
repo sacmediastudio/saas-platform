@@ -647,6 +647,16 @@ export const dashboardTranslations = {
       moveDown: "Move down",
     },
     dishModal: {
+      photoHint: "Dish photos use a 4:3 frame. If yours has a different shape, you'll be able to crop it.",
+      crop: {
+        title: "Crop photo (4:3)",
+        hint: "Drag the photo to frame it and use the slider (or pinch) to zoom.",
+        zoom: "Zoom",
+        cancel: "Cancel",
+        apply: "Use photo",
+        applying: "Saving...",
+        error: "We couldn't process that photo. Try another one.",
+      },
       titleCreate: "Add dish",
       titleEdit: "Edit dish",
       name: "Name",
@@ -1397,6 +1407,16 @@ export const dashboardTranslations = {
       moveDown: "Mover abajo",
     },
     dishModal: {
+      photoHint: "Las fotos de los platos usan un marco 4:3. Si la tuya tiene otra proporción, podrás recortarla.",
+      crop: {
+        title: "Recortar foto (4:3)",
+        hint: "Arrastra la foto para encuadrarla y usa el control (o pellizca) para acercar.",
+        zoom: "Zoom",
+        cancel: "Cancelar",
+        apply: "Usar foto",
+        applying: "Guardando...",
+        error: "No pudimos procesar esa foto. Prueba con otra.",
+      },
       titleCreate: "Agregar plato",
       titleEdit: "Editar plato",
       name: "Nombre",

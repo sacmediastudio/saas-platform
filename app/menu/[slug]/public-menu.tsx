@@ -358,7 +358,7 @@ export default function PublicMenu({
       >
         {hasPhoto && (
           <div
-            className="relative aspect-[4/5] w-[36%] max-w-[160px] shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-black/10 active:opacity-80"
+            className="relative aspect-[4/3] w-[42%] max-w-[190px] shrink-0 cursor-pointer self-start overflow-hidden rounded-2xl bg-black/10 active:opacity-80"
             onClick={() => setZoomedItem(item)}
           >
             <SmartImage
@@ -366,7 +366,7 @@ export default function PublicMenu({
               alt={resolveItemName(item, lang)}
               fill
               className="object-cover"
-              sizes="(min-width: 576px) 160px, 36vw"
+              sizes="(min-width: 576px) 190px, 42vw"
             />
             {featured && (
               <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold text-white">
