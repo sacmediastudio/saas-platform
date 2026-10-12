@@ -1,7 +1,29 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Star, Mail, Phone, MapPin, ChevronDown, ChevronLeft, ChevronRight, X, Heart, ArrowRight } from "lucide-react";
+import {
+  Star,
+  Mail,
+  Phone,
+  MapPin,
+  ChevronLeft,
+  ChevronRight,
+  X,
+  Heart,
+  ShoppingCart,
+  UtensilsCrossed,
+  Salad,
+  Baby,
+  IceCreamCone,
+  Wine,
+  Coffee,
+  Pizza,
+  Soup,
+  Sandwich,
+  Fish,
+  Beef,
+  Cake,
+} from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
@@ -85,6 +107,24 @@ interface LocationData {
 // mismo archivo, también necesitan resolver el nombre del plato
 // según el idioma — y al ser componentes hermanos, no pueden ver
 // funciones declaradas dentro de PublicMenu.
+// Los negocios no cargan un ícono por categoría, así que se elige uno por
+// el nombre (ES/EN); si no calza con nada, el cubierto de siempre.
+function categoryIcon(name: string) {
+  const n = name.toLowerCase();
+  if (/(entrada|appetizer|starter|ensalada|salad|tapas|aperitivo)/.test(n)) return Salad;
+  if (/(kid|niñ|nino|infantil|children)/.test(n)) return Baby;
+  if (/(postre|dessert|helado|ice cream|sweet|dulce)/.test(n)) return IceCreamCone;
+  if (/(torta|cake|pastel|panader|bakery)/.test(n)) return Cake;
+  if (/(bebida|drink|cocktail|coctel|cóctel|vino|wine|cerveza|beer|licor|liquor|jugo|juice|bar\b)/.test(n)) return Wine;
+  if (/(café|cafe|coffee|desayuno|breakfast|brunch)/.test(n)) return Coffee;
+  if (/pizza/.test(n)) return Pizza;
+  if (/(sopa|soup|caldo)/.test(n)) return Soup;
+  if (/(burger|hamburg|sandwich|sándwich|wrap)/.test(n)) return Sandwich;
+  if (/(seafood|marisco|pescado|fish|sushi|ceviche)/.test(n)) return Fish;
+  if (/(carne|beef|steak|parrilla|grill|bbq)/.test(n)) return Beef;
+  return UtensilsCrossed;
+}
+
 function resolveItemName(item: MenuItemData, lang: string) {
   return lang === "en" && item.nameEn ? item.nameEn : item.name;
 }
@@ -233,7 +273,7 @@ export default function PublicMenu({
     setCartLines((prev) => prev.filter((l) => l.lineId !== lineId));
   }
 
-  const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const navRef = useRef<HTMLDivElement | null>(null);
   const categoryScrollRef = useRef<HTMLDivElement | null>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
@@ -291,9 +331,132 @@ export default function PublicMenu({
     window.scrollTo({ top, behavior: "smooth" });
   }
 
-  function scrollToMenu() {
-    const firstId = categoriesWithItems[0]?.id;
-    if (firstId) scrollToCategory(firstId);
+  function priceParts(item: MenuItemData): { primary: string; secondary: string | null } {
+    const primary = formatCurrency(item.price, tenant.currency);
+    if (!tenant.secondaryCurrencyCode || !tenant.secondaryCurrencyRate) return { primary, secondary: null };
+    return { primary, secondary: formatCurrency(item.price * tenant.secondaryCurrencyRate, tenant.secondaryCurrencyCode) };
+  }
+
+  // Tarjeta de plato: foto grande a la izquierda con el corazón encima,
+  // nombre, descripción, precio (con la moneda secundaria al lado) y el
+  // botón redondo de agregar abajo a la derecha.
+  function renderItem(item: MenuItemData, featured = false) {
+    const hasPhoto = tenant.menuShowPhotos && Boolean(item.imageUrl);
+    const liked = wishlist.includes(item.id);
+    const soldOut = item.status === "SOLD_OUT";
+    const canOrder = tenant.orderingEnabled && !soldOut && !item.variablePrice;
+    const qty = quickQuantityFor(item.id);
+    const { primary, secondary } = priceParts(item);
+    const hasAddOns = item.addOns.length > 0;
+    const addStyle = { backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor };
+
+    return (
+      <div
+        key={`${featured ? "f-" : ""}${item.id}`}
+        className={`relative flex gap-4 rounded-[22px] border p-3 shadow-[0_6px_24px_-12px_rgba(0,0,0,0.2)] ${soldOut ? "opacity-50" : ""}`}
+        style={{ backgroundColor: tenant.menuCardColor, borderColor: "color-mix(in srgb, currentColor 6%, transparent)" }}
+      >
+        {hasPhoto && (
+          <div
+            className="relative aspect-[4/5] w-[36%] max-w-[160px] shrink-0 cursor-pointer overflow-hidden rounded-2xl bg-black/10 active:opacity-80"
+            onClick={() => setZoomedItem(item)}
+          >
+            <SmartImage
+              src={item.imageUrl}
+              alt={resolveItemName(item, lang)}
+              fill
+              className="object-cover"
+              sizes="(min-width: 576px) 160px, 36vw"
+            />
+            {featured && (
+              <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold text-white">
+                <Star size={10} className="fill-white" aria-hidden />
+                {lang === "en" ? "Featured" : "Destacado"}
+              </span>
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleWishlist(item.id);
+              }}
+              aria-label={favLabel(liked)}
+              className="absolute right-2 top-2 rounded-full bg-black/35 p-2 backdrop-blur-sm"
+            >
+              <Heart size={18} className={liked ? "fill-red-500 text-red-500" : "text-white"} aria-hidden />
+            </button>
+          </div>
+        )}
+
+        <div className="flex min-w-0 flex-1 flex-col py-1">
+          <div className="flex items-start justify-between gap-2">
+            <p className="text-[19px] font-bold leading-snug">{resolveItemName(item, lang)}</p>
+            {!hasPhoto && (
+              <button onClick={() => toggleWishlist(item.id)} aria-label={favLabel(liked)} className="shrink-0 p-1">
+                <Heart
+                  size={20}
+                  className={liked ? "fill-red-500 text-red-500" : ""}
+                  style={liked ? undefined : { opacity: 0.35 }}
+                  aria-hidden
+                />
+              </button>
+            )}
+          </div>
+          {itemDescription(item) && <p className="mt-1.5 line-clamp-3 text-[14px] leading-snug opacity-60">{itemDescription(item)}</p>}
+
+          <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+            {soldOut ? (
+              <span className="inline-block rounded-md bg-red-50 px-2 py-0.5 text-xs text-red-700">{lang === "en" ? "Sold out" : "Agotado"}</span>
+            ) : item.variablePrice ? (
+              <span className="text-[19px] font-extrabold">{lang === "en" ? "Ask" : "Preguntar"}</span>
+            ) : (
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 text-[18px]">
+                <span className="font-extrabold">{primary}</span>
+                {secondary && (
+                  <>
+                    <span className="h-5 w-px bg-current opacity-25" aria-hidden />
+                    <span className="text-[17px] opacity-60">{secondary}</span>
+                  </>
+                )}
+              </div>
+            )}
+
+            {canOrder && (
+              <div className="flex shrink-0 items-center gap-2">
+                {!hasAddOns && qty > 0 && (
+                  <>
+                    <button
+                      onClick={() => quickRemove(item.id)}
+                      aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
+                      className="flex h-10 w-10 items-center justify-center rounded-full border text-xl"
+                      style={{ borderColor: "color-mix(in srgb, currentColor 25%, transparent)" }}
+                    >
+                      −
+                    </button>
+                    <span className="w-5 text-center text-base font-bold">{qty}</span>
+                  </>
+                )}
+                <button
+                  onClick={() => (hasAddOns ? setCustomizeItem(item) : quickAdd(item.id))}
+                  aria-label={
+                    hasAddOns
+                      ? lang === "en"
+                        ? "Customize and add to order"
+                        : "Personalizar y agregar al pedido"
+                      : lang === "en"
+                        ? "Add to order"
+                        : "Agregar al pedido"
+                  }
+                  className="flex h-[52px] w-[52px] items-center justify-center rounded-full text-3xl font-light leading-none shadow-[0_6px_16px_-6px_rgba(0,0,0,0.45)] active:scale-95"
+                  style={addStyle}
+                >
+                  +
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   const hasContact = tenant.contactEmail || tenant.contactPhone || tenant.address;
@@ -303,418 +466,169 @@ export default function PublicMenu({
       className="min-h-screen"
       style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor }}
     >
-      {/* Hero */}
-      <div className="relative h-[70vh] min-h-[420px] flex items-center justify-center text-center px-6">
+      {/* Cabecera compacta: foto del local con logo, nombre, favoritos e idioma */}
+      <header className="relative h-[220px] overflow-hidden">
+        {tenant.contactPhone && (
+          <a
+            href={`tel:${tenant.contactPhone.replace(/\s+/g, "")}`}
+            aria-label={lang === "en" ? "Call" : "Llamar"}
+            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/50 bg-black/25 text-white backdrop-blur-md"
+          >
+            <Phone size={18} aria-hidden />
+          </a>
+        )}
         {tenant.heroImageUrl ? (
           <SmartImage src={tenant.heroImageUrl} alt="" fill priority className="object-cover" sizes="100vw" />
         ) : (
           <div className="absolute inset-0" style={{ backgroundColor: tenant.themeTextColor, opacity: 0.9 }} />
         )}
-        <div className="absolute inset-0 bg-black/50" />
-
-        <div className="relative z-10 max-w-md flex flex-col items-center">
-          {tenant.logoUrl && (
-            <SmartImage
-              src={tenant.logoUrl}
-              alt={tenant.name}
-              width={64}
-              height={64}
-              className="w-16 h-16 rounded-2xl object-cover mb-4 border-2 border-white/30"
-            />
-          )}
-          <p className="text-white text-4xl font-bold mb-2">{tenant.name}</p>
-          <p className="text-white/70 text-xs tracking-[0.2em] uppercase mb-4">Menú</p>
-          {tenant.heroTagline && (
-            <p className="text-white/85 text-sm leading-relaxed mb-6">{tenant.heroTagline}</p>
-          )}
-          <button
-            onClick={scrollToMenu}
-            className="flex items-center gap-1.5 text-sm font-semibold px-6 py-3 rounded-full hover:brightness-105 transition-all"
-            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-          >
-            {lang === "en" ? "View menu" : "Ver menú"}
-            <ChevronDown size={16} aria-hidden />
-          </button>
-        </div>
-      </div>
-
-      {/* Nav de categorías, pegajosa */}
-      <div
-        ref={navRef}
-        className="sticky top-0 z-20 backdrop-blur"
-        style={{ backgroundColor: tenant.themeBgColor + "e6" }}
-      >
-        <div className="max-w-xl mx-auto px-5 py-3 flex flex-col gap-2">
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2 min-w-0">
-              {tenant.logoUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={tenant.logoUrl} alt="" className="w-7 h-7 rounded-md object-cover shrink-0" />
-              )}
-              <span
-                className="text-sm font-semibold truncate"
-                style={{ color: tenant.menuPageTextColor }}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/25 to-black/60" />
+        <div className="relative z-10 mx-auto flex h-full max-w-xl items-end px-5 pb-12">
+          <div className="flex w-full items-center gap-3">
+            {tenant.logoUrl ? (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white p-1">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={tenant.logoUrl} alt={tenant.name} className="h-full w-full object-contain" />
+              </div>
+            ) : (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white text-xl font-extrabold text-black/70">
+                {tenant.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="line-clamp-2 text-xl font-extrabold leading-tight text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">{tenant.name}</p>
+              {tenant.heroTagline && <p className="truncate text-sm text-white/80">{tenant.heroTagline}</p>}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <button
+                onClick={() => setShowWishlistOnly((v) => !v)}
+                aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
+                className="flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-bold text-white backdrop-blur-md transition-colors"
+                style={{
+                  backgroundColor: showWishlistOnly ? tenant.buttonColor : "rgba(0,0,0,0.28)",
+                  color: showWishlistOnly ? tenant.buttonTextColor : "#fff",
+                  borderColor: "rgba(255,255,255,0.5)",
+                }}
               >
-                {tenant.name}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setShowWishlistOnly((v) => !v)}
-              aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
-              className="flex items-center gap-1 text-xs font-bold px-2.5 py-1.5 rounded-full transition-colors"
-              style={{
-                backgroundColor: showWishlistOnly ? tenant.buttonColor : "transparent",
-                color: showWishlistOnly ? tenant.buttonTextColor : tenant.themeTextColor,
-                border: showWishlistOnly ? "none" : "1px solid color-mix(in srgb, currentColor 20%, transparent)",
-              }}
-            >
-              <Heart size={13} className={wishlist.length > 0 ? "fill-current" : ""} aria-hidden />
-              {wishlist.length}
-            </button>
-            <div
-              className="flex items-center rounded-full p-0.5 text-xs font-bold"
-              style={{ border: "1px solid color-mix(in srgb, currentColor 20%, transparent)" }}
-            >
-              {(["ES", "EN"] as const).map((l) => {
-                const value = l.toLowerCase() as Lang;
-                const active = lang === value;
-                return (
-                  <button
-                    key={l}
-                    type="button"
-                    onClick={() => {
-                      setLang(value);
-                      setStoredLang(value);
-                    }}
-                    className="px-2 py-1 rounded-full transition-colors"
-                    style={{
-                      backgroundColor: active ? tenant.buttonColor : "transparent",
-                      color: active ? tenant.buttonTextColor : tenant.themeTextColor,
-                      opacity: active ? 1 : 0.6,
-                    }}
-                  >
-                    {l}
-                  </button>
-                );
-              })}
+                <Heart size={14} className={wishlist.length > 0 ? "fill-current" : ""} aria-hidden />
+                {wishlist.length}
+              </button>
+              <div className="flex items-center rounded-full border border-white/50 bg-white/25 p-0.5 text-[11px] font-bold backdrop-blur-md">
+                {(["ES", "EN"] as const).map((l) => {
+                  const value = l.toLowerCase() as Lang;
+                  const active = lang === value;
+                  return (
+                    <button
+                      key={l}
+                      type="button"
+                      onClick={() => {
+                        setLang(value);
+                        setStoredLang(value);
+                      }}
+                      className="rounded-full px-2 py-1 transition-colors"
+                      style={{
+                        backgroundColor: active ? tenant.buttonColor : "transparent",
+                        color: active ? tenant.buttonTextColor : "#fff",
+                      }}
+                    >
+                      {l}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-          </div>
+        </div>
+      </header>
 
-          <div className="relative flex-1 min-w-0 flex items-center">
+      {/* Hoja con esquinas redondeadas que sube sobre la foto */}
+      <div className="relative -mt-7 rounded-t-[30px]" style={{ backgroundColor: tenant.themeBgColor }}>
+        {/* Categorías: chips con ícono, pegajosas al hacer scroll */}
+        <div ref={navRef} className="sticky top-0 z-20 rounded-t-[30px]" style={{ backgroundColor: tenant.themeBgColor }}>
+          <div className="relative mx-auto max-w-xl px-5 pb-3 pt-4">
             {showLeftArrow && (
               <button
                 onClick={() => scrollCategoryNav("left")}
                 aria-label={lang === "en" ? "See previous categories" : "Ver categorías anteriores"}
-                className="absolute left-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: tenant.themeBgColor, color: tenant.menuPageTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
+                className="absolute left-3 top-[40px] z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)]"
+                style={{ backgroundColor: tenant.menuCardColor, color: tenant.menuPageTextColor }}
               >
-                <ChevronLeft size={16} aria-hidden />
+                <ChevronLeft size={20} aria-hidden />
               </button>
             )}
-            <div ref={categoryScrollRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
-              {categoriesWithItems.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => scrollToCategory(cat.id)}
-                  className="text-sm font-medium px-3 py-1.5 rounded-full whitespace-nowrap shrink-0 transition-opacity"
-                  style={{
-                    backgroundColor: activeCategory === cat.id ? tenant.buttonColor : "transparent",
-                    opacity: activeCategory === cat.id ? 1 : 0.6,
-                  }}
-                >
-                  <span
-                    style={{
-                      color: activeCategory === cat.id ? tenant.buttonTextColor : tenant.menuPageTextColor,
-                    }}
-                  >
-                    {categoryLabel(cat)}
-                  </span>
-                </button>
-              ))}
+            <div ref={categoryScrollRef} className="no-scrollbar -mx-5 -my-3 flex items-start gap-3 overflow-x-auto scroll-smooth px-5 py-3">
+              {categoriesWithItems.map((cat) => {
+                const active = activeCategory === cat.id;
+                const Icon = categoryIcon(categoryLabel(cat));
+                return (
+                  <button key={cat.id} onClick={() => scrollToCategory(cat.id)} className="flex shrink-0 flex-col items-center">
+                    <span
+                      className="flex items-center gap-2.5 whitespace-nowrap rounded-full px-5 py-3 text-base font-semibold transition-colors"
+                      style={
+                        active
+                          ? {
+                              backgroundColor: tenant.buttonColor,
+                              color: tenant.buttonTextColor,
+                              boxShadow: "0 8px 18px -8px rgba(0,0,0,0.45)",
+                            }
+                          : {
+                              backgroundColor: tenant.menuCardColor,
+                              color: tenant.menuPageTextColor,
+                              border: "1px solid color-mix(in srgb, currentColor 8%, transparent)",
+                              boxShadow: "0 4px 14px -8px rgba(0,0,0,0.2)",
+                            }
+                      }
+                    >
+                      <Icon size={20} aria-hidden />
+                      {categoryLabel(cat)}
+                    </span>
+                    <span
+                      className="mt-2 h-[3px] w-[78%] rounded-full"
+                      style={{ backgroundColor: active ? tenant.buttonColor : "transparent" }}
+                    />
+                  </button>
+                );
+              })}
             </div>
             {showRightArrow && (
               <button
                 onClick={() => scrollCategoryNav("right")}
                 aria-label={lang === "en" ? "See more categories" : "Ver más categorías"}
-                className="absolute right-0 z-10 w-7 h-7 rounded-full flex items-center justify-center shrink-0"
-                style={{ backgroundColor: tenant.themeBgColor, color: tenant.menuPageTextColor, boxShadow: "0 0 8px 4px " + tenant.themeBgColor }}
+                className="absolute right-3 top-[40px] z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)]"
+                style={{ backgroundColor: tenant.menuCardColor, color: tenant.menuPageTextColor }}
               >
-                <ChevronRight size={16} aria-hidden />
+                <ChevronRight size={20} aria-hidden />
               </button>
             )}
           </div>
         </div>
-      </div>
 
-      {/* Destacados */}
-      {featuredItems.length > 0 && (
-        <div className="px-5 py-8 max-w-xl mx-auto">
-          <h2
-            className="text-xs font-semibold tracking-[0.15em] uppercase opacity-60 mb-4"
-            style={{ color: tenant.menuPageTextColor }}
-          >
-            {lang === "en" ? "Featured" : "Destacados"}
-          </h2>
-          <div className="flex flex-col gap-5">
-            {featuredItems.map((item) => (
-              <div
-                key={item.id}
-                className="rounded-2xl overflow-hidden border shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
-                style={{ borderColor: "color-mix(in srgb, currentColor 12%, transparent)" }}
-              >
-                <div
-                  className={`relative w-full aspect-[4/3] bg-black/10 ${item.imageUrl ? "cursor-pointer active:opacity-80 transition-opacity" : ""}`}
-                  onClick={item.imageUrl ? () => setZoomedItem(item) : undefined}
-                >
-                  {item.imageUrl ? (
-                    <SmartImage
-                      src={item.imageUrl}
-                      alt={resolveItemName(item, lang)}
-                      fill
-                      className="object-cover"
-                      sizes="(min-width: 576px) 576px, 100vw"
-                    />
-                  ) : (
-                    <div
-                      className="w-full h-full flex items-center justify-center text-4xl font-bold opacity-20"
-                      style={{ backgroundColor: "currentColor" }}
-                    >
-                      <span style={{ color: tenant.themeBgColor }}>{resolveItemName(item, lang).charAt(0)}</span>
-                    </div>
-                  )}
-                  <span className="absolute top-3 left-3 flex items-center gap-1 bg-orange-500 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
-                    <Star size={12} className="fill-white" aria-hidden />
-                    {lang === "en" ? "Featured" : "Destacado"}
-                  </span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleWishlist(item.id);
-                    }}
-                    aria-label={favLabel(wishlist.includes(item.id))}
-                    className="absolute top-3 right-3 bg-black/50 hover:bg-black/65 rounded-full p-2 transition-colors"
-                  >
-                    <Heart
-                      size={16}
-                      className={wishlist.includes(item.id) ? "fill-red-500 text-red-500" : "text-white"}
-                      aria-hidden
-                    />
-                  </button>
-                </div>
-                <div className="px-5 py-4" style={{ backgroundColor: tenant.menuCardColor }}>
-                  {/* Nombre y precio en líneas separadas, no en la misma
-                      fila — un plato destacado con nombre largo y precio
-                      con conversión de moneda no entran juntos en una sola
-                      línea (mismo problema que la lista de platos). */}
-                  <p className="text-xl font-bold leading-tight">{resolveItemName(item, lang)}</p>
-                  {item.status === "SOLD_OUT" ? (
-                    <span className="inline-block text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 mt-1.5">
-                      {lang === "en" ? "Sold out" : "Agotado"}
-                    </span>
-                  ) : (
-                    <p className="text-xl font-bold text-red-600 mt-0.5">{priceLabel(item)}</p>
-                  )}
-                  {itemDescription(item) && (
-                    <p className="text-sm opacity-60 mt-2">{itemDescription(item)}</p>
-                  )}
-                  {/* Mismo botón de agregar/quitar que la lista de platos —
-                      antes un destacado no se podía pedir directo desde
-                      acá, había que encontrarlo de nuevo más abajo. */}
-                  {tenant.orderingEnabled && item.status !== "SOLD_OUT" && !item.variablePrice && (
-                    <div className="flex items-center justify-end gap-2 mt-3">
-                      {item.addOns.length > 0 ? (
-                        <button
-                          onClick={() => setCustomizeItem(item)}
-                          aria-label={lang === "en" ? "Customize and add to order" : "Personalizar y agregar al pedido"}
-                          className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
-                          style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-                        >
-                          +
-                        </button>
-                      ) : (
-                        <>
-                          {quickQuantityFor(item.id) > 0 && (
-                            <>
-                              <button
-                                onClick={() => quickRemove(item.id)}
-                                aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
-                                className="w-8 h-8 rounded-full border flex items-center justify-center text-base"
-                                style={{ borderColor: "currentColor" }}
-                              >
-                                −
-                              </button>
-                              <span className="text-base font-semibold w-5 text-center">
-                                {quickQuantityFor(item.id)}
-                              </span>
-                            </>
-                          )}
-                          <button
-                            onClick={() => quickAdd(item.id)}
-                            aria-label={lang === "en" ? "Add to order" : "Agregar al pedido"}
-                            className="w-8 h-8 rounded-full flex items-center justify-center text-base font-bold"
-                            style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-                          >
-                            +
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Lista de platos por categoría — con o sin foto, según lo que
-          el negocio haya elegido en Ajustes (menuShowPhotos). */}
       <div className="max-w-xl mx-auto px-5">
+        {featuredItems.length > 0 && (
+          <section className="pt-8">
+            <h2 className="text-[32px] font-extrabold leading-[1.1] tracking-tight" style={{ color: tenant.menuPageTextColor }}>
+              {lang === "en" ? "Featured" : "Destacados"}
+            </h2>
+            <div className="mt-5 flex flex-col gap-3.5">{featuredItems.map((item) => renderItem(item, true))}</div>
+          </section>
+        )}
+
         {categoriesWithItems.map((cat) => {
           const catItems = visibleItems.filter((i) => i.categoryId === cat.id);
           return (
-            <div
+            <section
               key={cat.id}
               ref={(el) => {
                 sectionRefs.current[cat.id] = el;
               }}
               data-category-id={cat.id}
-              className="rounded-2xl px-5 py-6 mb-6 shadow-[0_4px_20px_-8px_rgba(0,0,0,0.12)]"
-              style={{ backgroundColor: tenant.menuCardColor }}
+              className="pb-4 pt-8"
             >
-              <h2 className="text-xl font-bold mb-5">{categoryLabel(cat)}</h2>
-              <div
-                className="flex flex-col divide-y"
-                style={{ borderColor: "color-mix(in srgb, currentColor 8%, transparent)" }}
-              >
-                {catItems.map((item) => {
-                  const hasPhoto = tenant.menuShowPhotos && Boolean(item.imageUrl);
-                  const liked = wishlist.includes(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      className={`py-4 first:pt-0 flex flex-col gap-2 ${item.status === "SOLD_OUT" ? "opacity-45" : ""}`}
-                    >
-                      <div className="flex items-center gap-3">
-                        {!hasPhoto && (
-                          <button
-                            onClick={() => toggleWishlist(item.id)}
-                            aria-label={favLabel(liked)}
-                            className="shrink-0 p-1 -ml-1"
-                          >
-                            <Heart
-                              size={18}
-                              className={liked ? "fill-red-500 text-red-500" : ""}
-                              style={liked ? undefined : { opacity: 0.35 }}
-                              aria-hidden
-                            />
-                          </button>
-                        )}
-                        <div
-                          onClick={hasPhoto ? () => setZoomedItem(item) : undefined}
-                          className={`flex-1 min-w-0 flex gap-3 ${
-                            hasPhoto ? "cursor-pointer active:opacity-70 transition-opacity" : ""
-                          }`}
-                        >
-                          {hasPhoto && (
-                            <div className="relative shrink-0">
-                              <SmartImage
-                                src={item.imageUrl}
-                                alt={resolveItemName(item, lang)}
-                                width={56}
-                                height={56}
-                                className="w-14 h-14 rounded-lg object-cover"
-                              />
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleWishlist(item.id);
-                                }}
-                                aria-label={favLabel(liked)}
-                                className="absolute top-0.5 right-0.5 p-1 rounded-full"
-                                style={{ backgroundColor: "rgba(0,0,0,0.35)" }}
-                              >
-                                <Heart
-                                  size={13}
-                                  className={liked ? "fill-red-500 text-red-500" : "text-white"}
-                                  aria-hidden
-                                />
-                              </button>
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            {/* Nombre y precio en líneas separadas, no en la
-                                misma fila — al lado de la foto queda muy poco
-                                ancho, y un nombre largo junto a un precio con
-                                conversión de moneda ("Afl. 30,00 / $17.14")
-                                no entran juntos: el nombre se achicaba a una
-                                columna angosta y el precio quedaba superpuesto
-                                encima del texto. */}
-                            <p className="text-base font-semibold">{resolveItemName(item, lang)}</p>
-                            {item.status === "SOLD_OUT" ? (
-                              <span className="inline-block text-xs px-2 py-0.5 rounded-md bg-red-50 text-red-700 mt-1">
-                                {lang === "en" ? "Sold out" : "Agotado"}
-                              </span>
-                            ) : (
-                              <p className="text-base font-semibold mt-0.5">{priceLabel(item)}</p>
-                            )}
-                            {itemDescription(item) && (
-                              <p className="text-sm opacity-60 mt-1">{itemDescription(item)}</p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                      {/* Fila propia debajo del precio — si compartiera fila con
-                          el nombre, el stepper completo (−, cantidad, +) le
-                          quitaba tanto ancho al nombre en pantallas angostas
-                          que el texto se superponía con el precio. */}
-                      {tenant.orderingEnabled && item.status !== "SOLD_OUT" && !item.variablePrice && (
-                        <div className="flex items-center justify-end gap-2">
-                          {item.addOns.length > 0 ? (
-                            <button
-                              onClick={() => setCustomizeItem(item)}
-                              aria-label={lang === "en" ? "Customize and add to order" : "Personalizar y agregar al pedido"}
-                              className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
-                              style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-                            >
-                              +
-                            </button>
-                          ) : (
-                            <>
-                              {quickQuantityFor(item.id) > 0 && (
-                                <>
-                                  <button
-                                    onClick={() => quickRemove(item.id)}
-                                    aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
-                                    className="w-6 h-6 rounded-full border flex items-center justify-center text-sm"
-                                    style={{ borderColor: "currentColor" }}
-                                  >
-                                    −
-                                  </button>
-                                  <span className="text-sm font-semibold w-4 text-center">
-                                    {quickQuantityFor(item.id)}
-                                  </span>
-                                </>
-                              )}
-                              <button
-                                onClick={() => quickAdd(item.id)}
-                                aria-label={lang === "en" ? "Add to order" : "Agregar al pedido"}
-                                className="w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
-                                style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-                              >
-                                +
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+              <h2 className="text-[32px] font-extrabold leading-[1.1] tracking-tight" style={{ color: tenant.menuPageTextColor }}>
+                {categoryLabel(cat)}
+              </h2>
+              <div className="mt-5 flex flex-col gap-3.5">{catItems.map((item) => renderItem(item))}</div>
+            </section>
           );
         })}
 
@@ -765,6 +679,7 @@ export default function PublicMenu({
           </div>
         )}
       </div>
+      </div>
 
       {tenant.menuLeadEnabled && (
         <div className="flex justify-center px-6 pt-2">
@@ -782,19 +697,10 @@ export default function PublicMenu({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/logo.svg" alt="Zertoo" className="h-4 w-auto" />
       </div>
-
-      {tenant.contactPhone && (
-        <a
-          href={`tel:${tenant.contactPhone.replace(/\s+/g, "")}`}
-          className="fixed bottom-5 right-5 z-30 flex items-center gap-2 text-sm font-semibold px-4 py-3 rounded-full shadow-lg hover:brightness-105 transition-all"
-          style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-        >
-          <Phone size={15} aria-hidden />
-          {lang === "en" ? "Call" : "Llamar"}
-        </a>
-      )}
+      {tenant.orderingEnabled && <div className="h-24" />}
 
       <FaqChatWidget
+        raised={tenant.orderingEnabled}
         tenantSlug={tenant.slug}
         buttonColor={tenant.buttonColor}
         buttonTextColor={tenant.buttonTextColor}
@@ -904,20 +810,43 @@ export default function PublicMenu({
         />
       )}
 
-      {cartCount > 0 && !checkoutOpen && (
-        <button
-          onClick={() => setCheckoutOpen(true)}
-          className="fixed bottom-0 left-0 right-0 z-40 flex items-center justify-between px-6 py-4 font-semibold text-sm shadow-[0_-8px_24px_-8px_rgba(0,0,0,0.15)]"
-          style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
-        >
-          <span>
-            {cartCount} {lang === "en" ? (cartCount === 1 ? "item" : "items") : cartCount === 1 ? "ítem" : "ítems"}
-          </span>
-          <span className="flex items-center gap-2">
-            {formatCurrency(cartSubtotal, tenant.currency)}
-            <ArrowRight size={16} aria-hidden />
-          </span>
-        </button>
+      {/* Barra de pedido flotante — siempre visible si el negocio recibe pedidos */}
+      {tenant.orderingEnabled && !checkoutOpen && (
+        <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+          <div
+            className="mx-auto flex max-w-xl items-center gap-3 rounded-[32px] border p-2.5 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.35)]"
+            style={{ backgroundColor: tenant.menuCardColor, borderColor: "color-mix(in srgb, currentColor 8%, transparent)" }}
+          >
+            <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-black/[0.05]">
+              <ShoppingCart size={24} aria-hidden />
+              <span
+                className="absolute -right-1.5 -top-1.5 flex min-w-[22px] items-center justify-center rounded-full px-1.5 py-0.5 text-xs font-bold"
+                style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+              >
+                {cartCount}
+              </span>
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-base font-bold leading-tight">{lang === "en" ? "Your order" : "Tu pedido"}</p>
+              <p className="truncate text-[13px] opacity-60">
+                {cartCount === 0
+                  ? lang === "en"
+                    ? "Add items to get started"
+                    : "Agrega platos para empezar"
+                  : `${cartCount} ${lang === "en" ? (cartCount === 1 ? "item" : "items") : cartCount === 1 ? "ítem" : "ítems"} · ${formatCurrency(cartSubtotal, tenant.currency)}`}
+              </p>
+            </div>
+            <button
+              onClick={() => setCheckoutOpen(true)}
+              disabled={cartCount === 0}
+              className="flex h-12 shrink-0 items-center gap-1 rounded-full pl-5 pr-3.5 text-[15px] font-bold transition-opacity disabled:opacity-50"
+              style={{ backgroundColor: tenant.buttonColor, color: tenant.buttonTextColor }}
+            >
+              {lang === "en" ? "View order" : "Ver pedido"}
+              <ChevronRight size={18} aria-hidden />
+            </button>
+          </div>
+        </div>
       )}
 
       {customizeItem && (

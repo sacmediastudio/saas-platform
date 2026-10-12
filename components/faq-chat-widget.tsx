@@ -15,7 +15,10 @@ export default function FaqChatWidget({
   buttonTextColor,
   themeBgColor,
   themeTextColor,
+  raised = false,
 }: {
+  // En el menú con pedidos hay una barra fija abajo: el botón sube para no taparla.
+  raised?: boolean;
   tenantSlug: string;
   buttonColor: string;
   buttonTextColor: string;
@@ -45,7 +48,7 @@ export default function FaqChatWidget({
           setSelected(null);
         }}
         aria-label={open ? "Cerrar preguntas frecuentes" : "Preguntas frecuentes"}
-        className="fixed bottom-5 left-5 z-40 flex items-center justify-center w-12 h-12 rounded-full shadow-lg hover:brightness-105 transition-all"
+        className={`fixed ${raised ? "bottom-28" : "bottom-5"} left-5 z-40 flex items-center justify-center w-12 h-12 rounded-full shadow-lg hover:brightness-105 transition-all`}
         style={{ backgroundColor: buttonColor, color: buttonTextColor }}
       >
         {open ? <X size={20} aria-hidden /> : <MessageCircleQuestion size={20} aria-hidden />}
@@ -53,7 +56,7 @@ export default function FaqChatWidget({
 
       {open && (
         <div
-          className="fixed bottom-20 left-5 z-40 w-[calc(100vw-2.5rem)] max-w-xs rounded-2xl shadow-xl overflow-hidden border"
+          className={`fixed ${raised ? "bottom-44" : "bottom-20"} left-5 z-40 w-[calc(100vw-2.5rem)] max-w-xs rounded-2xl shadow-xl overflow-hidden border`}
           style={{
             backgroundColor: themeBgColor,
             color: themeTextColor,
