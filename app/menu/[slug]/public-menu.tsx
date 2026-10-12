@@ -374,12 +374,12 @@ export default function PublicMenu({
     return (
       <div
         key={`${featured ? "f-" : ""}${item.id}`}
-        className={`relative flex gap-4 rounded-[22px] border p-3 shadow-[0_6px_24px_-12px_rgba(0,0,0,0.2)] ${soldOut ? "opacity-50" : ""}`}
+        className={`relative flex gap-3 rounded-[13px] border p-1.5 pr-2.5 shadow-[0_4px_16px_-10px_rgba(0,0,0,0.2)] ${soldOut ? "opacity-50" : ""}`}
         style={{ backgroundColor: tenant.menuCardColor, borderColor: "color-mix(in srgb, currentColor 6%, transparent)" }}
       >
         {hasPhoto && (
           <div
-            className="relative aspect-[4/3] w-[42%] max-w-[190px] shrink-0 cursor-pointer self-start overflow-hidden rounded-2xl bg-black/10 active:opacity-80"
+            className="relative aspect-[4/3] w-[36%] max-w-[150px] shrink-0 cursor-pointer self-start overflow-hidden rounded-[9px] bg-black/10 active:opacity-80"
             onClick={() => setZoomedItem(item)}
             role="button"
             tabIndex={0}
@@ -396,7 +396,7 @@ export default function PublicMenu({
               alt={resolveItemName(item, lang)}
               fill
               className="object-cover"
-              sizes="(min-width: 576px) 190px, 42vw"
+              sizes="(min-width: 576px) 150px, 36vw"
             />
             {featured && (
               <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-xs font-bold text-white">
@@ -410,16 +410,16 @@ export default function PublicMenu({
                 toggleWishlist(item.id);
               }}
               aria-label={favLabel(liked)}
-              className="absolute right-2 top-2 rounded-full bg-black/35 p-2 backdrop-blur-sm before:absolute before:-inset-1.5 before:content-['']"
+              className="absolute right-1.5 top-1.5 rounded-full bg-black/35 p-1.5 backdrop-blur-sm before:absolute before:-inset-1.5 before:content-['']"
             >
-              <Heart size={18} className={liked ? "fill-red-500 text-red-500" : "text-white"} aria-hidden />
+              <Heart size={15} className={liked ? "fill-red-500 text-red-500" : "text-white"} aria-hidden />
             </button>
           </div>
         )}
 
-        <div className="flex min-w-0 flex-1 flex-col py-1">
+        <div className={`flex min-w-0 flex-1 flex-col pb-1 pt-1.5 ${hasPhoto ? "" : "pl-3"}`}>
           <div className="flex items-start justify-between gap-2">
-            <p className="text-[19px] font-bold leading-snug">{resolveItemName(item, lang)}</p>
+            <p className="text-[15px] font-bold leading-tight">{resolveItemName(item, lang)}</p>
             {!hasPhoto && (
               <button onClick={() => toggleWishlist(item.id)} aria-label={favLabel(liked)} className="relative shrink-0 p-1 before:absolute before:-inset-2 before:content-['']">
                 <Heart
@@ -432,23 +432,23 @@ export default function PublicMenu({
             )}
           </div>
           {itemDescription(item) && (
-            <p className="mt-1.5 line-clamp-3 text-[14px] leading-snug" style={{ color: mutedText }}>
+            <p className="mt-1 line-clamp-3 text-[12px] leading-[1.15]" style={{ color: mutedText }}>
               {itemDescription(item)}
             </p>
           )}
 
-          <div className="mt-auto flex items-end justify-between gap-2 pt-3">
+          <div className="mt-auto flex items-end justify-between gap-2 pt-1.5">
             {soldOut ? (
               <span className="inline-block rounded-md bg-red-50 px-2 py-0.5 text-xs text-red-700">{lang === "en" ? "Sold out" : "Agotado"}</span>
             ) : item.variablePrice ? (
-              <span className="text-[19px] font-extrabold">{lang === "en" ? "Ask" : "Preguntar"}</span>
+              <span className="text-[15px] font-bold">{lang === "en" ? "Ask" : "Preguntar"}</span>
             ) : (
-              <div className="flex min-w-0 flex-col sm:flex-row sm:items-center sm:gap-x-2.5">
-                <span className="text-[17px] font-extrabold leading-tight">{primary}</span>
+              <div className="flex min-w-0 flex-wrap items-center gap-x-2">
+                <span className="text-[15px] font-bold leading-tight">{primary}</span>
                 {secondary && (
                   <>
-                    <span className="hidden h-5 w-px bg-current opacity-25 sm:block" aria-hidden />
-                    <span className="text-[15px] leading-tight" style={{ color: mutedText }}>{secondary}</span>
+                    <span className="h-3.5 w-px bg-current opacity-25" aria-hidden />
+                    <span className="text-[12.5px] leading-tight" style={{ color: mutedText }}>{secondary}</span>
                   </>
                 )}
               </div>
@@ -461,7 +461,7 @@ export default function PublicMenu({
                     <button
                       onClick={() => quickRemove(item.id)}
                       aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
-                      className="relative flex h-8 w-8 items-center justify-center rounded-full border text-lg before:absolute before:-inset-2 before:content-['']"
+                      className="relative flex h-7 w-7 items-center justify-center rounded-full border text-base before:absolute before:-inset-2.5 before:content-['']"
                       style={{ borderColor: "color-mix(in srgb, currentColor 25%, transparent)" }}
                     >
                       −
@@ -480,7 +480,7 @@ export default function PublicMenu({
                         ? "Add to order"
                         : "Agregar al pedido"
                   }
-                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-2xl font-light leading-none shadow-[0_5px_12px_-5px_rgba(0,0,0,0.45)] before:absolute before:-inset-1 before:content-[''] active:scale-95"
+                  className="relative flex h-8 w-8 items-center justify-center rounded-full text-xl font-light leading-none shadow-[0_4px_10px_-4px_rgba(0,0,0,0.45)] before:absolute before:-inset-2 before:content-[''] active:scale-95"
                   style={addStyle}
                 >
                   +
@@ -663,7 +663,7 @@ export default function PublicMenu({
             <h2 className="text-2xl font-extrabold leading-[1.15] tracking-tight" style={{ color: tenant.menuPageTextColor }}>
               {lang === "en" ? "Featured" : "Destacados"}
             </h2>
-            <div className="mt-5 flex flex-col gap-3.5">{featuredItems.map((item) => renderItem(item, true))}</div>
+            <div className="mt-4 flex flex-col gap-3">{featuredItems.map((item) => renderItem(item, true))}</div>
           </section>
         )}
 
@@ -681,7 +681,7 @@ export default function PublicMenu({
               <h2 className="text-2xl font-extrabold leading-[1.15] tracking-tight" style={{ color: tenant.menuPageTextColor }}>
                 {categoryLabel(cat)}
               </h2>
-              <div className="mt-5 flex flex-col gap-3.5">{catItems.map((item) => renderItem(item))}</div>
+              <div className="mt-4 flex flex-col gap-3">{catItems.map((item) => renderItem(item))}</div>
             </section>
           );
         })}
