@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Star,
   Mail,
@@ -28,6 +28,8 @@ import { formatCurrency } from "@/lib/currency";
 import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
 import SmartImage from "@/components/smart-image";
+import DialogA11y from "@/components/use-dialog-a11y";
+import { ensureContrast, mutedColor } from "@/lib/contrast";
 
 interface MenuItemAddOnData {
   id: string;
@@ -130,7 +132,7 @@ function resolveItemName(item: MenuItemData, lang: string) {
 }
 
 export default function PublicMenu({
-  tenant,
+  tenant: tenantProp,
   categories,
   items,
   avgRating,
@@ -144,6 +146,21 @@ export default function PublicMenu({
   reviewCount: number;
   locations: LocationData[];
 }) {
+  // Los colores los elige cada negocio en Ajustes: acá se corrigen en el
+  // momento las combinaciones que no contrastan lo suficiente (mínimo
+  // 4,5:1) para que el texto siempre se pueda leer.
+  const tenant = useMemo(() => {
+    const buttonTextColor = ensureContrast(tenantProp.buttonTextColor, tenantProp.buttonColor);
+    const themeTextColor = ensureContrast(
+      ensureContrast(tenantProp.themeTextColor, tenantProp.menuCardColor),
+      tenantProp.themeBgColor
+    );
+    const menuPageTextColor = ensureContrast(tenantProp.menuPageTextColor, tenantProp.themeBgColor);
+    return { ...tenantProp, buttonTextColor, themeTextColor, menuPageTextColor };
+  }, [tenantProp]);
+  // Gris para descripciones y segunda moneda, calculado contra el fondo de la tarjeta.
+  const mutedText = mutedColor(tenant.themeTextColor, tenant.menuCardColor);
+
   // El nombre de cada plato NUNCA se traduce (puede ser cualquier cosa —
   // una marca, un plato regional, etc.). Solo las categorías y las
   // descripciones tienen una versión en inglés opcional, escrita a mano
@@ -160,6 +177,10 @@ export default function PublicMenu({
     const stored = window.localStorage.getItem("zertoo_lang");
     setLang(stored === "en" ? "en" : "es");
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = lang;
+  }, [lang]);
 
   function favLabel(isFav: boolean): string {
     if (isFav) return lang === "en" ? "Remove from favorites" : "Quitar de favoritos";
@@ -274,7 +295,7 @@ export default function PublicMenu({
   }
 
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
-  const navRef = useRef<HTMLDivElement | null>(null);
+  const navRef = useRef<HTMLElement | null>(null);
   const categoryScrollRef = useRef<HTMLDivElement | null>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(false);
@@ -360,6 +381,15 @@ export default function PublicMenu({
           <div
             className="relative aspect-[4/3] w-[42%] max-w-[190px] shrink-0 cursor-pointer self-start overflow-hidden rounded-2xl bg-black/10 active:opacity-80"
             onClick={() => setZoomedItem(item)}
+            role="button"
+            tabIndex={0}
+            aria-label={lang === "en" ? `Enlarge photo of ${resolveItemName(item, lang)}` : `Ampliar foto de ${resolveItemName(item, lang)}`}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                setZoomedItem(item);
+              }
+            }}
           >
             <SmartImage
               src={item.imageUrl}
@@ -369,7 +399,7 @@ export default function PublicMenu({
               sizes="(min-width: 576px) 190px, 42vw"
             />
             {featured && (
-              <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-[10px] font-bold text-white">
+              <span className="absolute bottom-2 left-2 flex items-center gap-1 rounded-full bg-orange-500 px-2 py-1 text-xs font-bold text-white">
                 <Star size={10} className="fill-white" aria-hidden />
                 {lang === "en" ? "Featured" : "Destacado"}
               </span>
@@ -380,7 +410,7 @@ export default function PublicMenu({
                 toggleWishlist(item.id);
               }}
               aria-label={favLabel(liked)}
-              className="absolute right-2 top-2 rounded-full bg-black/35 p-2 backdrop-blur-sm"
+              className="absolute right-2 top-2 rounded-full bg-black/35 p-2 backdrop-blur-sm before:absolute before:-inset-1.5 before:content-['']"
             >
               <Heart size={18} className={liked ? "fill-red-500 text-red-500" : "text-white"} aria-hidden />
             </button>
@@ -391,7 +421,7 @@ export default function PublicMenu({
           <div className="flex items-start justify-between gap-2">
             <p className="text-[19px] font-bold leading-snug">{resolveItemName(item, lang)}</p>
             {!hasPhoto && (
-              <button onClick={() => toggleWishlist(item.id)} aria-label={favLabel(liked)} className="shrink-0 p-1">
+              <button onClick={() => toggleWishlist(item.id)} aria-label={favLabel(liked)} className="relative shrink-0 p-1 before:absolute before:-inset-2 before:content-['']">
                 <Heart
                   size={20}
                   className={liked ? "fill-red-500 text-red-500" : ""}
@@ -401,7 +431,11 @@ export default function PublicMenu({
               </button>
             )}
           </div>
-          {itemDescription(item) && <p className="mt-1.5 line-clamp-3 text-[14px] leading-snug opacity-60">{itemDescription(item)}</p>}
+          {itemDescription(item) && (
+            <p className="mt-1.5 line-clamp-3 text-[14px] leading-snug" style={{ color: mutedText }}>
+              {itemDescription(item)}
+            </p>
+          )}
 
           <div className="mt-auto flex items-end justify-between gap-2 pt-3">
             {soldOut ? (
@@ -414,7 +448,7 @@ export default function PublicMenu({
                 {secondary && (
                   <>
                     <span className="hidden h-5 w-px bg-current opacity-25 sm:block" aria-hidden />
-                    <span className="text-[15px] leading-tight opacity-60">{secondary}</span>
+                    <span className="text-[15px] leading-tight" style={{ color: mutedText }}>{secondary}</span>
                   </>
                 )}
               </div>
@@ -427,7 +461,7 @@ export default function PublicMenu({
                     <button
                       onClick={() => quickRemove(item.id)}
                       aria-label={lang === "en" ? "Remove one" : "Quitar uno"}
-                      className="flex h-8 w-8 items-center justify-center rounded-full border text-lg"
+                      className="relative flex h-8 w-8 items-center justify-center rounded-full border text-lg before:absolute before:-inset-2 before:content-['']"
                       style={{ borderColor: "color-mix(in srgb, currentColor 25%, transparent)" }}
                     >
                       −
@@ -446,7 +480,7 @@ export default function PublicMenu({
                         ? "Add to order"
                         : "Agregar al pedido"
                   }
-                  className="flex h-10 w-10 items-center justify-center rounded-full text-2xl font-light leading-none shadow-[0_5px_12px_-5px_rgba(0,0,0,0.45)] active:scale-95"
+                  className="relative flex h-10 w-10 items-center justify-center rounded-full text-2xl font-light leading-none shadow-[0_5px_12px_-5px_rgba(0,0,0,0.45)] before:absolute before:-inset-1 before:content-[''] active:scale-95"
                   style={addStyle}
                 >
                   +
@@ -472,7 +506,7 @@ export default function PublicMenu({
           <a
             href={`tel:${tenant.contactPhone.replace(/\s+/g, "")}`}
             aria-label={lang === "en" ? "Call" : "Llamar"}
-            className="absolute right-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-full border border-white/50 bg-black/25 text-white backdrop-blur-md"
+            className="absolute right-4 top-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-white/50 bg-black/25 text-white backdrop-blur-md"
           >
             <Phone size={18} aria-hidden />
           </a>
@@ -496,14 +530,14 @@ export default function PublicMenu({
               </div>
             )}
             <div className="min-w-0 flex-1">
-              <p className="line-clamp-2 text-xl font-extrabold leading-tight text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">{tenant.name}</p>
+              <h1 className="line-clamp-2 text-xl font-extrabold leading-tight text-white [text-shadow:0_1px_6px_rgba(0,0,0,0.4)]">{tenant.name}</h1>
               {tenant.heroTagline && <p className="truncate text-sm text-white/80">{tenant.heroTagline}</p>}
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <button
                 onClick={() => setShowWishlistOnly((v) => !v)}
                 aria-label={lang === "en" ? "See favorites" : "Ver favoritos"}
-                className="flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-bold text-white backdrop-blur-md transition-colors"
+                className="relative flex items-center gap-1 rounded-full border px-2.5 py-1.5 text-xs font-bold text-white backdrop-blur-md transition-colors before:absolute before:-inset-x-1 before:-inset-y-2 before:content-['']"
                 style={{
                   backgroundColor: showWishlistOnly ? tenant.buttonColor : "rgba(0,0,0,0.28)",
                   color: showWishlistOnly ? tenant.buttonTextColor : "#fff",
@@ -513,7 +547,7 @@ export default function PublicMenu({
                 <Heart size={14} className={wishlist.length > 0 ? "fill-current" : ""} aria-hidden />
                 {wishlist.length}
               </button>
-              <div className="flex items-center rounded-full border border-white/50 bg-white/25 p-0.5 text-[11px] font-bold backdrop-blur-md">
+              <div className="flex items-center rounded-full border border-white/50 bg-white/25 p-0.5 text-xs font-bold backdrop-blur-md">
                 {(["ES", "EN"] as const).map((l) => {
                   const value = l.toLowerCase() as Lang;
                   const active = lang === value;
@@ -525,7 +559,8 @@ export default function PublicMenu({
                         setLang(value);
                         setStoredLang(value);
                       }}
-                      className="rounded-full px-2 py-1 transition-colors"
+                      aria-pressed={active}
+                      className="relative rounded-full px-2 py-1 transition-colors before:absolute before:-inset-x-0.5 before:-inset-y-3 before:content-['']"
                       style={{
                         backgroundColor: active ? tenant.buttonColor : "transparent",
                         color: active ? tenant.buttonTextColor : "#fff",
@@ -542,15 +577,29 @@ export default function PublicMenu({
       </header>
 
       {/* Hoja con esquinas redondeadas que sube sobre la foto */}
-      <div className="relative -mt-7 rounded-t-[30px]" style={{ backgroundColor: tenant.themeBgColor }}>
+      <main className="relative -mt-7 rounded-t-[30px]" style={{ backgroundColor: tenant.themeBgColor }}>
         {/* Categorías: chips con ícono, pegajosas al hacer scroll */}
-        <div ref={navRef} className="sticky top-0 z-20 rounded-t-[30px]" style={{ backgroundColor: tenant.themeBgColor }}>
+        <nav ref={navRef} aria-label={lang === "en" ? "Menu categories" : "Categorías del menú"} className="sticky top-0 z-20 rounded-t-[30px]" style={{ backgroundColor: tenant.themeBgColor }}>
           <div className="relative mx-auto max-w-xl px-5 pb-3 pt-4">
+            {showLeftArrow && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 left-0 z-[5] w-20"
+                style={{ background: `linear-gradient(to left, transparent, ${tenant.themeBgColor})` }}
+              />
+            )}
+            {showRightArrow && (
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 z-[5] w-20"
+                style={{ background: `linear-gradient(to right, transparent, ${tenant.themeBgColor})` }}
+              />
+            )}
             {showLeftArrow && (
               <button
                 onClick={() => scrollCategoryNav("left")}
                 aria-label={lang === "en" ? "See previous categories" : "Ver categorías anteriores"}
-                className="absolute left-3 top-[36px] z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)]"
+                className="absolute left-3 top-[36px] z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)] before:absolute before:-inset-1 before:content-['']"
                 style={{ backgroundColor: tenant.menuCardColor, color: tenant.menuPageTextColor }}
               >
                 <ChevronLeft size={18} aria-hidden />
@@ -561,7 +610,12 @@ export default function PublicMenu({
                 const active = activeCategory === cat.id;
                 const Icon = categoryIcon(categoryLabel(cat));
                 return (
-                  <button key={cat.id} onClick={() => scrollToCategory(cat.id)} className="flex shrink-0 flex-col items-center">
+                  <button
+                    key={cat.id}
+                    onClick={() => scrollToCategory(cat.id)}
+                    aria-current={active ? "true" : undefined}
+                    className="flex shrink-0 flex-col items-center"
+                  >
                     <span
                       className="flex items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors"
                       style={
@@ -594,14 +648,14 @@ export default function PublicMenu({
               <button
                 onClick={() => scrollCategoryNav("right")}
                 aria-label={lang === "en" ? "See more categories" : "Ver más categorías"}
-                className="absolute right-3 top-[36px] z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)]"
+                className="absolute right-3 top-[36px] z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full shadow-[0_4px_14px_-4px_rgba(0,0,0,0.35)] before:absolute before:-inset-1 before:content-['']"
                 style={{ backgroundColor: tenant.menuCardColor, color: tenant.menuPageTextColor }}
               >
                 <ChevronRight size={18} aria-hidden />
               </button>
             )}
           </div>
-        </div>
+        </nav>
 
       <div className="max-w-xl mx-auto px-5">
         {featuredItems.length > 0 && (
@@ -679,7 +733,7 @@ export default function PublicMenu({
           </div>
         )}
       </div>
-      </div>
+      </main>
 
       {tenant.menuLeadEnabled && (
         <div className="flex justify-center px-6 pt-2">
@@ -718,6 +772,7 @@ export default function PublicMenu({
             style={{ backgroundColor: tenant.themeBgColor, color: tenant.themeTextColor }}
             onClick={(e) => e.stopPropagation()}
           >
+            <DialogA11y onClose={() => setZoomedItem(null)} label={resolveItemName(zoomedItem, lang)} />
             <div className="relative">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -828,7 +883,7 @@ export default function PublicMenu({
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-base font-bold leading-tight">{lang === "en" ? "Your order" : "Tu pedido"}</p>
-              <p className="truncate text-[13px] opacity-60">
+              <p className="truncate text-[13px]" style={{ color: mutedText }}>
                 {cartCount === 0
                   ? lang === "en"
                     ? "Add items to get started"
@@ -955,6 +1010,7 @@ function LeadClaimModal({
         className="w-full max-w-sm bg-white rounded-2xl p-6 text-neutral-800"
         onClick={(e) => e.stopPropagation()}
       >
+        <DialogA11y onClose={onClose} label={rewardLabel} />
         {status === "done" ? (
           <div className="text-center">
             <p className="text-lg font-semibold mb-2">
@@ -1257,6 +1313,7 @@ function CheckoutModal({
         className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-6 text-neutral-800 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        <DialogA11y onClose={onClose} label={language === "en" ? "Your order" : "Tu pedido"} />
         {status === "done" ? (
           <div className="text-center py-6">
             <p className="text-lg font-semibold mb-2">{language === "en" ? "Order sent!" : "¡Pedido enviado!"}</p>
@@ -1531,6 +1588,7 @@ function ItemCustomizeModal({
         className="w-full sm:max-w-sm bg-white rounded-t-2xl sm:rounded-2xl p-6 text-neutral-800 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        <DialogA11y onClose={onClose} label={resolveItemName(item, lang)} />
         <p className="text-lg font-semibold mb-1">{resolveItemName(item, lang)}</p>
         <p className="text-sm opacity-60 mb-4">{formatCurrency(item.price, currency)}</p>
 
