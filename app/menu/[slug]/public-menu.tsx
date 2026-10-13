@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Star,
   Mail,
@@ -29,7 +29,7 @@ import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
 import SmartImage from "@/components/smart-image";
 import DialogA11y from "@/components/use-dialog-a11y";
-import { ensureContrast, mutedColor } from "@/lib/contrast";
+import { mutedColor } from "@/lib/contrast";
 
 interface MenuItemAddOnData {
   id: string;
@@ -146,18 +146,8 @@ export default function PublicMenu({
   reviewCount: number;
   locations: LocationData[];
 }) {
-  // Los colores los elige cada negocio en Ajustes: acá se corrigen en el
-  // momento las combinaciones que no contrastan lo suficiente (mínimo
-  // 4,5:1) para que el texto siempre se pueda leer.
-  const tenant = useMemo(() => {
-    const buttonTextColor = ensureContrast(tenantProp.buttonTextColor, tenantProp.buttonColor);
-    const themeTextColor = ensureContrast(
-      ensureContrast(tenantProp.themeTextColor, tenantProp.menuCardColor),
-      tenantProp.themeBgColor
-    );
-    const menuPageTextColor = ensureContrast(tenantProp.menuPageTextColor, tenantProp.themeBgColor);
-    return { ...tenantProp, buttonTextColor, themeTextColor, menuPageTextColor };
-  }, [tenantProp]);
+  // Los colores los elige cada negocio en Ajustes y se respetan tal cual.
+  const tenant = tenantProp;
   // Gris para descripciones y segunda moneda, calculado contra el fondo de la tarjeta.
   const mutedText = mutedColor(tenant.themeTextColor, tenant.menuCardColor);
 

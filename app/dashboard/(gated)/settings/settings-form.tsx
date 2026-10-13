@@ -1,6 +1,5 @@
 "use client";
 
-import { contrastRatio, MIN_TEXT_CONTRAST } from "@/lib/contrast";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Image as ImageIcon, Check } from "lucide-react";
@@ -341,28 +340,6 @@ export default function SettingsForm({
             onChange={(v) => setForm({ ...form, menuPageTextColor: v })}
           />
         </div>
-
-        {(() => {
-          const issues = [
-            { label: t.settingsForm.contrastWarningPairs.buttons, ratio: contrastRatio(form.buttonTextColor, form.buttonColor) },
-            { label: t.settingsForm.contrastWarningPairs.cards, ratio: contrastRatio(form.themeTextColor, form.menuCardColor) },
-            { label: t.settingsForm.contrastWarningPairs.page, ratio: contrastRatio(form.menuPageTextColor, form.themeBgColor) },
-          ].filter((c) => c.ratio !== null && c.ratio < MIN_TEXT_CONTRAST);
-          if (issues.length === 0) return null;
-          return (
-            <div role="alert" className="md:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-3.5 py-3 text-xs text-amber-900">
-              <p className="font-semibold">{t.settingsForm.contrastWarningTitle}</p>
-              <ul className="mt-1 list-disc pl-4">
-                {issues.map((c) => (
-                  <li key={c.label}>
-                    {c.label} ({c.ratio!.toFixed(1)}:1)
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-1.5">{t.settingsForm.contrastWarningNote}</p>
-            </div>
-          );
-        })()}
 
         <div className="md:col-span-2">
           <div
