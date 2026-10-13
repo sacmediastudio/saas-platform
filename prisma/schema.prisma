@@ -529,6 +529,9 @@ enum SmartLinkType {
   LINKEDIN
   MAPS
   VCARD
+  // Botones de descarga de apps móviles (App Store / Google Play).
+  APP_STORE
+  PLAY_STORE
   CUSTOM
 }
 

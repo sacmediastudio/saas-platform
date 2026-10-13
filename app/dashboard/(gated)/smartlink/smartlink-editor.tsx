@@ -26,6 +26,8 @@ import {
   Check,
   Contact,
   MousePointerClick,
+  Apple,
+  Play,
 } from "lucide-react";
 
 type LinkType =
@@ -40,6 +42,8 @@ type LinkType =
   | "LINKEDIN"
   | "MAPS"
   | "VCARD"
+  | "APP_STORE"
+  | "PLAY_STORE"
   | "CUSTOM";
 
 interface SmartLinkItem {
@@ -63,6 +67,8 @@ const TYPE_META: Record<LinkType, { icon: any; placeholder: string }> = {
   LINKEDIN: { icon: Linkedin, placeholder: "https://linkedin.com/company/tunegocio" },
   MAPS: { icon: MapPin, placeholder: "https://maps.app.goo.gl/..." },
   VCARD: { icon: Contact, placeholder: "" },
+  APP_STORE: { icon: Apple, placeholder: "https://apps.apple.com/app/..." },
+  PLAY_STORE: { icon: Play, placeholder: "https://play.google.com/store/apps/details?id=..." },
   CUSTOM: { icon: Link2, placeholder: "https://..." },
 };
 

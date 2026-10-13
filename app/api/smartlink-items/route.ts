@@ -15,6 +15,8 @@ const TYPES = [
   "LINKEDIN",
   "MAPS",
   "VCARD",
+  "APP_STORE",
+  "PLAY_STORE",
   "CUSTOM",
 ] as const;
 

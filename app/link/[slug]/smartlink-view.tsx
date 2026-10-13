@@ -12,6 +12,8 @@ import {
   MapPin,
   Link2,
   Contact,
+  Apple,
+  Play,
 } from "lucide-react";
 import { getStoredLang, setStoredLang, type Lang } from "@/lib/i18n-auth";
 import { publicTranslations } from "@/lib/i18n-public";
@@ -30,6 +32,8 @@ const ICONS: Record<string, any> = {
   LINKEDIN: Linkedin,
   MAPS: MapPin,
   VCARD: Contact,
+  APP_STORE: Apple,
+  PLAY_STORE: Play,
   CUSTOM: Link2,
 };
 
