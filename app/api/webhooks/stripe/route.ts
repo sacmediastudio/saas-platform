@@ -66,14 +66,27 @@ async function syncSubscriptionFromStripe(stripeSubscription: Stripe.Subscriptio
       Boolean(x.module)
     );
 
-  await db.$transaction([
-    db.subscriptionModuleItem.deleteMany({ where: { subscriptionId: subscription.id } }),
-    ...currentModules.map(({ item, module }) =>
-      db.subscriptionModuleItem.create({
-        data: { subscriptionId: subscription.id, module, stripeItemId: item.id },
-      })
-    ),
-  ]);
+  // Un mismo módulo no puede aparecer dos veces (unique subscriptionId +
+  // module) — si Stripe trae dos ítems del mismo módulo, se queda con uno.
+  const uniqueModules = Array.from(new Map(currentModules.map((x) => [x.module, x])).values());
+
+  // Stripe manda checkout.session.completed, subscription.created y
+  // subscription.updated casi al mismo tiempo, y cada uno corre esta
+  // reconstrucción: sin serializar, dos transacciones borran y después
+  // ambas insertan, y la segunda choca con el unique. El lock por
+  // suscripción las pone en fila; skipDuplicates es el cinturón extra.
+  await db.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${subscription.id}))`;
+    await tx.subscriptionModuleItem.deleteMany({ where: { subscriptionId: subscription.id } });
+    await tx.subscriptionModuleItem.createMany({
+      data: uniqueModules.map(({ item, module }) => ({
+        subscriptionId: subscription.id,
+        module,
+        stripeItemId: item.id,
+      })),
+      skipDuplicates: true,
+    });
+  });
 }
 
 export async function POST(req: NextRequest) {
