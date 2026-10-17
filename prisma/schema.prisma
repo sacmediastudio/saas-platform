@@ -775,6 +775,15 @@ model LoyaltyAccountVerification {
   verifiedAt                DateTime?
   createdAt                 DateTime  @default(now())
 
+  // Cuenta con contraseña (app Zertoo Eats, build 9+): nombre, hash
+  // bcrypt de la contraseña activa y, mientras el correo no se verifica
+  // (o se está cambiando por "olvidé mi contraseña"), el hash pendiente.
+  // Las filas viejas (verificación por código sin contraseña) dejan
+  // estos campos en null y siguen funcionando con los endpoints viejos.
+  name                String?
+  passwordHash        String?
+  pendingPasswordHash String?
+
   @@map("loyalty_account_verifications")
 }
 

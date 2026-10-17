@@ -126,6 +126,54 @@ export async function sendLoyaltyAccountVerificationEmail(to: string, code: stri
   );
 }
 
+function escapeHtml(value: string) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// Código de 6 dígitos de la cuenta de Zertoo Eats (registro y "olvidé mi
+// contraseña") — la app manda el idioma elegido por la persona.
+export async function sendEatsAccountCodeEmail(
+  to: string,
+  code: string,
+  purpose: "verify" | "reset",
+  name: string | null,
+  language: string
+) {
+  const en = language === "en";
+  const greeting = name ? (en ? `Hi ${escapeHtml(name)},` : `Hola ${escapeHtml(name)},`) : en ? "Hi," : "Hola,";
+  const intro =
+    purpose === "verify"
+      ? en
+        ? "Use this code to activate your Zertoo Eats account:"
+        : "Usa este código para activar tu cuenta de Zertoo Eats:"
+      : en
+        ? "Use this code to reset your Zertoo Eats password:"
+        : "Usa este código para restablecer tu contraseña de Zertoo Eats:";
+  const subject =
+    purpose === "verify"
+      ? en
+        ? `Your Zertoo Eats verification code: ${code}`
+        : `Tu código de verificación de Zertoo Eats: ${code}`
+      : en
+        ? `Your Zertoo Eats password reset code: ${code}`
+        : `Tu código para restablecer la contraseña de Zertoo Eats: ${code}`;
+  await sendEmail(
+    to,
+    subject,
+    `
+      <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
+        <p style="font-size: 14px; color: #343233;">${greeting}</p>
+        <p style="font-size: 14px; color: #343233;">${intro}</p>
+        <p style="font-size: 32px; font-weight: 800; letter-spacing: 4px; color: #002D09; margin: 24px 0;">
+          ${code}
+        </p>
+        <p style="font-size: 12px; color: #888;">${en ? "This code expires in 15 minutes. If you didn't request it, ignore this email." : "Este código expira en 15 minutos. Si no lo pediste, ignora este correo."}</p>
+      </div>
+    `,
+    `Código de Zertoo Eats para ${to}: ${code}\nConfigura RESEND_API_KEY para enviar correos reales.`
+  );
+}
+
 export async function sendPasswordResetEmail(to: string, resetUrl: string, userName: string) {
   await sendEmail(
     to,
