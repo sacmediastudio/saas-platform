@@ -20,8 +20,6 @@ const ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
 const AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN;
 const WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER; // formato: +2977472770, sin "whatsapp:"
 
-const TEMPLATE_BOOKING_REMINDER_ES = process.env.TWILIO_TEMPLATE_BOOKING_REMINDER_ES || "";
-const TEMPLATE_BOOKING_REMINDER_EN = process.env.TWILIO_TEMPLATE_BOOKING_REMINDER_EN || "";
 
 const TEMPLATE_LEAD_REWARD_ES = process.env.TWILIO_TEMPLATE_LEAD_REWARD_ES || "";
 const TEMPLATE_LEAD_REWARD_EN = process.env.TWILIO_TEMPLATE_LEAD_REWARD_EN || "";
@@ -99,26 +97,6 @@ async function sendTemplateMessage(params: {
     const responseBody = await res.text().catch(() => "");
     throw new Error(`Twilio respondió ${res.status}: ${responseBody}`);
   }
-}
-
-/**
- * Recordatorio de cita. bodyParams tiene que coincidir con el orden
- * de variables de la plantilla real aprobada en Twilio.
- */
-export async function sendBookingReminder(params: {
-  toPhone: string;
-  customerName: string;
-  serviceName: string;
-  businessName: string;
-  dateLabel: string;
-  timeLabel: string;
-  language: string;
-}): Promise<void> {
-  await sendTemplateMessage({
-    toPhone: params.toPhone,
-    contentSid: params.language === "en" ? TEMPLATE_BOOKING_REMINDER_EN : TEMPLATE_BOOKING_REMINDER_ES,
-    bodyParams: [params.customerName, params.serviceName, params.dateLabel, params.timeLabel, params.businessName],
-  });
 }
 
 /**

@@ -4,7 +4,6 @@ import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/email";
 import { isSlotFree } from "@/lib/availability";
-import { syncBookingToGoogleCalendar } from "@/lib/google-calendar";
 import { addLoyaltyStamp } from "@/lib/loyalty";
 import { upsertCustomer } from "@/lib/customers";
 
@@ -74,16 +73,6 @@ export async function POST(req: NextRequest) {
       timezone: tenant.timezone,
     }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
   }
-
-  await syncBookingToGoogleCalendar({
-    tenantId: session.tenantId,
-    bookingId: booking.id,
-    serviceName: service.name,
-    customerName: customer.customerName,
-    customerEmail: customer.customerEmail,
-    datetime: start,
-    durationMinutes: service.durationMinutes,
-  });
 
   const loyalty = await addLoyaltyStamp({
     tenantId: session.tenantId,

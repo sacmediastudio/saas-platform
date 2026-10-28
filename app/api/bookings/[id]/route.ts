@@ -3,7 +3,6 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { requirePermission } from "@/lib/auth";
 import { sendBookingConfirmationEmail, sendLoyaltyRewardEmail } from "@/lib/email";
-import { syncBookingToGoogleCalendar, deleteGoogleCalendarEvent } from "@/lib/google-calendar";
 import { addLoyaltyStamp } from "@/lib/loyalty";
 
 const schema = z.object({
@@ -44,16 +43,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
       timezone: existing.tenant.timezone,
     }).catch((err) => console.error("No se pudo enviar el correo de confirmación:", err));
 
-    await syncBookingToGoogleCalendar({
-      tenantId: session.tenantId,
-      bookingId: existing.id,
-      serviceName: existing.service.name,
-      customerName: existing.customerName,
-      customerEmail: existing.customerEmail,
-      datetime: existing.datetime,
-      durationMinutes: existing.service.durationMinutes,
-    });
-
     const loyalty = await addLoyaltyStamp({
       tenantId: session.tenantId,
       customerEmail: existing.customerEmail,
@@ -69,12 +58,6 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         stamps: loyalty.stamps,
       }).catch((err) => console.error("No se pudo enviar el correo de premio:", err));
     }
-  }
-
-  // Si se cancela una cita que ya estaba sincronizada, borramos el
-  // evento de Google también — para que el calendario no mienta.
-  if (parsed.data.status === "CANCELLED" && existing.googleEventId) {
-    await deleteGoogleCalendarEvent(session.tenantId, existing.googleEventId);
   }
 
   return NextResponse.json({ booking });
