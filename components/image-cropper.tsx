@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
-export const CROP_ASPECT = 4 / 3;
-const OUTPUT_MAX_WIDTH = 1200;
+export const CROP_ASPECT = 3 / 4;
+const OUTPUT_MAX_WIDTH = 900;
 const MAX_ZOOM = 3;
 
 export interface CropperLabels {
@@ -34,14 +34,14 @@ export function readImageSize(file: File): Promise<{ width: number; height: numb
   });
 }
 
-/** ¿Ya viene en 4:3 (con un 2 % de tolerancia)? Entonces no hace falta recortar. */
+/** ¿Ya viene en 3:4 (con un 2 % de tolerancia)? Entonces no hace falta recortar. */
 export function isCropAspect(size: { width: number; height: number }): boolean {
   return Math.abs(size.width / size.height / CROP_ASPECT - 1) <= 0.02;
 }
 
-// Editor de recorte con proporción fija 4:3: se arrastra la foto para
+// Editor de recorte con proporción fija 3:4 (vertical): se arrastra la foto para
 // encuadrarla y se acerca con el control, la rueda del mouse o pellizcando.
-// Al aplicar entrega un JPEG ya recortado (máx. 1200 px de ancho).
+// Al aplicar entrega un JPEG ya recortado (máx. 900 px de ancho, 1200 de alto).
 export default function ImageCropper({
   file,
   labels,
@@ -158,9 +158,9 @@ export default function ImageCropper({
       const sy = -offset.y / scale;
       const sw = frame.w / scale;
       const sh = frame.h / scale;
-      // Ancho múltiplo de 4 para que el alto sea un entero exacto (4:3 sin redondeos).
-      const outW = Math.max(4, Math.floor(Math.min(OUTPUT_MAX_WIDTH, sw) / 4) * 4);
-      const outH = (outW / 4) * 3;
+      // Ancho múltiplo de 3 para que el alto sea un entero exacto (3:4 sin redondeos).
+      const outW = Math.max(3, Math.floor(Math.min(OUTPUT_MAX_WIDTH, sw) / 3) * 3);
+      const outH = (outW / 3) * 4;
       const canvas = document.createElement("canvas");
       canvas.width = outW;
       canvas.height = outH;
@@ -190,8 +190,8 @@ export default function ImageCropper({
 
         <div
           ref={frameRef}
-          className="relative w-full touch-none select-none overflow-hidden rounded-lg bg-black"
-          style={{ aspectRatio: "4 / 3", cursor: "grab" }}
+          className="relative mx-auto w-full max-w-[320px] touch-none select-none overflow-hidden rounded-lg bg-black"
+          style={{ aspectRatio: "3 / 4", cursor: "grab" }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}

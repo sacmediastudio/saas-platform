@@ -32,7 +32,7 @@ export function GET() {
 }
 
 // POST /api/tenant/reels — registra un reel DESPUÉS de que el navegador
-// subió el video y la portada. Las reglas (máx. 3, 15 s, 50 MB, MP4/MOV)
+// subió el video y la portada. Las reglas (máx. 3, 25 s, 50 MB, MP4/MOV)
 // se comprueban acá contra el archivo real, no solo contra lo que dice
 // el navegador; si algo no cumple, se borran los archivos subidos.
 export function POST(req: NextRequest) {

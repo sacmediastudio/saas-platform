@@ -156,16 +156,14 @@ export default function PublicMenu({
   // descripciones tienen una versión en inglés opcional, escrita a mano
   // por el negocio en su dashboard — no hay traducción automática.
   //
-  // Nota: acá NO usamos getStoredLang() (que por defecto cae a "en",
-  // pensado para la landing). En el menú es más intuitivo arrancar en
-  // español salvo que la persona ya haya elegido inglés explícitamente
-  // en algún momento — si no, alguien que entra directo al menú sin
-  // pasar por la landing vería "EN" activo sin haberlo pedido.
-  const [lang, setLang] = useState<Lang>("es");
+  // El inglés es el idioma principal del menú: arranca en "en" salvo que
+  // la persona ya haya elegido español explícitamente. Donde falte la
+  // versión en inglés de un nombre o descripción se muestra la original.
+  const [lang, setLang] = useState<Lang>("en");
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem("zertoo_lang");
-    setLang(stored === "en" ? "en" : "es");
+    setLang(stored === "es" ? "es" : "en");
   }, []);
 
   useEffect(() => {
@@ -181,7 +179,7 @@ export default function PublicMenu({
     return lang === "en" && cat.nameEn ? cat.nameEn : cat.name;
   }
   function itemDescription(item: MenuItemData) {
-    return lang === "en" && item.descriptionEn ? item.descriptionEn : item.description;
+    return lang === "en" ? item.descriptionEn || item.description : item.description || item.descriptionEn;
   }
 
   function priceLabel(item: MenuItemData) {
@@ -369,7 +367,7 @@ export default function PublicMenu({
       >
         {hasPhoto && (
           <div
-            className="relative aspect-[4/3] w-[36%] max-w-[150px] shrink-0 cursor-pointer self-start overflow-hidden rounded-[9px] bg-black/10 active:opacity-80"
+            className="relative aspect-[3/4] w-[30%] max-w-[120px] shrink-0 cursor-pointer self-start overflow-hidden rounded-[9px] bg-black/10 active:opacity-80"
             onClick={() => setZoomedItem(item)}
             role="button"
             tabIndex={0}

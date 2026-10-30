@@ -381,9 +381,12 @@ function DishModal({
 }) {
   const { t } = useDashboardLang();
   const [form, setForm] = useState({
-    name: item?.name ?? "",
+    // El inglés es el campo principal. Si el plato se guardó sin versión en
+    // español, `name` repite el inglés (la columna es obligatoria): en ese
+    // caso el campo de español se muestra vacío.
+    name: item && item.nameEn && item.name === item.nameEn ? "" : item?.name ?? "",
     nameEn: item?.nameEn ?? "",
-    description: item?.description ?? "",
+    description: item && item.descriptionEn && item.description === item.descriptionEn ? "" : item?.description ?? "",
     descriptionEn: item?.descriptionEn ?? "",
     price: item ? String(item.price) : "",
     variablePrice: item?.variablePrice ?? false,
@@ -396,7 +399,7 @@ function DishModal({
   const [saving, setSaving] = useState(false);
   const [processingImage, setProcessingImage] = useState(false);
 
-  // Si la foto ya es 4:3 se sube directo; si no, se abre el editor de recorte.
+  // Si la foto ya es 3:4 se sube directo; si no, se abre el editor de recorte.
   const [cropFile, setCropFile] = useState<File | null>(null);
 
   async function uploadFinal(file: File) {
@@ -451,10 +454,10 @@ function DishModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categoryId: form.categoryId,
-          name: form.name,
-          nameEn: form.nameEn || null,
-          description: form.description || undefined,
-          descriptionEn: form.descriptionEn || null,
+          name: form.name.trim() || form.nameEn.trim(),
+          nameEn: form.nameEn.trim() || null,
+          description: form.description.trim() || (mode === "edit" ? "" : undefined),
+          descriptionEn: form.descriptionEn.trim() || null,
           price: form.variablePrice ? 0 : price,
           variablePrice: form.variablePrice,
           imageUrl: form.imageUrl,
@@ -518,21 +521,21 @@ function DishModal({
           <p className="mt-1.5 text-[11px] text-[#343233]/55">{t.dishModal.photoHint}</p>
         </Field>
 
-        <Field label={t.dishModal.name}>
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-            placeholder={t.dishModal.namePlaceholder}
-            className={inputClass}
-          />
-        </Field>
-
         <Field label={t.dishModal.nameEn}>
           <input
             value={form.nameEn}
             onChange={(e) => setForm({ ...form, nameEn: e.target.value })}
+            required={!item || !form.name.trim()}
             placeholder="Classic bruschetta"
+            className={inputClass}
+          />
+        </Field>
+
+        <Field label={t.dishModal.name}>
+          <input
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder={t.dishModal.namePlaceholder}
             className={inputClass}
           />
         </Field>
@@ -595,22 +598,22 @@ function DishModal({
           {t.dishModal.featured}
         </label>
 
-        <Field label={t.dishModal.description}>
-          <textarea
-            value={form.description}
-            onChange={(e) => setForm({ ...form, description: e.target.value })}
-            rows={2}
-            placeholder="Tomate, albahaca, ajo"
-            className={`${inputClass} resize-none`}
-          />
-        </Field>
-
         <Field label={t.dishModal.descriptionEn}>
           <textarea
             value={form.descriptionEn}
             onChange={(e) => setForm({ ...form, descriptionEn: e.target.value })}
             rows={2}
             placeholder="Tomato, basil, garlic"
+            className={`${inputClass} resize-none`}
+          />
+        </Field>
+
+        <Field label={t.dishModal.description}>
+          <textarea
+            value={form.description}
+            onChange={(e) => setForm({ ...form, description: e.target.value })}
+            rows={2}
+            placeholder="Tomate, albahaca, ajo"
             className={`${inputClass} resize-none`}
           />
         </Field>
@@ -700,7 +703,9 @@ function CategoryModal({
   onUpdated: (cat: Category) => void;
 }) {
   const { t } = useDashboardLang();
-  const [name, setName] = useState(category?.name ?? "");
+  // Mismo criterio que los platos: el inglés es el principal y, si no hay
+  // versión en español, `name` repite el inglés.
+  const [name, setName] = useState(category && category.nameEn && category.name === category.nameEn ? "" : category?.name ?? "");
   const [nameEn, setNameEn] = useState(category?.nameEn ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -716,7 +721,7 @@ function CategoryModal({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, nameEn: nameEn || null }),
+        body: JSON.stringify({ name: name.trim() || nameEn.trim(), nameEn: nameEn.trim() || null }),
       });
 
       if (!res.ok) {
@@ -743,21 +748,21 @@ function CategoryModal({
   return (
     <ModalShell title={mode === "create" ? t.categoryModal.titleCreate : t.categoryModal.titleEdit} onClose={onClose}>
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <Field label={t.categoryModal.name}>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-            placeholder="Postres"
-            className={inputClass}
-            autoFocus
-          />
-        </Field>
         <Field label={t.categoryModal.nameEn}>
           <input
             value={nameEn}
             onChange={(e) => setNameEn(e.target.value)}
+            required={!category || !name.trim()}
             placeholder="Desserts"
+            className={inputClass}
+            autoFocus
+          />
+        </Field>
+        <Field label={t.categoryModal.name}>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Postres"
             className={inputClass}
           />
         </Field>

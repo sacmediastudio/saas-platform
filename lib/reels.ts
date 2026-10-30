@@ -3,8 +3,8 @@
 // se reflejan en las dos puntas porque el dashboard las importa.
 
 export const REEL_MAX_PER_TENANT = 3;
-export const REEL_MAX_DURATION_SEC = 15;
-// Pequeña tolerancia: algunos teléfonos graban "15.02 s" en un clip de 15.
+export const REEL_MAX_DURATION_SEC = 25;
+// Pequeña tolerancia: algunos teléfonos graban "25.02 s" en un clip de 25.
 export const REEL_DURATION_TOLERANCE_SEC = 0.5;
 export const REEL_MAX_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 export const REEL_ALLOWED_TYPES = ["video/mp4", "video/quicktime"] as const;
