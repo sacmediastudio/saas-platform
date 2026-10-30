@@ -41,6 +41,7 @@ export async function GET(_req: NextRequest) {
   return NextResponse.json({
     promotions: promotions.map((p) => ({
       id: p.id,
+      kind: p.kind,
       title: p.title,
       description: p.description,
       imageUrl: p.imageUrl,

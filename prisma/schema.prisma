@@ -667,6 +667,27 @@ model Promotion {
   @@map("promotions")
 }
 
+// Pop-up publicitario de la app de Zertoo Eats: un espacio que solo el
+// admin de Zertoo puede activar (se vende aparte de la suscripción). Se
+// muestra al abrir la app. Si hay varios activos y vigentes, gana el más
+// reciente. tenantSlug abre ese negocio dentro de la app; linkUrl es un
+// enlace externo; sin ninguno de los dos el pop-up es solo la imagen.
+model AppPopup {
+  id         String    @id @default(cuid())
+  // Nombre interno (anunciante/campaña) — nunca se muestra en la app.
+  title      String
+  imageUrl   String
+  tenantSlug String?
+  linkUrl    String?
+  active     Boolean   @default(false)
+  startsAt   DateTime?
+  endsAt     DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@map("app_popups")
+}
+
 // Video corto ("reel") de un negocio para Zertoo Eats: máximo 3 por
 // negocio y 15 segundos cada uno (lo hace cumplir la API, ver
 // lib/reels.ts). El video y su imagen de portada viven en el mismo

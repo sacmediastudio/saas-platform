@@ -52,11 +52,17 @@ function resizeImageToBlob(file: File, maxWidth: number, format: "jpeg" | "png")
  * que antes, para no cambiarle el comportamiento a las subidas ya
  * existentes que no lo necesitan.
  */
-export async function uploadImage(file: File, maxWidth = 800, format: "jpeg" | "png" = "jpeg"): Promise<string> {
+export async function uploadImage(
+  file: File,
+  maxWidth = 800,
+  format: "jpeg" | "png" = "jpeg",
+  // El admin sube por su propio endpoint (no tiene sesión de negocio).
+  presignEndpoint = "/api/uploads/presign"
+): Promise<string> {
   const blob = await resizeImageToBlob(file, maxWidth, format);
   const fileType = blob.type || "image/jpeg";
 
-  const presignRes = await fetch("/api/uploads/presign", {
+  const presignRes = await fetch(presignEndpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ fileName: file.name, fileType }),
