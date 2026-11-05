@@ -15,14 +15,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const count = await db.menuCategory.count({ where: { tenantId: session.tenantId } });
+  // Al final de la lista: max+1 (no la cantidad, que repetiría un valor
+  // existente si antes se borró una categoría del medio).
+  const last = await db.menuCategory.aggregate({ where: { tenantId: session.tenantId }, _max: { sortOrder: true } });
 
   const category = await db.menuCategory.create({
     data: {
       tenantId: session.tenantId,
       name: parsed.data.name,
       nameEn: parsed.data.nameEn || null,
-      sortOrder: count,
+      sortOrder: (last._max.sortOrder ?? -1) + 1,
     },
   });
 

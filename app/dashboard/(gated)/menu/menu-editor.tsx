@@ -35,6 +35,7 @@ interface Category {
   id: string;
   name: string;
   nameEn: string | null;
+  sortOrder: number;
 }
 
 const statusStyles: Record<MenuItem["status"], { className: string }> = {
@@ -66,6 +67,10 @@ export default function MenuEditor({
 }) {
   const { t } = useDashboardLang();
   const [categories, setCategories] = useState(initialCategories);
+  const [reorderError, setReorderError] = useState<string | null>(null);
+  // Siempre ordenadas por sortOrder (sort estable: si hay valores repetidos
+  // se respeta el orden en que llegaron del servidor).
+  const sortedCategories = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
   const [items, setItems] = useState(initialItems);
   const [saving, setSaving] = useState<string | null>(null);
   const [dishModal, setDishModal] = useState<{ mode: "create" | "edit"; item?: MenuItem } | null>(null);
@@ -151,6 +156,34 @@ export default function MenuEditor({
     setSaving(null);
   }
 
+  // Sube/baja una categoría. Se manda la lista completa en el orden nuevo
+  // y el servidor reescribe 0..n-1 (corrige también valores repetidos).
+  async function moveCategory(cat: Category, direction: -1 | 1) {
+    const idx = sortedCategories.findIndex((c) => c.id === cat.id);
+    const target = idx + direction;
+    if (idx < 0 || target < 0 || target >= sortedCategories.length) return;
+
+    const reordered = [...sortedCategories];
+    [reordered[idx], reordered[target]] = [reordered[target], reordered[idx]];
+
+    const prev = categories;
+    setReorderError(null);
+    setCategories(reordered.map((c, i) => ({ ...c, sortOrder: i })));
+    setSaving(cat.id);
+    try {
+      const res = await fetch("/api/menu-categories/reorder", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: reordered.map((c) => c.id) }),
+      });
+      if (!res.ok) throw new Error("reorder failed");
+    } catch {
+      setCategories(prev);
+      setReorderError(t.menu.reorderCategoriesFailed);
+    }
+    setSaving(null);
+  }
+
   async function deleteCategory(cat: Category) {
     const hasItems = items.some((i) => i.categoryId === cat.id);
     if (hasItems) {
@@ -230,13 +263,31 @@ export default function MenuEditor({
         </p>
       )}
 
-      {categories.map((cat) => {
+      {reorderError && <p className="text-red-600 text-sm mb-3">{reorderError}</p>}
+
+      {sortedCategories.map((cat, catIdx) => {
         const catItems = items.filter((i) => i.categoryId === cat.id).sort((a, b) => a.sortOrder - b.sortOrder);
         return (
           <div key={cat.id} className="mb-6">
             <div className="flex items-center justify-between mb-2">
               <h2 className="text-sm font-medium text-[#343233]/70">{cat.name}</h2>
               <div className="flex items-center gap-2">
+                <button
+                  onClick={() => moveCategory(cat, -1)}
+                  disabled={catIdx === 0 || saving === cat.id}
+                  aria-label={t.menu.moveCategoryUp(cat.name)}
+                  className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
+                >
+                  <ArrowUp size={13} aria-hidden />
+                </button>
+                <button
+                  onClick={() => moveCategory(cat, 1)}
+                  disabled={catIdx === sortedCategories.length - 1 || saving === cat.id}
+                  aria-label={t.menu.moveCategoryDown(cat.name)}
+                  className="text-[#343233]/60 hover:text-[#002D09] disabled:opacity-30"
+                >
+                  <ArrowDown size={13} aria-hidden />
+                </button>
                 <button
                   onClick={() => setCategoryModal({ mode: "edit", category: cat })}
                   aria-label={t.menu.renameCategory(cat.name)}
@@ -342,7 +393,7 @@ export default function MenuEditor({
         <DishModal
           mode={dishModal.mode}
           item={dishModal.item}
-          categories={categories}
+          categories={sortedCategories}
           onClose={() => setDishModal(null)}
           onCreated={(item) => setItems((prev) => [...prev, item])}
           onUpdated={(item) => setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)))}
