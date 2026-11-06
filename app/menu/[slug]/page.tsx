@@ -5,6 +5,7 @@ import { recordPageView } from "@/lib/analytics";
 import { getEnabledModules } from "@/lib/modules";
 import { jsonLdScriptProps } from "@/lib/json-ld";
 import { ensureTrialEndsAt, getBillingStatus } from "@/lib/billing-status";
+import { isReviewWindowOpen } from "@/lib/waiter-reviews";
 import UnavailableMessage from "@/components/unavailable-message";
 import PublicMenu from "./public-menu";
 
@@ -49,6 +50,15 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
     db.review.findMany({ where: { tenantId: tenant.id, status: "PUBLISHED" } }),
     db.location.findMany({ where: { tenantId: tenant.id, isActive: true }, orderBy: { sortOrder: "asc" } }),
   ]);
+
+  // El botón "Calificar" solo se muestra con la función activa, el local
+  // abierto (más el margen de cierre) y al menos un mesero activo. La
+  // ubicación se pide recién al tocarlo y todo se vuelve a validar en
+  // el servidor al enviar.
+  const waiterReviewsAvailable =
+    tenant.waiterReviewsEnabled &&
+    (await isReviewWindowOpen(tenant)) &&
+    (await db.serviceWaiter.count({ where: { tenantId: tenant.id, isActive: true } })) > 0;
 
   const avgRating =
     reviews.length > 0 ? reviews.reduce((s, r) => s + r.rating, 0) / reviews.length : null;
@@ -113,6 +123,7 @@ export default async function PublicMenuPage({ params }: { params: { slug: strin
         }))}
         avgRating={avgRating}
         reviewCount={reviews.length}
+        waiterReviewsAvailable={waiterReviewsAvailable}
         locations={locations.map((l) => ({
           id: l.id,
           name: l.name,

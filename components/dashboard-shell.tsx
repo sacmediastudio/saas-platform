@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone, Clapperboard, LogOut, Heart, ChevronDown } from "lucide-react";
+import { Menu, X, UtensilsCrossed, Calendar, Link2, Star, Settings, Blocks, CreditCard, MessageCircleQuestion, Stamp, Gift, Users, ShoppingBag, Megaphone, Clapperboard, ConciergeBell, LogOut, Heart, ChevronDown } from "lucide-react";
 import { dashboardTranslations, type DashLang } from "@/lib/i18n-dashboard";
 import { DashboardLangContext } from "@/lib/dashboard-lang-context";
 import type { PermissionKey } from "@/lib/permissions";
@@ -89,6 +89,9 @@ export default function DashboardShell({
       : []),
     leaf({ href: "/dashboard/smartlink", label: t.nav.smartlink, icon: Link2, permissionKey: "SMARTLINK" }),
     leaf({ href: "/dashboard/reviews", label: t.nav.reviews, icon: Star, permissionKey: "REVIEWS" }),
+    ...(enabledModules.includes("RESTAURANT")
+      ? [leaf({ href: "/dashboard/waiter-reviews", label: t.nav.waiterReviews, icon: ConciergeBell, permissionKey: "REVIEWS" })]
+      : []),
     leaf({ href: "/dashboard/customers", label: t.nav.customers, icon: Users, permissionKey: "CUSTOMERS" }),
     leaf({ href: "/dashboard/faqs", label: t.nav.faqs, icon: MessageCircleQuestion, permissionKey: "FAQS" }),
     {

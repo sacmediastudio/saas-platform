@@ -150,6 +150,13 @@ model Tenant {
   // navegar exacto — para eso está googleMapsUrl más abajo.
   latitude             Float?
   longitude            Float?
+  // Reseñas de meseros en el menú público. Solo se pueden calificar con
+  // el local abierto (más un margen después del cierre) y estando a
+  // menos de waiterReviewRadiusM metros del local — todo se valida en
+  // el servidor, ver lib/waiter-reviews.ts.
+  waiterReviewsEnabled     Boolean @default(false)
+  waiterReviewRadiusM      Int     @default(100)
+  waiterReviewGraceMinutes Int     @default(60)
   // Link de Google Maps que el propio negocio pega (ej. su ficha de
   // Google Business ya compartida) — cuando existe, "Cómo llegar" en
   // Zertoo Eats usa ESTO directo en vez de construir una ruta a partir
@@ -261,6 +268,8 @@ model Tenant {
   smartLinkItems           SmartLinkItem[]
   pageViews                PageView[]
   businessHours            BusinessHours[]
+  serviceWaiters           ServiceWaiter[]
+  serviceReviews           ServiceReview[]
   externalReviewLinks      ExternalReviewLink[]
   faqItems                 FaqItem[]
   googleCalendarConnection GoogleCalendarConnection?
@@ -1038,6 +1047,10 @@ model Location {
   tenantId          String
   name              String
   address           String?
+  // Pin exacto de este local (opcional) — las reseñas de meseros aceptan
+  // estar cerca del pin del negocio O de cualquiera de sus locales.
+  latitude          Float?
+  longitude         Float?
   // WhatsApp de este local para el aviso de "pedido nuevo" — si no
   // se carga, se usa el contactPhone del Tenant como respaldo.
   contactPhone      String?
@@ -1344,4 +1357,53 @@ model SubscriptionModuleItem {
 
   @@unique([subscriptionId, module])
   @@map("subscription_module_items")
+}
+
+
+// Mesero (o mesera) que el negocio carga para que los clientes lo
+// califiquen desde el menú público. NO es una cuenta de acceso — para
+// eso está User (Zertoo Waiter). Se desactiva en vez de borrarse para
+// conservar el historial de reseñas; borrarlo sí borra sus reseñas.
+model ServiceWaiter {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  photoUrl  String?
+  isActive  Boolean  @default(true)
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenant  Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  reviews ServiceReview[]
+
+  @@index([tenantId, sortOrder])
+  @@map("service_waiters")
+}
+
+// Una calificación de un cliente a un mesero. Un mismo envío del modal
+// puede calificar a varios meseros — comparten submissionId.
+model ServiceReview {
+  id           String   @id @default(cuid())
+  tenantId     String
+  waiterId     String
+  // 1.0 a 5.0 en pasos de 0.5
+  rating       Float
+  // Nota opcional, privada: solo la ve el negocio en su dashboard.
+  note         String?
+  submissionId String
+  // Hash (SHA-256) del id anónimo del dispositivo + negocio — nunca el
+  // id crudo. Sirve para limitar una reseña por mesero cada 12 horas.
+  deviceHash   String
+  // Distancia al local al momento de calificar, en metros (auditoría).
+  distanceM    Int?
+  createdAt    DateTime @default(now())
+
+  tenant Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  waiter ServiceWaiter @relation(fields: [waiterId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, createdAt])
+  @@index([waiterId, createdAt])
+  @@index([waiterId, deviceHash, createdAt])
+  @@map("service_reviews")
 }

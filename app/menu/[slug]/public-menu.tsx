@@ -29,6 +29,7 @@ import { setStoredLang, type Lang } from "@/lib/i18n-auth";
 import FaqChatWidget from "@/components/faq-chat-widget";
 import SmartImage from "@/components/smart-image";
 import DialogA11y from "@/components/use-dialog-a11y";
+import WaiterReviewModal from "./waiter-review-modal";
 import { mutedColor } from "@/lib/contrast";
 
 interface MenuItemAddOnData {
@@ -137,6 +138,7 @@ export default function PublicMenu({
   items,
   avgRating,
   reviewCount,
+  waiterReviewsAvailable,
   locations,
 }: {
   tenant: TenantData;
@@ -144,6 +146,7 @@ export default function PublicMenu({
   items: MenuItemData[];
   avgRating: number | null;
   reviewCount: number;
+  waiterReviewsAvailable: boolean;
   locations: LocationData[];
 }) {
   // Los colores los elige cada negocio en Ajustes y se respetan tal cual.
@@ -160,6 +163,7 @@ export default function PublicMenu({
   // la persona ya haya elegido español explícitamente. Donde falte la
   // versión en inglés de un nombre o descripción se muestra la original.
   const [lang, setLang] = useState<Lang>("en");
+  const [showWaiterReview, setShowWaiterReview] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const stored = window.localStorage.getItem("zertoo_lang");
@@ -655,7 +659,7 @@ export default function PublicMenu({
           </section>
         )}
 
-        {categoriesWithItems.map((cat) => {
+        {categoriesWithItems.map((cat, catIndex) => {
           const catItems = visibleItems.filter((i) => i.categoryId === cat.id);
           return (
             <section
@@ -666,9 +670,25 @@ export default function PublicMenu({
               data-category-id={cat.id}
               className="pb-4 pt-8"
             >
-              <h2 className="text-2xl font-extrabold leading-[1.15] tracking-tight" style={{ color: tenant.menuPageTextColor }}>
-                {categoryLabel(cat)}
-              </h2>
+              <div className="flex items-start justify-between gap-3">
+                <h2 className="text-2xl font-extrabold leading-[1.15] tracking-tight" style={{ color: tenant.menuPageTextColor }}>
+                  {categoryLabel(cat)}
+                </h2>
+                {catIndex === 0 && waiterReviewsAvailable && (
+                  <button
+                    type="button"
+                    onClick={() => setShowWaiterReview(true)}
+                    className="relative flex shrink-0 items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-semibold before:absolute before:-inset-2 before:content-['']"
+                    style={{
+                      borderColor: "color-mix(in srgb, currentColor 35%, transparent)",
+                      color: tenant.menuPageTextColor,
+                    }}
+                  >
+                    {lang === "en" ? "Rate" : "Calificar"}
+                    <Star size={16} aria-hidden />
+                  </button>
+                )}
+              </div>
               <div className="mt-4 flex flex-col gap-3">{catItems.map((item) => renderItem(item))}</div>
             </section>
           );
@@ -697,6 +717,16 @@ export default function PublicMenu({
             {lang === "en" ? "Leave a review" : "Dejar una reseña"}
           </a>
         </div>
+
+        {showWaiterReview && (
+          <WaiterReviewModal
+            slug={tenant.slug}
+            lang={lang}
+            accent={tenant.buttonColor}
+            accentText={tenant.buttonTextColor}
+            onClose={() => setShowWaiterReview(false)}
+          />
+        )}
 
         {hasContact && (
           <div
