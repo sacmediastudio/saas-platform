@@ -307,6 +307,15 @@ export default function SettingsForm({
         </Field>
       </Section>
 
+      <Section title={t.settingsForm.hoursLabel}>
+        <div className="md:col-span-2 flex flex-col gap-1.5">
+          <span className="text-xs text-[#343233]/50 mb-1">{t.settingsForm.hoursHint}</span>
+          <div className="border border-[#002D09]/10 rounded-xl p-4">
+            <BusinessHoursEditor hideBuffer />
+          </div>
+        </div>
+      </Section>
+
       <Section title={t.settingsForm.appearanceSection}>
         <div className="md:col-span-2 grid grid-cols-2 gap-4">
           <ColorField
@@ -463,14 +472,6 @@ export default function SettingsForm({
                 />
                 <span className="text-xs text-[#343233]/50">{t.settingsForm.reservationUrlHint}</span>
               </label>
-
-              <div className="flex flex-col gap-1.5">
-                <span className="text-xs text-[#343233]/70">{t.settingsForm.hoursLabel}</span>
-                <span className="text-xs text-[#343233]/50 mb-1">{t.settingsForm.hoursHint}</span>
-                <div className="border border-[#002D09]/10 rounded-xl p-4">
-                  <BusinessHoursEditor hideBuffer />
-                </div>
-              </div>
             </div>
           )}
         </Section>

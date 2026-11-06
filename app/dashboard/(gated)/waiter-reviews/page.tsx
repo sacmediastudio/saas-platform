@@ -11,8 +11,9 @@ export default async function WaiterReviewsPage() {
   if (!tenant || !getEnabledModules(tenant).includes("RESTAURANT")) redirect("/dashboard");
 
   const since = new Date(Date.now() - 30 * 86_400_000);
-  const [settings, waiters, allStats, recentStats, recent] = await Promise.all([
+  const [settings, hours, waiters, allStats, recentStats, recent] = await Promise.all([
     getWaiterReviewSettings(tenant.id),
+    db.businessHours.findMany({ where: { tenantId: tenant.id }, orderBy: { dayOfWeek: "asc" } }),
     db.serviceWaiter.findMany({
       where: { tenantId: tenant.id },
       orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
@@ -43,6 +44,7 @@ export default async function WaiterReviewsPage() {
   return (
     <WaiterReviewsView
       initialSettings={settings}
+      hours={hours.map((h) => ({ dayOfWeek: h.dayOfWeek, isOpen: h.isOpen, startTime: h.startTime, endTime: h.endTime }))}
       initialWaiters={waiters.map((w) => ({
         id: w.id,
         name: w.name,

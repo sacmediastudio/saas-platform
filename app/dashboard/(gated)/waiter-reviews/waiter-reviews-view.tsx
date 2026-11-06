@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowDown, ArrowUp, Camera, ExternalLink, MapPin, Star, Trash2 } from "lucide-react";
 import DashboardCard from "@/components/dashboard-card";
-import BusinessHoursEditor from "@/components/business-hours-editor";
+import Link from "next/link";
 import { useDashboardLang } from "@/lib/dashboard-lang-context";
 import { uploadImage } from "@/lib/upload-image";
 import {
@@ -48,13 +48,43 @@ function Avatar({ name, url, size = 44 }: { name: string; url: string | null; si
   );
 }
 
+interface HoursRow {
+  dayOfWeek: number;
+  isOpen: boolean;
+  startTime: string;
+  endTime: string;
+}
+
+// Agrupa días consecutivos con el mismo horario: "Lun–Sáb 11:00–22:00".
+// Un día sin fila guardada cuenta como cerrado, igual que en el servidor.
+function summarizeHours(rows: HoursRow[], dayNames: string[], closedLabel: string): { label: string; value: string }[] {
+  const perDay = [0, 1, 2, 3, 4, 5, 6].map((d) => {
+    const r = rows.find((x) => x.dayOfWeek === d);
+    return r && r.isOpen ? `${r.startTime}–${r.endTime}` : closedLabel;
+  });
+  // Semana de lunes a domingo
+  const order = [1, 2, 3, 4, 5, 6, 0];
+  const groups: { from: number; to: number; value: string }[] = [];
+  for (const d of order) {
+    const last = groups[groups.length - 1];
+    if (last && last.value === perDay[d]) last.to = d;
+    else groups.push({ from: d, to: d, value: perDay[d] });
+  }
+  return groups.map((g) => ({
+    label: g.from === g.to ? dayNames[g.from] : `${dayNames[g.from]}–${dayNames[g.to]}`,
+    value: g.value,
+  }));
+}
+
 export default function WaiterReviewsView({
   initialSettings,
+  hours,
   initialWaiters,
   recentReviews,
   timezone,
 }: {
   initialSettings: WaiterReviewSettings;
+  hours: HoursRow[];
   initialWaiters: WaiterRow[];
   recentReviews: RecentReview[];
   timezone: string;
@@ -331,7 +361,24 @@ export default function WaiterReviewsView({
       <DashboardCard className="mb-5">
         <h2 className="font-semibold text-[#343233]">{w.hoursTitle}</h2>
         <p className="text-sm text-[#343233]/60 mt-1 mb-4">{w.hoursHint}</p>
-        <BusinessHoursEditor hideBuffer />
+        {hours.length === 0 ? (
+          <p className="text-sm text-amber-700">{w.hoursNotSet}</p>
+        ) : (
+          <ul className="text-sm text-[#343233] flex flex-col gap-1">
+            {summarizeHours(hours, w.dayNames, w.hoursClosed).map((g) => (
+              <li key={g.label} className="flex gap-3">
+                <span className="w-24 shrink-0 font-medium">{g.label}</span>
+                <span className={g.value === w.hoursClosed ? "text-[#343233]/50" : ""}>{g.value}</span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <Link
+          href="/dashboard/settings"
+          className="inline-flex items-center gap-1 mt-4 text-sm font-semibold text-[#002D09] underline underline-offset-2"
+        >
+          {w.hoursEdit} <ExternalLink size={12} aria-hidden />
+        </Link>
       </DashboardCard>
 
       <DashboardCard className="mb-5">
