@@ -31,6 +31,7 @@ import SmartImage from "@/components/smart-image";
 import DialogA11y from "@/components/use-dialog-a11y";
 import WaiterReviewModal from "./waiter-review-modal";
 import { mutedColor } from "@/lib/contrast";
+import PhoneField from "@/components/phone-field";
 
 interface MenuItemAddOnData {
   id: string;
@@ -1080,13 +1081,11 @@ function LeadClaimModal({
               required
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
-            <input
-              type="tel"
-              placeholder={lang === "en" ? "Your WhatsApp (with country code)" : "Tu WhatsApp (con código de país)"}
+            <PhoneField
+              lang={lang === "en" ? "en" : "es"}
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onChange={(phone) => setForm({ ...form, phone })}
               required
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
             {status === "error" && <p className="text-red-600 text-sm">{errorMsg}</p>}
             <div className="flex gap-2 mt-1">
@@ -1503,14 +1502,7 @@ function CheckoutModal({
               placeholder={language === "en" ? "Your email" : "Tu correo"}
               className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
             />
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              placeholder={language === "en" ? "Your WhatsApp (with country code)" : "Tu WhatsApp (con código de país)"}
-              className="w-full px-3 py-2.5 rounded-lg border border-neutral-200 text-base"
-            />
+            <PhoneField lang={language === "en" ? "en" : "es"} value={phone} onChange={setPhone} required />
             <textarea
               value={orderNotes}
               onChange={(e) => setOrderNotes(e.target.value)}
