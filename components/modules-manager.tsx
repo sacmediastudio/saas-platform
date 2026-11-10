@@ -20,7 +20,7 @@ const MODULE_PRICES: Record<ModuleType, number> = {
   SMARTLINK: 12.9,
   SMALL_BUSINESS: 29.9,
   RESTAURANT: 39.9,
-  ORDERS: 59.9,
+  ORDERS: 49.9,
 };
 
 const MODULES: { type: ModuleType; label: string; description: string; icon: any }[] = [
