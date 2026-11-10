@@ -117,7 +117,7 @@ export const translations = {
       heroTitlePrefix: "Your restaurant's entire operation,",
       heroTitleHighlight: "in one place.",
       heroSubtitle:
-        "Online and dine-in orders, kitchen, tables, payments and receipts — all from an iPad, with no per-order commission and connected to your Zertoo Menu.",
+        "Online and dine-in orders — including those from Zertoo Eats, with no commission — plus kitchen, tables, payments and receipts, all from an iPad and connected to your Zertoo Menu.",
       heroCtaPrimary: "Request access",
       heroCtaSecondary: "See Zertoo Menu",
       sections: [
@@ -125,13 +125,27 @@ export const translations = {
           id: "tablero",
           isNew: false,
           title: "Every order, on one screen",
-          subtitle: "Orders from your online menu and from the dining room show up instantly on a clear board, with each one's timer in view.",
+          subtitle: "Orders from your online menu, from Zertoo Eats and from the dining room show up instantly on a clear board, with each one's timer in view.",
           bullets: [
             "Three columns: New, In progress and Ready",
             "A sound alert the moment a new order comes in",
             "A timer on every order that turns red when it runs late",
             "Full detail: items, extras, customer notes and delivery address",
             "Updates on its own — no need to refresh the screen",
+          ],
+        },
+        {
+          id: "conexion",
+          isNew: false,
+          title: "Zertoo Eats orders, with no commission",
+          subtitle: "Customers who find you on Zertoo Eats order straight from your restaurant: the order lands on your board and there's no commission on any of them.",
+          bullets: [
+            "Pickup and Delivery orders from Zertoo Eats land on the same board as the ones from your own menu, with no extra steps",
+            "No per-order commission on Zertoo Eats orders or on your own menu",
+            "New customers discover you in the directory and order directly from you",
+            "Uses the same menu, extras and prices as your Zertoo Menu — nothing to load twice",
+            "Delivery orders arrive with the customer's contact verified",
+            "Requires Zertoo Menu and Zertoo Eats to be active",
           ],
         },
         {
@@ -233,18 +247,6 @@ export const translations = {
             "Order history with the status of each one",
             "Stations, printers and print routing are set up from your Zertoo dashboard",
             "No per-order commission",
-          ],
-        },
-        {
-          id: "conexion",
-          isNew: false,
-          title: "Connected to your Zertoo Menu and Zertoo Eats",
-          subtitle: "Nothing to load twice: your menu, prices and online orders are already the same ones.",
-          bullets: [
-            "Uses the same menu, extras and prices as your Zertoo Menu",
-            "Pickup and Delivery orders from your menu and from Zertoo Eats go straight to the board",
-            "Delivery orders arrive with the customer's contact verified",
-            "Requires Zertoo Menu and Zertoo Eats to be active",
           ],
         },
       ],
@@ -477,7 +479,7 @@ export const translations = {
       heroTitlePrefix: "Toda la operación de tu restaurante,",
       heroTitleHighlight: "en un solo lugar.",
       heroSubtitle:
-        "Pedidos online y del salón, cocina, mesas, cobro y recibos — todo desde un iPad, sin comisión por pedido y conectado a tu Zertoo Menu.",
+        "Pedidos online y del salón — incluidos los de Zertoo Eats, sin comisión — más cocina, mesas, cobro y recibos, todo desde un iPad y conectado a tu Zertoo Menu.",
       heroCtaPrimary: "Solicitar acceso",
       heroCtaSecondary: "Ver Zertoo Menu",
       sections: [
@@ -485,13 +487,27 @@ export const translations = {
           id: "tablero",
           isNew: false,
           title: "Todos tus pedidos, en una sola pantalla",
-          subtitle: "Los pedidos de tu menú online y los del salón aparecen al instante en un tablero claro, con el tiempo de cada uno a la vista.",
+          subtitle: "Los pedidos de tu menú online, de Zertoo Eats y del salón aparecen al instante en un tablero claro, con el tiempo de cada uno a la vista.",
           bullets: [
             "Tres columnas: Nuevos, En preparación y Listos",
             "Aviso con sonido apenas entra un pedido nuevo",
             "Cronómetro en cada pedido que se pone en rojo cuando se atrasa",
             "Detalle completo con productos, extras, notas del cliente y dirección de entrega",
             "Se actualiza solo, sin tener que recargar la pantalla",
+          ],
+        },
+        {
+          id: "conexion",
+          isNew: false,
+          title: "Pedidos de Zertoo Eats, sin comisión",
+          subtitle: "Los clientes que te encuentran en Zertoo Eats piden directo a tu restaurante: el pedido llega a tu tablero y no pagas comisión por ninguno.",
+          bullets: [
+            "Los pedidos Pickup y Delivery de Zertoo Eats llegan al mismo tablero que los de tu propio menú, sin pasos extra",
+            "Sin comisión por pedido, tanto en Zertoo Eats como en tu propio menú",
+            "Clientes nuevos te descubren en el directorio y piden directamente contigo",
+            "Usa el mismo menú, extras y precios de tu Zertoo Menu, sin cargar nada dos veces",
+            "Los pedidos de Delivery llegan con el contacto del cliente verificado",
+            "Requiere tener activos Zertoo Menu y Zertoo Eats",
           ],
         },
         {
@@ -593,18 +609,6 @@ export const translations = {
             "Historial de pedidos con el estado de cada uno",
             "Estaciones, impresoras y rutas de impresión se configuran desde tu panel de Zertoo",
             "Sin comisión por pedido",
-          ],
-        },
-        {
-          id: "conexion",
-          isNew: false,
-          title: "Conectado con tu Zertoo Menu y Zertoo Eats",
-          subtitle: "No hay que cargar nada dos veces: el menú, los precios y los pedidos online ya son los mismos.",
-          bullets: [
-            "Usa el mismo menú, extras y precios de tu Zertoo Menu",
-            "Los pedidos Pickup y Delivery de tu menú y de Zertoo Eats entran directo al tablero",
-            "Los pedidos de delivery llegan con el contacto del cliente verificado",
-            "Requiere tener activos Zertoo Menu y Zertoo Eats",
           ],
         },
       ],

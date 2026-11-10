@@ -264,7 +264,7 @@ function TeamMock() {
 function FlowMock() {
   const nodes = [
     { name: "Zertoo Menu", desc: "Tu menú y tus precios" },
-    { name: "Zertoo Eats", desc: "Te descubren y piden" },
+    { name: "Zertoo Eats", desc: "Te descubren y piden, sin comisión" },
     { name: "Zertoo Orders", desc: "Todo llega al tablero", active: true },
   ];
   return (
