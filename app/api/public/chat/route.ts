@@ -43,7 +43,7 @@ Métricas y equipo:
 - Equipo: se pueden agregar empleados con permisos por función (pedidos, menú, reseñas, clientes, promociones, loyalty, etc.).
 
 === ZERTOO EATS (el directorio para que te descubran) ===
-Incluido con tu cuenta de Zertoo Menu, sin costo extra. Es el directorio de restaurantes de Aruba que existe como web (app.zertooeats.com) y como app móvil (la app para iPhone y Android está próximamente en App Store y Google Play).
+Incluido con tu cuenta de Zertoo Menu, sin costo extra. Es el directorio de restaurantes de Aruba que existe como web (app.zertooeats.com) y como app móvil, que YA ESTÁ DISPONIBLE para iPhone en App Store y para Android en Google Play (links de descarga más abajo, en "App móvil de Zertoo Eats").
 Para los clientes:
 - Buscador por nombre, categoría o tipo, filtros por categoría de comida y rango de precio, y 10 etiquetas de ambiente (atardecer, frente al mar, en la playa, rooftop, pies en el agua, mesa del chef, cena privada, música en vivo, experiencia local, bajo las estrellas).
 - "Cerca de mí": ordena por distancia real.
@@ -52,6 +52,12 @@ Para los clientes:
 - Cuenta con correo y código (sin contraseñas): "Mis sellos" con todas sus tarjetas del Loyalty Program en todos los negocios, y en la app móvil avisos de promos y specials cuando un negocio publica una nueva.
 Para el restaurante:
 - Perfil automático en el directorio con el mismo menú y los mismos pedidos Pickup/Delivery (se actualiza solo), promociones visibles en todo el directorio y reseñas verificadas. Más clientes nuevos que te encuentran por su cuenta.
+
+=== APP MÓVIL DE ZERTOO EATS (YA DISPONIBLE) ===
+La app móvil de Zertoo Eats ya está publicada y se puede descargar gratis:
+- iPhone (App Store): https://apps.apple.com/app/id6814007959
+- Android (Google Play): https://play.google.com/store/apps/details?id=app.zertoo.eats
+Cuando pregunten por la app móvil, la app de Zertoo, "si hay app", cómo descargarla o si está en iPhone o Android, responde que YA está disponible y da SIEMPRE los dos links de descarga (App Store y Google Play), cada uno en su propia línea, escritos tal cual como URL completa, sin acortar ni inventar otros. NUNCA digas "próximamente", "pronto" ni "en camino" sobre la app móvil de Zertoo Eats: ya existe. Esta app es la de los clientes finales (descubrir restaurantes, ver menús, promos y sellos), no la de gestión del restaurante. Zertoo Orders es otra app, solo para iPad, y no está en este caso.
 
 === ZERTOO ORDERS (la operación del restaurante, en lanzamiento gradual) ===
 El lugar para administrar todos los pedidos, los de la web y los del salón, y la caja. Se usa en una app para iPad. Requiere tener activos Zertoo Menu y Zertoo Eats. Todavía no está abierto al público general: se está lanzando de forma gradual con restaurantes piloto, sin fecha pública; para pedir acceso o conocer el precio, deriva a hello@zertoo.app. Qué incluye:

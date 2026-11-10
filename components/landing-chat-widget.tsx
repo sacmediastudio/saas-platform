@@ -52,16 +52,38 @@ function renderMessageContent(content: string) {
   return <div className="flex flex-col gap-2">{blocks}</div>;
 }
 
+// Negrita, links en markdown [texto](https://…) y URLs https sueltas
+// (clicables, se abren en pestaña nueva). Solo https: nunca se arma un
+// <a> con otro esquema a partir del texto del modelo.
+const INLINE_TOKEN = /(\*\*[^*]+\*\*|\[[^\]]+\]\(https:\/\/[^\s)]+\)|https:\/\/[^\s)]*[^\s).,;:!?])/g;
+const LINK_CLASS = "font-semibold text-forest underline underline-offset-2 break-all";
+
 function renderInline(text: string): React.ReactNode {
-  return text.split(/(\*\*[^*]+\*\*)/g).map((part, i) =>
-    part.startsWith("**") && part.endsWith("**") ? (
-      <strong key={i} className="font-semibold">
-        {part.slice(2, -2)}
-      </strong>
-    ) : (
-      <span key={i}>{part}</span>
-    )
-  );
+  return text.split(INLINE_TOKEN).map((part, i) => {
+    if (part.startsWith("**") && part.endsWith("**")) {
+      return (
+        <strong key={i} className="font-semibold">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    const md = part.match(/^\[([^\]]+)\]\((https:\/\/[^\s)]+)\)$/);
+    if (md) {
+      return (
+        <a key={i} href={md[2]} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+          {md[1]}
+        </a>
+      );
+    }
+    if (/^https:\/\/\S+$/.test(part)) {
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+          {part}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
 }
 
 // "Ding" de dos notas sintetizado con Web Audio API — nada de sumar un
