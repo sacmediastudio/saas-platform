@@ -60,16 +60,24 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
         });
         subscriptionItemId = item.id;
 
-        await stripe.invoiceItems.create({
-          customer: subscription.stripeCustomerId,
-          amount: Math.round(MODULE_PRICES[target] * 100),
-          currency: "usd",
-          description: `Activación de módulo: ${MODULE_LABELS[target]}`,
-        });
-
+        // Primero se crea la factura en borrador y el cargo se le adjunta
+        // explícitamente (`invoice: invoice.id`). Con la versión de API
+        // 2024-06-20, invoices.create() ya NO recoge por defecto los
+        // cargos pendientes del cliente (pending_invoice_items_behavior
+        // = "exclude"): si el cargo se creaba antes y suelto, la factura
+        // salía en $0, quedaba "pagada" y el módulo se activaba sin
+        // cobrar, dejando el cargo colgado para la próxima renovación.
         const invoice = await stripe.invoices.create({
           customer: subscription.stripeCustomerId,
           collection_method: "charge_automatically",
+          pending_invoice_items_behavior: "exclude",
+        });
+        await stripe.invoiceItems.create({
+          customer: subscription.stripeCustomerId,
+          invoice: invoice.id!,
+          amount: Math.round(MODULE_PRICES[target] * 100),
+          currency: "usd",
+          description: `Activación de módulo: ${MODULE_LABELS[target]}`,
         });
         // finalizeInvoice() con collection_method:"charge_automatically"
         // YA intenta cobrar como parte de la finalización — no hace
@@ -77,7 +85,13 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
         // factura que puede haber quedado pagada en este mismo paso.
         const finalized = await stripe.invoices.finalizeInvoice(invoice.id!);
 
-        if (finalized.status !== "paid") {
+        // Además de "paid", se exige que lo cobrado sea el precio del
+        // módulo: una factura en $0 también sale "paid" y no debe activar nada.
+        const expectedCents = Math.round(MODULE_PRICES[target] * 100);
+        if (finalized.status !== "paid" || finalized.amount_paid < expectedCents) {
+          // Si no se pudo cobrar, se anula la factura para que no quede
+          // abierta reintentándose ni se sume a otro cobro después.
+          await stripe.invoices.voidInvoice(invoice.id!).catch(() => {});
           // El cobro no se confirmó — se revierte el ítem de la
           // suscripción para no dejar algo "medio activado" cobrando
           // sin haber cobrado, y se marca la solicitud para seguimiento.
