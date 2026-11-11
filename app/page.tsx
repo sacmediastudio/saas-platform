@@ -173,7 +173,7 @@ function ProductCard({
           </Btn>
         ) : (
           <Btn
-            href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : p.id === "eats" ? "https://zertooeats.com" : "#precios"}
+            href={p.id === "restaurants" || p.id === "restaurantes" ? "/restaurantes" : p.id === "eats" ? "https://zertooeats.com" : p.id === "orders" ? "/orders" : "#precios"}
             {...(p.id === "eats" ? { target: "_blank", rel: "noopener noreferrer" } : {})}
             variant="ghost"
             className="mt-8 w-full"
@@ -294,10 +294,6 @@ function Pricing({ t }: { t: (typeof translations)["en"] }) {
                 <p className={`mt-8 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-lime" : "text-forest"}`}>
                   {t.pricing.included}
                 </p>
-              ) : p.soon ? (
-                <p className={`mt-8 text-[2.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-white/40" : "text-graphite/40"}`}>
-                  {t.pricing.soon}
-                </p>
               ) : (
                 <p className="mt-8 flex items-baseline gap-1.5">
                   <span className={`text-[3.4rem] font-extrabold leading-none tracking-[-0.04em] ${p.highlight ? "text-lime" : "text-forest"}`}>${p.price}</span>
@@ -312,19 +308,13 @@ function Pricing({ t }: { t: (typeof translations)["en"] }) {
                   </li>
                 ))}
               </ul>
-              {p.soon ? (
-                <span
-                  className={`mt-9 flex w-full items-center justify-center rounded-2xl px-7 py-3.5 text-[15px] font-semibold ${
-                    p.highlight ? "border border-white/20 text-white/40" : "border border-forest/15 text-graphite/40"
-                  }`}
-                >
-                  {t.pricing.soon}
-                </span>
-              ) : (
-                <Btn href="/signup?type=RESTAURANT" variant={p.highlight ? "primary" : "dark"} className="mt-9 w-full">
-                  {t.pricing.start}
-                </Btn>
-              )}
+              <Btn
+                href={p.name === "Zertoo Orders" ? "/orders" : "/signup?type=RESTAURANT"}
+                variant={p.highlight ? "primary" : "dark"}
+                className="mt-9 w-full"
+              >
+                {p.name === "Zertoo Orders" ? t.products.moreInfo : t.pricing.start}
+              </Btn>
             </div>
           </Reveal>
         ))}

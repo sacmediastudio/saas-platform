@@ -15,7 +15,7 @@ export const translations = {
       publishedIn: "Published in",
       panelUrl: "panel.zertoo.com",
     },
-    ticker: ["Digital menu", "Loyalty Program", "Zertoo Eats", "Free Smartlink", "Zertoo Orders — soon", "NFC hardware", "Reviews", "Custom domain"],
+    ticker: ["Digital menu", "Loyalty Program", "Zertoo Eats", "Free Smartlink", "Zertoo Orders", "NFC hardware", "Reviews", "Custom domain"],
     products: {
       title: "One product, three ways to use it",
       subtitle:
@@ -41,9 +41,9 @@ export const translations = {
         {
           id: "orders",
           name: "Zertoo Orders",
-          soon: true,
+          price: "49.90",
           desc: "One place to manage every order — online and in-house.",
-          benefits: ["Centralizes online and in-house orders", "Accept or reject with one tap", "Automatic printing to the kitchen", "Routing by station (kitchen/bar)", "Full order history and status"],
+          benefits: ["Receives Zertoo Eats orders, with no commission", "Centralizes online and in-house orders", "Accept or reject with one tap", "Automatic printing to the kitchen", "Routing by station (kitchen/bar)", "Full order history and status"],
         },
       ],
     },
@@ -80,7 +80,7 @@ export const translations = {
       plans: [
         { name: "Zertoo Menu", price: "39.90", for: "Menus and cartes", points: ["Menu with photos", "Categories and sold-out items", "Featured dishes", "Loyalty Program for your customers", "Reviews and local currency"], highlight: true },
         { name: "Zertoo Eats", included: true, for: "Discovery, Pickup & Delivery", points: ["Zertoo Eats directory listing", "Pickup and Delivery orders", "Promotions and reviews", "Included, no extra cost"], highlight: false },
-        { name: "Zertoo Orders", soon: true, for: "Centralized order management", points: ["Accept orders with one tap", "Automatic kitchen printing", "Kitchen / bar routing", "Order history"], highlight: false },
+        { name: "Zertoo Orders", price: "49.90", for: "Centralized order management", points: ["Accept orders with one tap", "Automatic kitchen printing", "Kitchen / bar routing", "Order history"], highlight: false },
       ],
       trust: ["No contracts or penalties", "Instant publishing", "Optimized for mobile"],
     },
@@ -113,6 +113,8 @@ export const translations = {
     ordersPage: {
       badge: "Zertoo Orders",
       statusNote: "Gradual rollout — access on request",
+      playAlt: "Get it on Google Play",
+      storeNote: "Android app available now · iPad version coming soon",
       newBadge: "New",
       heroTitlePrefix: "Your restaurant's entire operation,",
       heroTitleHighlight: "in one place.",
@@ -378,7 +380,7 @@ export const translations = {
       publishedIn: "Publicado en",
       panelUrl: "panel.zertoo.com",
     },
-    ticker: ["Menú digital", "Loyalty Program", "Zertoo Eats", "Smartlink gratis", "Zertoo Orders — pronto", "Hardware NFC", "Reseñas", "Dominio propio"],
+    ticker: ["Menú digital", "Loyalty Program", "Zertoo Eats", "Smartlink gratis", "Zertoo Orders", "Hardware NFC", "Reseñas", "Dominio propio"],
     products: {
       title: "Un producto, tres formas de usarlo",
       subtitle: "No todos los negocios necesitan lo mismo. Por eso Zertoo ofrece tres experiencias diferentes construidas sobre la misma plataforma.",
@@ -403,9 +405,9 @@ export const translations = {
         {
           id: "orders",
           name: "Zertoo Orders",
-          soon: true,
+          price: "49.90",
           desc: "Un solo lugar para administrar todos tus pedidos, online y del local.",
-          benefits: ["Centraliza pedidos online y del local", "Acepta o rechaza con un toque", "Impresión automática a cocina", "Enrutamiento por estación (cocina/barra)", "Historial y estado de cada pedido"],
+          benefits: ["Recibe pedidos de Zertoo Eats, sin comisión", "Centraliza pedidos online y del local", "Acepta o rechaza con un toque", "Impresión automática a cocina", "Enrutamiento por estación (cocina/barra)", "Historial y estado de cada pedido"],
         },
       ],
     },
@@ -442,7 +444,7 @@ export const translations = {
       plans: [
         { name: "Zertoo Menu", price: "39.90", for: "Cartas y menús", points: ["Menú con fotos", "Categorías y agotados", "Platos destacados", "Loyalty Program para tus clientes", "Reseñas y moneda local"], highlight: true },
         { name: "Zertoo Eats", included: true, for: "Descubrimiento, Pickup y Delivery", points: ["Perfil en el directorio Zertoo Eats", "Pedidos Pickup y Delivery", "Promociones y reseñas", "Incluido, sin costo extra"], highlight: false },
-        { name: "Zertoo Orders", soon: true, for: "Administración centralizada de pedidos", points: ["Acepta pedidos con un toque", "Impresión automática a cocina", "Enrutamiento cocina / barra", "Historial de pedidos"], highlight: false },
+        { name: "Zertoo Orders", price: "49.90", for: "Administración centralizada de pedidos", points: ["Acepta pedidos con un toque", "Impresión automática a cocina", "Enrutamiento cocina / barra", "Historial de pedidos"], highlight: false },
       ],
       trust: ["Sin contratos ni penalizaciones", "Publicación inmediata", "Optimizado para móvil"],
     },
@@ -475,6 +477,8 @@ export const translations = {
     ordersPage: {
       badge: "Zertoo Orders",
       statusNote: "En lanzamiento gradual — acceso por solicitud",
+      playAlt: "Disponible en Google Play",
+      storeNote: "App Android disponible ya · versión para iPad próximamente",
       newBadge: "Nuevo",
       heroTitlePrefix: "Toda la operación de tu restaurante,",
       heroTitleHighlight: "en un solo lugar.",

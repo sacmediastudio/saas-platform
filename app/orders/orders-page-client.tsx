@@ -346,6 +346,26 @@ export default function OrdersPageClient() {
                 </Btn>
               </div>
             </Reveal>
+            <Reveal delay={0.3} y={20}>
+              <div className="mt-8 flex flex-col items-center gap-3">
+                <a
+                  href="https://play.google.com/store/apps/details?id=app.zertoo.orders"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="transition-transform hover:-translate-y-0.5 active:scale-[0.98]"
+                >
+                  {/* Badge oficial de Google Play, sin modificar (mismo archivo que Zertoo Eats). */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`/badges/google-play-${lang === "en" ? "en" : "es"}.png`}
+                    alt={p.playAlt}
+                    className="h-12 w-auto select-none"
+                    draggable={false}
+                  />
+                </a>
+                <p className="text-[13px] text-graphite/70">{p.storeNote}</p>
+              </div>
+            </Reveal>
           </div>
         </section>
 
