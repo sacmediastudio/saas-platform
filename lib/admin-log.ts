@@ -1,6 +1,6 @@
 import { db } from "./db";
 
-type AdminAction = "SUSPEND" | "UNSUSPEND" | "DELETE_TENANT" | "UPDATE_SUBSCRIPTION";
+type AdminAction = "SUSPEND" | "UNSUSPEND" | "DELETE_TENANT" | "UPDATE_SUBSCRIPTION" | "DEACTIVATE_MODULE";
 
 export async function logAdminActivity(params: {
   adminEmail: string;

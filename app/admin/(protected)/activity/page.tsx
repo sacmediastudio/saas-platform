@@ -6,6 +6,7 @@ const ACTION_LABELS: Record<string, { label: string; className: string }> = {
   UNSUSPEND: { label: "Reactivó", className: "bg-green-50 text-green-700" },
   DELETE_TENANT: { label: "Borró", className: "bg-red-50 text-red-700" },
   UPDATE_SUBSCRIPTION: { label: "Editó suscripción", className: "bg-[#F7F8F4] text-[#343233]" },
+  DEACTIVATE_MODULE: { label: "Desactivó módulo", className: "bg-red-50 text-red-700" },
 };
 
 export default async function AdminActivityPage() {

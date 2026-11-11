@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { getEnabledModules, modulePublicPrefix, MODULE_LABELS } from "@/lib/modules";
 import TenantActions from "@/components/tenant-actions";
 import SubscriptionEditor from "@/components/subscription-editor";
+import TenantModulesAdmin from "@/components/tenant-modules-admin";
 import DashboardCard from "@/components/dashboard-card";
 
 export default async function AdminTenantDetailPage({ params }: { params: { id: string } }) {
@@ -75,6 +76,14 @@ export default async function AdminTenantDetailPage({ params }: { params: { id: 
       </DashboardCard>
 
       <DashboardCard>
+      <Section title="Módulos activos">
+        <TenantModulesAdmin
+          tenantId={tenant.id}
+          tenantName={tenant.name}
+          modules={enabledModules.map((m) => ({ module: m, label: MODULE_LABELS[m] }))}
+        />
+      </Section>
+
       <Section title="Suscripción">
         <div className="px-4 py-3">
           <SubscriptionEditor
